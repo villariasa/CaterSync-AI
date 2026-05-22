@@ -1,0 +1,4 @@
+{
+  "booking": ["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"],
+  "payment": ["UNPAID", "PARTIAL", "PAID", "REFUNDED"]
+}

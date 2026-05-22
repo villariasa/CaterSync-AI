@@ -1,0 +1,1 @@
+"""Demand prediction model placeholder."""

@@ -1,0 +1,11 @@
+openapi: 3.0.3
+info:
+  title: CaterSync Auth API
+  version: 0.1.0
+paths:
+  /api/auth/token/:
+    post:
+      summary: Obtain a JWT access and refresh token pair.
+      responses:
+        "200":
+          description: Token pair generated.

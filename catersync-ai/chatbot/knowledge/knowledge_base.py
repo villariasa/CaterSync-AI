@@ -1,0 +1,1 @@
+"""Catering knowledge base placeholder."""

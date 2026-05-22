@@ -1,0 +1,10 @@
+name: Backend CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  reference:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Canonical workflow lives at .github/workflows/backend-ci.yml"
