@@ -210,49 +210,49 @@
 ## 3.1 Flutter Mobile App Development
 
 ### 3.1.1 Mobile App Foundation
-- [ ] Set up Flutter mobile project structure
-- [ ] Implement navigation system
-- [ ] Create responsive UI components
-- [ ] Set up state management (Provider/Bloc)
-- [ ] Implement theme system
-- [ ] Set up localization support
-- [ ] Configure app permissions
+- [x] Set up Flutter mobile project structure
+- [x] Implement navigation system
+- [x] Create responsive UI components
+- [x] Set up state management (Provider/Bloc)
+- [x] Implement theme system
+- [x] Set up localization support
+- [x] Configure app permissions
 
 **Estimated Time:** 3 days
 **Dependencies:** Backend APIs
 **Deliverable:** Mobile app foundation
 
 ### 3.1.2 Authentication & Onboarding
-- [ ] Create login/register screens
-- [ ] Implement biometric authentication
-- [ ] Design interactive onboarding flow
-- [ ] Create tutorial system
-- [ ] Implement role-based navigation
-- [ ] Set up user profile screens
+- [x] Create login/register screens
+- [x] Implement biometric authentication
+- [x] Design interactive onboarding flow
+- [x] Create tutorial system
+- [x] Implement role-based navigation
+- [x] Set up user profile screens
 
 **Estimated Time:** 3 days
 **Dependencies:** Mobile app foundation
 **Deliverable:** Authentication and onboarding system
 
 ### 3.1.3 Customer Features
-- [ ] Create booking screens
-- [ ] Implement package selection UI
-- [ ] Design event tracking interface
-- [ ] Create payment screens
-- [ ] Implement rating/review system
-- [ ] Set up loyalty program UI
+- [x] Create booking screens
+- [x] Implement package selection UI
+- [x] Design event tracking interface
+- [x] Create payment screens
+- [x] Implement rating/review system
+- [x] Set up loyalty program UI
 
 **Estimated Time:** 4 days
 **Dependencies:** Authentication system
 **Deliverable:** Customer-facing features
 
 ### 3.1.4 QR Code Features
-- [ ] Implement QR code scanner
-- [ ] Create QR booking verification
-- [ ] Design QR guest check-in
-- [ ] Implement QR payment validation
-- [ ] Create digital event tickets
-- [ ] Set up QR code generation
+- [x] Implement QR code scanner
+- [x] Create QR booking verification
+- [x] Design QR guest check-in
+- [x] Implement QR payment validation
+- [x] Create digital event tickets
+- [x] Set up QR code generation
 
 **Estimated Time:** 2 days
 **Dependencies:** Customer features
@@ -261,48 +261,48 @@
 ## 3.2 Flutter Web/Desktop Admin Panel
 
 ### 3.2.1 Admin Panel Foundation
-- [ ] Set up Flutter web project
-- [ ] Create responsive web layouts
-- [ ] Implement admin navigation
-- [ ] Set up data tables and grids
-- [ ] Create dashboard layout
-- [ ] Implement search and filtering
+- [x] Set up Flutter web project
+- [x] Create responsive web layouts
+- [x] Implement admin navigation
+- [x] Set up data tables and grids
+- [x] Create dashboard layout
+- [x] Implement search and filtering
 
 **Estimated Time:** 3 days
 **Dependencies:** Backend APIs
 **Deliverable:** Admin panel foundation
 
 ### 3.2.2 Business Management Interface
-- [ ] Create booking management screens
-- [ ] Implement inventory management UI
-- [ ] Design staff management interface
-- [ ] Create customer management screens
-- [ ] Implement financial reporting UI
-- [ ] Set up calendar management
+- [x] Create booking management screens
+- [x] Implement inventory management UI
+- [x] Design staff management interface
+- [x] Create customer management screens
+- [x] Implement financial reporting UI
+- [x] Set up calendar management
 
 **Estimated Time:** 5 days
 **Dependencies:** Admin panel foundation
 **Deliverable:** Core business management features
 
 ### 3.2.3 Analytics Dashboard
-- [ ] Create interactive charts and graphs
-- [ ] Implement KPI displays
-- [ ] Design revenue analytics UI
-- [ ] Create booking trend visualizations
-- [ ] Implement performance metrics
-- [ ] Set up real-time data updates
+- [x] Create interactive charts and graphs
+- [x] Implement KPI displays
+- [x] Design revenue analytics UI
+- [x] Create booking trend visualizations
+- [x] Implement performance metrics
+- [x] Set up real-time data updates
 
 **Estimated Time:** 3 days
 **Dependencies:** Business management interface
 **Deliverable:** Analytics dashboard
 
 ### 3.2.4 Communication Center
-- [ ] Create messaging interface
-- [ ] Implement notification center
-- [ ] Design broadcast messaging UI
-- [ ] Create template management
-- [ ] Implement chat support interface
-- [ ] Set up customer communication logs
+- [x] Create messaging interface
+- [x] Implement notification center
+- [x] Design broadcast messaging UI
+- [x] Create template management
+- [x] Implement chat support interface
+- [x] Set up customer communication logs
 
 **Estimated Time:** 3 days
 **Dependencies:** Admin panel foundation
@@ -311,16 +311,57 @@
 ## 3.3 Super Admin Panel
 
 ### 3.3.1 Multi-Tenant Management
-- [ ] Create tenant registration interface
-- [ ] Implement tenant approval system
-- [ ] Design subscription management UI
-- [ ] Create system-wide analytics
-- [ ] Implement storage limit monitoring
-- [ ] Set up activity log viewing
+- [x] Create tenant registration interface
+- [x] Implement tenant approval system
+- [x] Design subscription management UI
+- [x] Create system-wide analytics
+- [x] Implement storage limit monitoring
+- [x] Set up activity log viewing
 
 **Estimated Time:** 4 days
 **Dependencies:** Admin panel foundation
 **Deliverable:** Super admin management system
+
+### 3.4 Design & Component Library
+- [x] Create Figma design brief
+- [x] Design system & tokens (colors, typography, spacing)
+- [ ] High-fidelity screens (mobile & web)
+- [x] Component library implementation (Flutter widgets) — core widgets and gallery
+- [x] Export assets & developer handoff (SVGs, icons, style guide)
+- [ ] Accessibility review & QA (WCAG, keyboard, ARIA labels)
+
+**Export helper (run locally to generate 2x PNG fallbacks and package exports)**
+
+- Run one of the following locally from the repository root to generate 48×48 PNG fallbacks from SVGs and package them into the exports ZIP:
+
+    - If you have `rsvg-convert` (recommended):
+
+        ```bash
+        mkdir -p assets/icons/png
+        for f in assets/icons/svg/*.svg; do 
+            rsvg-convert -w 48 -h 48 "$f" -o "assets/icons/png/$(basename "$f" .svg).png"; 
+        done
+        mkdir -p docs/frontend/exports/icons/png
+        cp assets/icons/png/*.png docs/frontend/exports/icons/png/
+        bash docs/frontend/exports/make_exports.sh
+        ```
+
+    - Or using ImageMagick's `convert`:
+
+        ```bash
+        mkdir -p assets/icons/png
+        for f in assets/icons/svg/*.svg; do 
+            convert -background none -resize 48x48 "$f" "assets/icons/png/$(basename "$f" .svg).png"; 
+        done
+        mkdir -p docs/frontend/exports/icons/png
+        cp assets/icons/png/*.png docs/frontend/exports/icons/png/
+        bash docs/frontend/exports/make_exports.sh
+        ```
+
+    - After running the commands, commit the generated PNGs and the created ZIP and push to a branch, then open a PR as usual.
+
+    - Notes: install `librsvg` (for `rsvg-convert`) or `imagemagick` (for `convert`) if missing. These commands must be run locally where you control the environment to get pixel-perfect PNGs.
+
 
 ---
 

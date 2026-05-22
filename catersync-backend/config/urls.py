@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.http import JsonResponse
-from django.urls import path
+from django.urls import path, include
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -38,5 +38,7 @@ urlpatterns = [
     path("api/auth/token/", TokenObtainPairView.as_view(), name="token-obtain-pair"),
     path("api/auth/token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
     path("api/auth/token/verify/", TokenVerifyView.as_view(), name="token-verify"),
+    path("api/auth/", include("apps.authentication.urls")),
+    path("api/tenants/", include("apps.tenants.urls")),
     path('admin/', admin.site.urls),
 ]

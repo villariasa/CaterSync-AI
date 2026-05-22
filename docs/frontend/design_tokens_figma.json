@@ -1,0 +1,39 @@
+{
+  "color": {
+    "primary": { "value": "#00695C", "type": "color" },
+    "primary-variant": { "value": "#004D40", "type": "color" },
+    "accent": { "value": "#FFC107", "type": "color" },
+    "background": { "value": "#FFFFFF", "type": "color" },
+    "surface": { "value": "#FFFFFF", "type": "color" },
+    "text-primary": { "value": "#0D1B1A", "type": "color" },
+    "text-secondary": { "value": "#4D6664", "type": "color" },
+    "success": { "value": "#2E7D32", "type": "color" },
+    "warning": { "value": "#F57C00", "type": "color" },
+    "danger": { "value": "#D32F2F", "type": "color" }
+  },
+
+  "typography": {
+    "h1": { "value": { "fontFamily": "Inter", "fontSize": 32, "fontWeight": 700, "lineHeight": 40 }, "type": "typography" },
+    "h2": { "value": { "fontFamily": "Inter", "fontSize": 24, "fontWeight": 600, "lineHeight": 32 }, "type": "typography" },
+    "body": { "value": { "fontFamily": "Inter", "fontSize": 16, "fontWeight": 400, "lineHeight": 24 }, "type": "typography" },
+    "caption": { "value": { "fontFamily": "Inter", "fontSize": 12, "fontWeight": 400, "lineHeight": 16 }, "type": "typography" }
+  },
+
+  "size": {
+    "spacing-xs": { "value": 4, "type": "sizing" },
+    "spacing-sm": { "value": 8, "type": "sizing" },
+    "spacing-md": { "value": 16, "type": "sizing" },
+    "spacing-lg": { "value": 24, "type": "sizing" },
+    "spacing-xl": { "value": 32, "type": "sizing" }
+  },
+
+  "radius": {
+    "sm": { "value": 4, "type": "borderRadius" },
+    "md": { "value": 8, "type": "borderRadius" },
+    "lg": { "value": 12, "type": "borderRadius" }
+  },
+
+  "boxShadow": {
+    "card": { "value": { "x": 0, "y": 1, "blur": 3, "spread": 0, "color": "rgba(13,27,26,0.08)" }, "type": "boxShadow" }
+  }
+}
