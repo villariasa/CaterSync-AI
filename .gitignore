@@ -1,0 +1,48 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+.venv/
+venv/
+env/
+pip-wheel-metadata/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+
+# Node and frontend
+node_modules/
+dist/
+build/
+.next/
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+coverage/
+
+# IDE and OS
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+.DS_Store
+
+# Logs and generated backups
+*.log
+backups/
+*.dump
+*.sql.gz
