@@ -17,9 +17,40 @@ export class CateringState {
   usingMockData = $state(false);
 
   // Authentication & PWA variables
-  isAuthenticated = $state(false);
-  currentUser = $state(null);
-  registeredPIN = $state('1234'); // Default dummy PIN
+  _isAuthenticated = $state(false);
+  _currentUser = $state(null);
+  _registeredPIN = $state('1234'); // Default dummy PIN
+
+  get isAuthenticated() {
+    return this._isAuthenticated;
+  }
+  set isAuthenticated(value) {
+    this._isAuthenticated = value;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('catersync_auth_state', value ? 'true' : 'false');
+    }
+  }
+
+  get currentUser() {
+    return this._currentUser;
+  }
+  set currentUser(value) {
+    this._currentUser = value;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('catersync_current_user', value ? JSON.stringify(value) : '');
+    }
+  }
+
+  get registeredPIN() {
+    return this._registeredPIN;
+  }
+  set registeredPIN(value) {
+    this._registeredPIN = value;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('catersync_registered_pin', value);
+    }
+  }
+
   biometricCredentialRegistered = $state(false);
   deferredPrompt = $state(null);
   pwaInstallable = $state(false);
@@ -40,6 +71,19 @@ export class CateringState {
   audioCtx = null;
 
   constructor(data) {
+    if (typeof window !== 'undefined') {
+      this._isAuthenticated = localStorage.getItem('catersync_auth_state') === 'true';
+      this._registeredPIN = localStorage.getItem('catersync_registered_pin') || '1234';
+      const storedUser = localStorage.getItem('catersync_current_user');
+      if (storedUser) {
+        try {
+          this._currentUser = JSON.parse(storedUser);
+        } catch (e) {
+          this._currentUser = null;
+        }
+      }
+    }
+
     if (data) {
       this.customers = [...data.customers];
       this.events = [...data.events];
