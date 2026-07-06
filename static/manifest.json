@@ -1,0 +1,20 @@
+{
+  "name": "CaterSync-AI Intelligence Operations",
+  "short_name": "CaterSync",
+  "description": "AI-Powered Catering Operations & Predictive Forecasting Console",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#2A2521",
+  "background_color": "#F6F2EA",
+  "dir": "ltr",
+  "lang": "en-US",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

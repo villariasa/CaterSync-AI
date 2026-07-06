@@ -122,3 +122,25 @@ To transition the dashboard from a static visual layout to an operational physic
 7. **Cost Share Transitions**: Grid rows flash highlighted backgrounds on matching triggers, and toast notifications slide in from the bottom-right to track completed processes.
 8. **Reduced Motion Guardrail**: The entire layout is wrapped in a `@media (prefers-reduced-motion: reduce)` block that strips all durations and transition curves for accessibility compliance.
 
+---
+
+## 📌 Sticky Layout Hierarchy (Phase 8 Upgrade)
+
+To optimize usability on long scrollable ledger lists, the layout structure has been updated:
+* **Unified Pinned Navigation**: The header top bar and the route tabs navigation row are wrapped in a single sticky wrapper (`sticky top-0 z-30`). They stick together at the top of the viewport when scrolling.
+* **Glassmorphic Blending**: Features a subtle semi-transparent background (`bg-[#F6F2EA]/90`) and `backdrop-blur-md` so scrolled content transitions behind the navigation bar smoothly.
+* **Sticky Table Headers**: The column titles (`<thead>`) inside `DataTable.svelte` are pinned (`sticky top-0 z-10 bg-[#F6F2EA]`) inside the table scroll view. Column labels remain visible when browsing deep datasets.
+
+---
+
+## 📲 PWA, Push Notifications, & Authentication Gateway (Phase 9 Upgrade)
+
+The application has been elevated to progressive installation standards:
+* **Web App Manifest**: Added `manifest.json` configuration defining start paths, standalone layouts, and icon bindings for system installation.
+* **Offline Caching Service Worker**: Implemented caching protocols (`service-worker.js`) preserving shell resources offline and capturing server push messages.
+* **Tactile Multi-Option Auth**: Built an elegant operator authentication gate (`LandingPage.svelte`) supporting password codes, 4-digit numeric PIN Dialers, and biometric verification.
+* **Interactive Fingerprint Scanner**: Integrated `BiometricScanner.svelte` implementing active scanning sweep animations and custom sound synthesis for Touch ID checks.
+* **Local System Notifications**: Exposes browser-integrated Push Notifications for warnings (such as inventory updates or computed timeline logs).
+
+
+
