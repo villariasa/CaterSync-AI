@@ -26,23 +26,28 @@
   const appState = new CateringState(data);
   setCateringContext(appState);
 
-  let confirmLogout = $state(false);
-  let logoutTimeout;
   let currentDateTime = $state('');
+  let showLogoutModal = $state(false);
+  let showUpdateModal = $state(false);
+  let autoUpdateEnabled = $state(false);
+  let swRegistration = $state(null);
 
   function handleLogoutClick() {
     appState.playClickSound();
-    if (!confirmLogout) {
-      confirmLogout = true;
-      clearTimeout(logoutTimeout);
-      logoutTimeout = setTimeout(() => {
-        confirmLogout = false;
-      }, 3000);
-    } else {
-      confirmLogout = false;
-      appState.isAuthenticated = false;
-      appState.showToast("🔒 Logged out of console session.");
+    showLogoutModal = true;
+  }
+
+  function triggerAppUpdate() {
+    appState.playClickSound();
+    if (swRegistration && swRegistration.waiting) {
+      swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
     }
+    showUpdateModal = false;
+  }
+
+  function toggleAutoUpdate() {
+    appState.playClickSound();
+    localStorage.setItem('catersync_auto_update', autoUpdateEnabled ? 'true' : 'false');
   }
 
   onMount(() => {
@@ -53,9 +58,46 @@
 
     // Register PWA service worker
     if ('serviceWorker' in navigator) {
+      autoUpdateEnabled = localStorage.getItem('catersync_auto_update') === 'true';
+
       navigator.serviceWorker.register('/service-worker.js', { type: 'module' })
-        .then(() => console.log("Service Worker registered successfully."))
+        .then((reg) => {
+          console.log("Service Worker registered.");
+          swRegistration = reg;
+
+          // Check if there is an update already waiting
+          if (reg.waiting) {
+            if (autoUpdateEnabled) {
+              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            } else {
+              showUpdateModal = true;
+            }
+          }
+
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  if (autoUpdateEnabled) {
+                    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                  } else {
+                    showUpdateModal = true;
+                  }
+                }
+              });
+            }
+          });
+        })
         .catch((err) => console.warn("Service Worker registration failed:", err));
+
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
     }
 
     // Listen to browser PWA install availability
@@ -174,11 +216,10 @@
           <!-- Log Out Button -->
           <button 
             onclick={handleLogoutClick} 
-            class="btn-interactive p-2 rounded border transition-all duration-200 flex items-center gap-1.5 text-xs font-mono 
-            {confirmLogout ? 'bg-[#AC3B2A] text-white border-[#AC3B2A] hover:bg-[#AC3B2A]/90' : 'hover:bg-[#AC3B2A]/10 hover:text-[#AC3B2A] border-transparent hover:border-[#AC3B2A]/20 text-[#767068]'}"
+            class="btn-interactive p-2 rounded border border-transparent hover:bg-[#AC3B2A]/10 hover:text-[#AC3B2A] hover:border-[#AC3B2A]/20 flex items-center gap-1.5 text-xs font-mono text-[#767068]"
           >
-            <LogOut size={14} class={confirmLogout ? 'text-white' : 'text-[#AC3B2A]'} />
-            <span class="hidden sm:inline">{confirmLogout ? 'Confirm?' : 'Log Out'}</span>
+            <LogOut size={14} class="text-[#AC3B2A]" />
+            <span class="hidden sm:inline">Log Out</span>
           </button>
 
           <!-- Live Clock -->
@@ -238,5 +279,81 @@
     <main class="flex-1 p-6 max-w-7xl w-full mx-auto space-y-8">
       {@render children()}
     </main>
+  </div>
+{/if}
+
+<!-- MODAL: LOG OUT CONFIRMATION -->
+{#if showLogoutModal}
+  <div class="fixed inset-0 bg-[#2A2521]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="ticket-card bg-white p-6 max-w-sm w-full border border-[#767068]/30 shadow-2xl relative animate-scale-up">
+      <div class="mb-4">
+        <span class="ticket-stamp bg-red-50 text-[#AC3B2A] border-[#AC3B2A]/20">LOCK SESSION</span>
+        <h3 class="text-base font-bold text-[#2A2521] mt-2">Operator Exit Request</h3>
+        <p class="text-xs text-[#767068] leading-relaxed mt-1.5">
+          Are you sure you want to end your operator session? You will need to enter your password, PIN, or biometric key to regain access to the console.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 pt-3 border-t border-[#767068]/20 font-mono text-xs">
+        <button 
+          onclick={() => { appState.playClickSound(); showLogoutModal = false; }} 
+          class="py-2.5 rounded border border-[#767068]/30 text-[#767068] bg-slate-50 hover:bg-slate-100 transition-all font-bold text-center"
+        >
+          Cancel
+        </button>
+        <button 
+          onclick={() => {
+            appState.playClickSound();
+            showLogoutModal = false;
+            appState.isAuthenticated = false;
+            appState.showToast("🔒 Logged out of console session.");
+          }} 
+          class="py-2.5 rounded bg-[#AC3B2A] text-white hover:bg-[#AC3B2A]/90 transition-all font-bold text-center"
+        >
+          Log Out
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- MODAL: PWA VERSION UPDATE -->
+{#if showUpdateModal}
+  <div class="fixed inset-0 bg-[#2A2521]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="ticket-card bg-white p-6 max-w-sm w-full border border-[#767068]/30 shadow-2xl relative animate-scale-up">
+      <div class="mb-4">
+        <span class="ticket-stamp bg-amber-50 text-[#D9A441] border-[#D9A441]/20">CORE UPGRADE</span>
+        <h3 class="text-base font-bold text-[#2A2521] mt-2">New Version Available!</h3>
+        <p class="text-xs text-[#767068] leading-relaxed mt-1.5">
+          An update is ready for your app. Upgrade now to activate the latest features, brand assets, and client interface enhancements.
+        </p>
+      </div>
+
+      <!-- Auto-Update Toggle -->
+      <label class="flex items-center gap-2 font-mono text-[10px] text-[#767068] cursor-pointer bg-[#F6F2EA]/60 p-2 rounded border border-[#767068]/15 mb-4">
+        <input 
+          type="checkbox" 
+          bind:checked={autoUpdateEnabled} 
+          onchange={toggleAutoUpdate}
+          class="rounded border-[#767068]/30 text-[#3E6650] w-4 h-4" 
+        />
+        <span>Enable Auto-Update in the future</span>
+      </label>
+
+      <div class="grid grid-cols-2 gap-3 pt-2 font-mono text-xs">
+        <button 
+          onclick={() => { appState.playClickSound(); showUpdateModal = false; }} 
+          class="py-2.5 rounded border border-[#767068]/30 text-[#767068] bg-slate-50 hover:bg-slate-100 transition-all font-bold text-center"
+        >
+          Later
+        </button>
+        <button 
+          onclick={triggerAppUpdate} 
+          class="py-2.5 rounded bg-[#3E6650] text-white hover:bg-[#3E6650]/90 transition-all font-bold text-center"
+        >
+          Update Now
+        </button>
+      </div>
+    </div>
   </div>
 {/if}

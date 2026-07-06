@@ -104,15 +104,20 @@ self.addEventListener('notificationclick', (event) => {
 
 // Listener for background timed notifications when tab is closed
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.action === 'schedule_test_notification') {
-    const { delay, title, body } = event.data;
-    setTimeout(() => {
-      self.registration.showNotification(title, {
-        body,
-        icon: '/favicon.svg',
-        vibrate: [100, 50, 100],
-        data: { url: '/' }
-      });
-    }, delay);
+  if (event.data) {
+    if (event.data.type === 'SKIP_WAITING' || event.data.action === 'skip_waiting') {
+      self.skipWaiting();
+    }
+    if (event.data.action === 'schedule_test_notification') {
+      const { delay, title, body } = event.data;
+      setTimeout(() => {
+        self.registration.showNotification(title, {
+          body,
+          icon: '/favicon.svg',
+          vibrate: [100, 50, 100],
+          data: { url: '/' }
+        });
+      }, delay);
+    }
   }
 });
