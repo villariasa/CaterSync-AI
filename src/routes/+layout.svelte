@@ -3,6 +3,7 @@
   import favicon from '$lib/assets/favicon.svg';
   import LandingPage from '$lib/components/LandingPage.svelte';
   import { onMount } from 'svelte';
+  import { slide } from 'svelte/transition';
   import { 
     LayoutDashboard, 
     UtensilsCrossed, 
@@ -305,7 +306,7 @@
           <!-- Mobile Hamburger Toggle -->
           <button 
             onclick={() => { appState.playClickSound(); showMobileMenu = !showMobileMenu; }} 
-            class="md:hidden p-1.5 rounded hover:bg-white/50 border border-transparent hover:border-[#767068]/20 text-[#767068]"
+            class="md:hidden p-1.5 rounded hover:bg-white/50 border border-transparent hover:border-[#767068]/20 text-[#767068] transition-transform duration-300 {showMobileMenu ? 'rotate-90' : ''}"
             aria-label="Toggle Menu"
           >
             {#if showMobileMenu}
@@ -319,7 +320,7 @@
 
       <!-- MOBILE NAVIGATION TABS (Toggled) -->
       {#if showMobileMenu}
-        <div class="md:hidden bg-white/95 border-t border-[#767068]/20 px-6 py-4 space-y-2 animate-fade-in">
+        <div transition:slide={{ duration: 300 }} class="md:hidden bg-white/95 border-t border-[#767068]/20 px-6 py-4 space-y-2 overflow-hidden">
           <nav class="flex flex-col gap-2 font-sans">
             <a 
               href="/" 
