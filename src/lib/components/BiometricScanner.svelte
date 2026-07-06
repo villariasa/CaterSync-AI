@@ -7,46 +7,82 @@
   let { onsuccess = () => {}, oncancel = () => {} } = $props();
 
   let scanState = $state('idle'); // idle, scanning, success, error
-  let scanMessage = $state('Place your finger on the scanner area');
+  let scanMessage = $state('Click scanner area to verify identity');
 
   async function triggerBiometricScan() {
     if (scanState === 'scanning' || scanState === 'success') return;
     
     appState.playClickSound();
     scanState = 'scanning';
-    scanMessage = 'Scanning biometrics data...';
+    scanMessage = 'Requesting device authenticator...';
 
-    // Simulate standard WebAuthn Credentials fetch
-    if ('credentials' in navigator) {
-      try {
-        console.log("Initializing WebAuthn Biometric verification request...");
-        // WebAuthn request stub configurations for offline/localhost verification
-      } catch (err) {
-        console.warn("Hardware credential reader busy or offline");
-      }
+    if (!window.PublicKeyCredential) {
+      scanState = 'error';
+      scanMessage = 'Biometrics not supported on this browser/device.';
+      appState.playBuzzerSound();
+      resetToIdle();
+      return;
     }
 
-    // High fidelity biometric scanning animation sequence
-    setTimeout(() => {
-      if (Math.random() > 0.05) {
-        // Success
+    try {
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+      
+      const userId = new Uint8Array(16);
+      window.crypto.getRandomValues(userId);
+
+      const publicKey = {
+        challenge,
+        rp: {
+          name: "CaterSync-AI Console",
+          id: window.location.hostname
+        },
+        user: {
+          id: userId,
+          name: "operator@catersync.ai",
+          displayName: "System Operator"
+        },
+        pubKeyCredParams: [
+          { type: "public-key", alg: -7 },   // ES256
+          { type: "public-key", alg: -257 }  // RS256
+        ],
+        authenticatorSelection: {
+          authenticatorAttachment: "platform",
+          userVerification: "required"
+        },
+        timeout: 60000
+      };
+
+      const credential = await navigator.credentials.create({ publicKey });
+      
+      if (credential) {
         scanState = 'success';
-        scanMessage = 'Biometrics matched successfully!';
+        scanMessage = 'Device verified successfully!';
         appState.playScanSuccessSound();
         setTimeout(() => {
           onsuccess();
         }, 800);
       } else {
-        // Error
-        scanState = 'error';
-        scanMessage = 'Scan failed. Please align your finger and try again.';
-        appState.playBuzzerSound();
-        setTimeout(() => {
-          scanState = 'idle';
-          scanMessage = 'Place your finger on the scanner area';
-        }, 2000);
+        throw new Error('Credential check returned null');
       }
-    }, 1800);
+    } catch (err) {
+      console.warn("Device biometric verification failed:", err);
+      scanState = 'error';
+      if (err.name === 'NotAllowedError') {
+        scanMessage = 'Lock screen validation cancelled.';
+      } else {
+        scanMessage = 'Biometric signature rejected.';
+      }
+      appState.playBuzzerSound();
+      resetToIdle();
+    }
+  }
+
+  function resetToIdle() {
+    setTimeout(() => {
+      scanState = 'idle';
+      scanMessage = 'Click scanner area to verify identity';
+    }, 2500);
   }
 </script>
 

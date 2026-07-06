@@ -8,7 +8,9 @@ self.addEventListener('install', (event) => {
       return cache.addAll([
         '/',
         '/manifest.json',
-        '/favicon.svg'
+        '/favicon.svg',
+        '/icon-192.png',
+        '/icon-512.png'
       ]);
     }).then(() => self.skipWaiting())
   );

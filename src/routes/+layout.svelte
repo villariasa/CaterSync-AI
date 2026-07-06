@@ -159,8 +159,10 @@
           <button 
             onclick={() => {
               appState.playClickSound();
-              appState.isAuthenticated = false;
-              appState.showToast("🔒 Logged out of console session.");
+              if (confirm("Are you sure you want to log out of the CaterSync-AI console?")) {
+                appState.isAuthenticated = false;
+                appState.showToast("🔒 Logged out of console session.");
+              }
             }} 
             class="btn-interactive p-2 rounded hover:bg-[#AC3B2A]/10 hover:text-[#AC3B2A] border border-transparent hover:border-[#AC3B2A]/20 flex items-center gap-1.5 text-xs font-mono text-[#767068]"
           >
