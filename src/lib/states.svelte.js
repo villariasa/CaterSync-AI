@@ -69,7 +69,9 @@ export class CateringState {
     risk_medium_threshold: 0.35,
     risk_high_threshold: 0.60,
     low_stock_alerts_enabled: true,
-    sound_enabled_default: false
+    sound_enabled_default: false,
+    broadcasted_update_version: '',
+    broadcasted_update_message: ''
   });
 
   // Web Audio Context
@@ -171,6 +173,43 @@ export class CateringState {
   playScanSuccessSound() {
     if (!this.audioEnabled) return;
     this.playClickSound();
+  }
+
+  async broadcastUpdate(versionCode, updateDesc) {
+    const updatedSettings = {
+      ...this.settings,
+      broadcasted_update_version: versionCode,
+      broadcasted_update_message: updateDesc
+    };
+
+    if (this.usingMockData) {
+      this.settings = updatedSettings;
+      this.saveDataToFile();
+      this.showToast(`📢 Broadcast alert queued: Version ${versionCode}`, "success");
+      this.playStampSound();
+      return { success: true, settings: updatedSettings };
+    }
+
+    try {
+      const response = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedSettings)
+      });
+      const res = await response.json();
+      if (res.success) {
+        this.settings = res.settings;
+        this.showToast(`📢 Broadcast alert dispatched: Version ${versionCode}`, "success");
+        this.playStampSound();
+        return { success: true, settings: res.settings };
+      } else {
+        throw new Error(res.error);
+      }
+    } catch (err) {
+      this.showToast(`❌ Broadcast failed: ${err.message}`, "error");
+      this.playBuzzerSound();
+      return { success: false, error: err.message };
+    }
   }
 
   // Push notifications generator
