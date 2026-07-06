@@ -1,6 +1,6 @@
 // Service Worker configuration for SvelteKit PWA offline compliance
 const CACHE_NAME = 'catersync-offline-v1';
-const SW_VERSION = '1.2.6';
+const SW_VERSION = '1.2.7';
 
 // Assets will be cached dynamically
 self.addEventListener('install', (event) => {
@@ -15,21 +15,6 @@ self.addEventListener('install', (event) => {
       ]);
     })
   );
-
-  // Show device system notification if this is a software update (registration already has an active controller)
-  if (self.registration.active) {
-    self.registration.showNotification("🚀 CaterSync Upgrade Ready", {
-      body: "An update is ready. Click Update to apply the latest console features.",
-      icon: "/icon-192.png",
-      badge: "/favicon.svg",
-      tag: "catersync-update",
-      renotify: true,
-      actions: [
-        { action: 'update', title: 'Update Now' }
-      ],
-      data: { url: '/' }
-    });
-  }
 });
 
 self.addEventListener('activate', (event) => {
