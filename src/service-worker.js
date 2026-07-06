@@ -18,10 +18,13 @@ self.addEventListener('install', (event) => {
   // Show device system notification if this is a software update (registration already has an active controller)
   if (self.registration.active) {
     self.registration.showNotification("🚀 CaterSync Upgrade Ready", {
-      body: "Tap here to reload the console and activate the latest update.",
+      body: "An update is ready. Click Update to apply the latest console features.",
       icon: "/favicon.svg",
       tag: "catersync-update",
       renotify: true,
+      actions: [
+        { action: 'update', title: 'Update Now' }
+      ],
       data: { url: '/' }
     });
   }
@@ -98,7 +101,7 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
-  if (event.notification.tag === 'catersync-update') {
+  if (event.action === 'update' || event.notification.tag === 'catersync-update') {
     self.skipWaiting();
   }
 
