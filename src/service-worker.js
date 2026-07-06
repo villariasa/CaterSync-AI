@@ -1,5 +1,6 @@
 // Service Worker configuration for SvelteKit PWA offline compliance
 const CACHE_NAME = 'catersync-offline-v1';
+const SW_VERSION = '1.2.4';
 
 // Assets will be cached dynamically
 self.addEventListener('install', (event) => {
@@ -126,6 +127,9 @@ self.addEventListener('message', (event) => {
   if (event.data) {
     if (event.data.type === 'SKIP_WAITING' || event.data.action === 'skip_waiting') {
       self.skipWaiting();
+    }
+    if (event.data.type === 'GET_VERSION' && event.source) {
+      event.source.postMessage({ type: 'VERSION_RESPONSE', version: SW_VERSION });
     }
     if (event.data.action === 'schedule_test_notification') {
       const { delay, title, body } = event.data;

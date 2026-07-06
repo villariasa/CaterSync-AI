@@ -7,7 +7,8 @@
     UserPlus, 
     ChevronRight, 
     Volume2,
-    Users
+    Users,
+    Download
   } from '@lucide/svelte';
 
   const appState = getCateringContext();
@@ -313,8 +314,8 @@
 
     </div>
 
-    <!-- Clean Sound Toggle -->
-    <div class="flex justify-center">
+    <!-- Clean Sound Toggle and Install App Button -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
       <button 
         onclick={() => appState.toggleAudio()} 
         class="text-[10px] font-mono text-[#767068] hover:text-[#2A2521] flex items-center gap-1 bg-white/60 hover:bg-white px-2.5 py-1.5 rounded border border-[#767068]/20 transition-all btn-interactive"
@@ -322,6 +323,21 @@
         <Volume2 size={12} class={appState.audioEnabled ? 'text-[#3E6650]' : ''} />
         <span>Sound Effects: {appState.audioEnabled ? 'Active' : 'Muted'}</span>
       </button>
+
+      {#if appState.pwaInstallable}
+        <button 
+          onclick={() => appState.executeAppInstall()} 
+          class="text-[10px] font-mono text-[#F6F2EA] bg-[#3E6650] hover:bg-[#3E6650]/90 flex items-center gap-1 px-2.5 py-1.5 rounded border border-transparent shadow-sm transition-all btn-interactive"
+        >
+          <Download size={12} />
+          <span>Install PWA App</span>
+        </button>
+      {/if}
+    </div>
+
+    <!-- App Version -->
+    <div class="text-center mt-3 text-[10px] font-mono text-[#767068] opacity-75">
+      Catersync PWA Console v{appState.version}
     </div>
 
   </div>

@@ -63,10 +63,25 @@
     if ('serviceWorker' in navigator) {
       autoUpdateEnabled = localStorage.getItem('catersync_auto_update') === 'true';
 
+      // Listen for version info messages from Service Worker
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'VERSION_RESPONSE') {
+          console.log(`Active SW: ${event.data.version}, Client: ${appState.version}`);
+          if (event.data.version === appState.version) {
+            showUpdateModal = false;
+          }
+        }
+      });
+
       navigator.serviceWorker.register('/service-worker.js', { type: 'module' })
         .then((reg) => {
           console.log("Service Worker registered.");
           swRegistration = reg;
+
+          // Query active service worker for version
+          if (reg.active) {
+            reg.active.postMessage({ type: 'GET_VERSION' });
+          }
 
           // Force check for updates to the service worker on reload
           reg.update().catch((err) => console.warn("Failed to check for updates:", err));
