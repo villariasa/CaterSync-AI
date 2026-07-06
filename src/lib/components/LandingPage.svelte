@@ -58,7 +58,7 @@
     };
     appState.registeredPIN = regPIN;
     regMessage = `✅ Profile "${regUsername}" registered successfully. You can now login.`;
-    appState.showToast("👥 User enrolled");
+    appState.showToast("👥 User enrolled", "success", false);
     appState.playStampSound();
     setTimeout(() => {
       activeTab = 'password';
@@ -66,6 +66,7 @@
     }, 1200);
   }
 
+  // Handle password login
   function handlePasswordLogin(e) {
     e.preventDefault();
     appState.playClickSound();
@@ -74,7 +75,7 @@
 
     if (username === user.username && password === user.password) {
       appState.isAuthenticated = true;
-      appState.showToast(`🔒 Welcome, ${username}`);
+      appState.showToast(`🔒 Welcome, ${username}`, "success", false);
       appState.playStampSound();
       goto('/');
     } else {
@@ -92,11 +93,11 @@
         const correctPIN = appState.registeredPIN || '1234';
         if (inputPIN === correctPIN) {
           appState.isAuthenticated = true;
-          appState.showToast("🔓 Quick access PIN granted");
+          appState.showToast("🔓 Quick access PIN granted", "success", false);
           appState.playStampSound();
           goto('/');
         } else {
-          appState.showToast("❌ Incorrect access PIN", "error");
+          appState.showToast("❌ Incorrect access PIN", "error", false);
           appState.playBuzzerSound();
           inputPIN = '';
         }
@@ -104,9 +105,10 @@
     }
   }
 
+  // Biometric validation
   function handleBiometricsSuccess() {
     appState.isAuthenticated = true;
-    appState.showToast("🧬 Biometric validation granted");
+    appState.showToast("🧬 Biometric validation granted", "success", false);
     goto('/');
   }
 

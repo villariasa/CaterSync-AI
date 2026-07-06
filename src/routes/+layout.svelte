@@ -589,7 +589,7 @@
             appState.playClickSound();
             showLogoutModal = false;
             appState.isAuthenticated = false;
-            appState.showToast("🔒 Logged out of console session.");
+            appState.showToast("🔒 Logged out of console session.", "success", false);
           }} 
           class="py-2.5 rounded bg-[#AC3B2A] text-white hover:bg-[#AC3B2A]/90 transition-all font-bold text-center"
         >

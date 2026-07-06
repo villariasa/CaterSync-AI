@@ -19,7 +19,7 @@ export class CateringState {
   activeEventForAnalysis = $state(null);
   anomalyReport = $state(null);
   usingMockData = $state(false);
-  version = '1.3.0';
+  version = '1.3.1';
   isDataLoaded = $state(false);
 
   // Authentication & PWA variables
@@ -105,19 +105,21 @@ export class CateringState {
     }
   }
 
-  showToast(message, type = 'success') {
+  showToast(message, type = 'success', persist = true) {
     const id = Date.now() + Math.random();
     this.toasts = [...this.toasts, { id, message, type }];
 
     // Add to persistent notifications list
-    const newNotif = {
-      id,
-      message,
-      type,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      unread: true
-    };
-    this.notifications = [newNotif, ...this.notifications];
+    if (persist) {
+      const newNotif = {
+        id,
+        message,
+        type,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        unread: true
+      };
+      this.notifications = [newNotif, ...this.notifications];
+    }
 
     setTimeout(() => {
       this.toasts = this.toasts.filter(t => t.id !== id);
