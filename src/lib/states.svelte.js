@@ -15,7 +15,7 @@ export class CateringState {
   activeEventForAnalysis = $state(null);
   anomalyReport = $state(null);
   usingMockData = $state(false);
-  version = '1.2.7';
+  version = '1.2.8';
   isDataLoaded = $state(false);
 
   // Authentication & PWA variables
@@ -29,7 +29,7 @@ export class CateringState {
   set isAuthenticated(value) {
     this._isAuthenticated = value;
     if (typeof window !== 'undefined') {
-      localStorage.setItem('catersync_auth_state', value ? 'true' : 'false');
+      sessionStorage.setItem('catersync_auth_state', value ? 'true' : 'false');
     }
   }
 
@@ -39,7 +39,7 @@ export class CateringState {
   set currentUser(value) {
     this._currentUser = value;
     if (typeof window !== 'undefined') {
-      localStorage.setItem('catersync_current_user', value ? JSON.stringify(value) : '');
+      sessionStorage.setItem('catersync_current_user', value ? JSON.stringify(value) : '');
     }
   }
 
@@ -74,9 +74,9 @@ export class CateringState {
 
   constructor(data) {
     if (typeof window !== 'undefined') {
-      this._isAuthenticated = localStorage.getItem('catersync_auth_state') === 'true';
+      this._isAuthenticated = sessionStorage.getItem('catersync_auth_state') === 'true';
       this._registeredPIN = localStorage.getItem('catersync_registered_pin') || '1234';
-      const storedUser = localStorage.getItem('catersync_current_user');
+      const storedUser = sessionStorage.getItem('catersync_current_user');
       if (storedUser) {
         try {
           this._currentUser = JSON.parse(storedUser);
