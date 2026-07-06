@@ -4,7 +4,7 @@
   // Data passed from server load function
   let { data } = $props();
 
-  // Active navigation zone / view
+  // Active navigation zone
   let activeTab = $state('overview'); // overview, planner, customers, inventory, scheduling, audits
 
   // Database status indicator
@@ -45,6 +45,138 @@
   let aiSchedulingKitchen = $state(false);
   let aiAssigningStaff = $state(false);
 
+  // Solved flash indicators for row highlights
+  let scheduleSolved = $state(false);
+  let staffSolved = $state(false);
+
+  // Form validation shake states
+  let shakeBudget = $state(false);
+  let shakeGuests = $state(false);
+
+  // Audio system settings
+  let audioEnabled = $state(false);
+  let audioCtx = null;
+
+  // Toast System
+  let toasts = $state([]); // array of { id, message, type }
+
+  function showToast(message, type = 'success') {
+    const id = Date.now() + Math.random();
+    toasts = [...toasts, { id, message, type }];
+    setTimeout(() => {
+      toasts = toasts.filter(t => t.id !== id);
+    }, 3500);
+  }
+
+  // Web Audio API Sound Synthesizer (Zero-dependency offline audio cues)
+  function initAudio() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  function toggleAudio() {
+    if (!audioEnabled) {
+      initAudio();
+      audioEnabled = true;
+      showToast("🔈 Sound effects enabled", "info");
+      playClickSound();
+    } else {
+      audioEnabled = false;
+      showToast("🔇 Sound effects muted", "info");
+    }
+  }
+
+  function playClickSound() {
+    if (!audioEnabled || !audioCtx) return;
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      
+      osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.08);
+      
+      gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+      
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.08);
+    } catch (e) {
+      console.warn("Audio click failed", e);
+    }
+  }
+
+  function playStampSound() {
+    if (!audioEnabled || !audioCtx) return;
+    try {
+      // Create a stamp "chunk" sound using filtered white noise and a low sine wave
+      const bufferSize = audioCtx.sampleRate * 0.12; // 120ms
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(250, audioCtx.currentTime);
+      filter.Q.setValueAtTime(5, audioCtx.currentTime);
+      
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+      
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+      
+      noise.start();
+      
+      // Add a sub-frequency sine boom for thump feel
+      const osc = audioCtx.createOscillator();
+      const oscGain = audioCtx.createGain();
+      osc.connect(oscGain);
+      oscGain.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(75, audioCtx.currentTime);
+      osc.frequency.linearRampToValueAtTime(40, audioCtx.currentTime + 0.10);
+      oscGain.gain.setValueAtTime(0.20, audioCtx.currentTime);
+      oscGain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.12);
+    } catch (e) {
+      console.warn("Audio stamp failed", e);
+    }
+  }
+
+  function playBuzzerSound() {
+    if (!audioEnabled || !audioCtx) return;
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+      
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+      
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.25);
+    } catch (e) {
+      console.warn("Audio buzzer failed", e);
+    }
+  }
+
   // AI model outputs
   let generatedMenuResult = $state(null);
   let predictedQuantities = $state([]);
@@ -81,9 +213,33 @@
   );
 
   // ---------------------------------------------------------------------------
+  // LIVE PREVIEW BINDINGS (Reactivity calculations for Event Planner preview)
+  // ---------------------------------------------------------------------------
+  let liveBudgetPerGuest = $derived(guestCount > 0 ? (budget / guestCount) : 0);
+  let liveDraftMenu = $derived.by(() => {
+    if (liveBudgetPerGuest <= 0) return null;
+    let closestMenu = null;
+    let closestDiff = Infinity;
+    menus.forEach(menu => {
+      if (menu.cost_per_serving <= liveBudgetPerGuest) {
+        const diff = liveBudgetPerGuest - menu.cost_per_serving;
+        if (diff < closestDiff) {
+          closestDiff = diff;
+          closestMenu = menu;
+        }
+      }
+    });
+    if (!closestMenu && menus.length > 0) {
+      closestMenu = menus.reduce((prev, curr) => prev.cost_per_serving < curr.cost_per_serving ? prev : curr);
+    }
+    return closestMenu;
+  });
+
+  // ---------------------------------------------------------------------------
   // MODULE 7: Customer Preference Cosine Similarity
   // ---------------------------------------------------------------------------
   function loadCustomerPreferences(customerId) {
+    playClickSound();
     if (!customerId) {
       selectedReturningCustomerRecs = [];
       return;
@@ -91,11 +247,9 @@
     const customer = customers.find(c => c.id === parseInt(customerId));
     if (!customer) return;
 
-    // Simulate Cosine Similarity Recommendation Score
     selectedReturningCustomerRecs = menus.map(menu => {
-      let score = 0.25; // Base similarity score
+      let score = 0.25;
 
-      // Match customer preference tags to menu tags
       if (customer.preferred_theme && menu.name.toLowerCase().includes(customer.preferred_theme.split(' ')[0].toLowerCase())) {
         score += 0.40;
       }
@@ -105,7 +259,7 @@
       }
 
       if (customer.allergies.includes('Shellfish') && menu.category === 'Seafood') {
-        score -= 0.85; // Heavy allergen penalty
+        score -= 0.85;
       }
 
       return { ...menu, matchScore: Math.max(0, Math.min(1, score)) };
@@ -115,30 +269,35 @@
   }
 
   // ---------------------------------------------------------------------------
-  // MODULE 2: Menu Generator Optimizer (Local LP Knapsack fallback)
+  // MODULE 2: AI Menu Generator Optimizer (Local LP Knapsack fallback)
   // ---------------------------------------------------------------------------
   function handleGenerateMenu() {
-    if (!budget || !guestCount) return;
+    playClickSound();
+    
+    // INPUT VALIDATION SHAKE
+    let hasError = false;
+    if (guestCount < 10) {
+      shakeGuests = true;
+      hasError = true;
+      setTimeout(() => shakeGuests = false, 300);
+    }
+    if (budget < guestCount * 150) {
+      shakeBudget = true;
+      hasError = true;
+      setTimeout(() => shakeBudget = false, 300);
+    }
+
+    if (hasError) {
+      playBuzzerSound();
+      showToast("⚠️ Cost constraint violation. Adjust budget or guest count.", "error");
+      return;
+    }
+
     aiGeneratingMenu = true;
     
     setTimeout(() => {
       const budgetPerGuest = budget / guestCount;
-      let selectedMenu = null;
-      let closestBudgetDiff = Infinity;
-
-      menus.forEach(menu => {
-        if (menu.cost_per_serving <= budgetPerGuest) {
-          const diff = budgetPerGuest - menu.cost_per_serving;
-          if (diff < closestBudgetDiff) {
-            closestBudgetDiff = diff;
-            selectedMenu = menu;
-          }
-        }
-      });
-
-      if (!selectedMenu) {
-        selectedMenu = menus.reduce((prev, curr) => prev.cost_per_serving < curr.cost_per_serving ? prev : curr);
-      }
+      let selectedMenu = liveDraftMenu;
 
       const profitMarginPct = (((selectedMenu.price_per_serving - selectedMenu.cost_per_serving) / selectedMenu.price_per_serving) * 100).toFixed(0);
       const estTotalCost = (selectedMenu.cost_per_serving * guestCount);
@@ -153,6 +312,8 @@
       };
 
       aiGeneratingMenu = false;
+      playStampSound();
+      showToast("🍽️ AI Menu optimized successfully");
       
       // Auto chain dependencies
       handlePredictQuantities(selectedMenu.id);
@@ -177,6 +338,7 @@
         { dish: 'Prepared Sauces / Soup', predicted: (guestCount * 0.32 * multiplier).toFixed(1), unit: 'liters', confidence: '89%' }
       ];
       aiCalculatingQuantities = false;
+      showToast("⚖️ Portion quantity predicted");
     }, 700);
   }
 
@@ -191,11 +353,11 @@
 
       if (isOutdoor) {
         riskScore += 0.48;
-        reasons.push("Outdoor setup selected. Rainfall indices suggest a 55% precipitation probability for this cycle.");
+        reasons.push("Outdoor setup requested: rainfall probability indicator is at 55% for this seasonal window.");
       }
       if (guestCount > 200) {
         riskScore += 0.25;
-        reasons.push("Guest count exceeds 200. Plating workflow speed constraints flagged.");
+        reasons.push("Guest count exceeds 200: kitchen logistics bottleneck risk is flagged.");
       }
       if (budget / guestCount < 350) {
         riskScore += 0.15;
@@ -205,9 +367,13 @@
       riskAssessment = {
         score: riskScore.toFixed(2),
         level: riskScore > 0.6 ? 'High' : (riskScore > 0.35 ? 'Medium' : 'Low'),
-        reasons: reasons.length > 0 ? reasons : ["No operational anomalies flagged. Metrics within baseline tolerances."]
+        reasons: reasons.length > 0 ? reasons : ["No operational anomalies flagged. Event within safe tolerances."]
       };
       aiCheckingRisks = false;
+      if (riskScore > 0.35) {
+        playBuzzerSound();
+      }
+      showToast("⚠️ Event risk analysis complete");
     }, 850);
   }
 
@@ -215,7 +381,10 @@
   // MODULE 4: Kitchen Scheduler Solver (Local CP-SAT scheduling fallback)
   // ---------------------------------------------------------------------------
   function runKitchenScheduler() {
+    playClickSound();
     aiSchedulingKitchen = true;
+    scheduleSolved = false;
+
     setTimeout(() => {
       kitchenTimeline = [
         { time: '08:00 AM', task: 'Ingredient Sourcing & Inspection', staff: 'Sarah Lim (Coordinator)', duration: '60 mins' },
@@ -226,6 +395,12 @@
         { time: '04:30 PM', task: 'Station Setup & Warmers Assembly', staff: 'James Lao & Clara Diaz', duration: '90 mins' }
       ];
       aiSchedulingKitchen = false;
+      scheduleSolved = true;
+      playStampSound();
+      showToast("⏱️ Prep schedule compiled successfully");
+      
+      // Auto fade highlight flash off after 1 second
+      setTimeout(() => scheduleSolved = false, 1200);
     }, 950);
   }
 
@@ -233,7 +408,10 @@
   // MODULE 5: Staff Assignment Solver (Hungarian bipartite matching fallback)
   // ---------------------------------------------------------------------------
   function runStaffAssignment() {
+    playClickSound();
     aiAssigningStaff = true;
+    staffSolved = false;
+
     setTimeout(() => {
       let serverCount = Math.max(1, Math.ceil(guestCount / 35));
       
@@ -252,6 +430,11 @@
         });
       }
       aiAssigningStaff = false;
+      staffSolved = true;
+      playStampSound();
+      showToast("🧑‍🤝‍🧑 Staff matching completed");
+
+      setTimeout(() => staffSolved = false, 1200);
     }, 900);
   }
 
@@ -259,6 +442,7 @@
   // MODULE 6: Post-Event Anomaly Profit Analyzer
   // ---------------------------------------------------------------------------
   function runProfitAnalysis(eventObj) {
+    playClickSound();
     if (!eventObj) return;
 
     const rev = eventObj.budget;
@@ -289,6 +473,7 @@
       isCostAnomaly,
       reason
     };
+    showToast("💰 Profit metrics audited");
   }
 
   // CRUD Submissions
@@ -317,11 +502,15 @@
         newCustContact = '';
         newCustAllergies = '';
         newCustDiet = '';
+        showToast("👥 New customer profile created");
+        playStampSound();
       } else {
         customerMessage = `❌ Registration failed: ${res.error}`;
+        playBuzzerSound();
       }
     } catch (err) {
       customerMessage = `❌ Error: ${err.message}`;
+      playBuzzerSound();
     }
   }
 
@@ -349,14 +538,28 @@
       if (res.success) {
         events = [res.event, ...events];
         eventMessage = `✅ Event ticket created for ${eventDate}.`;
+        showToast("📅 Catering ticket booked");
+        playStampSound();
       } else {
         eventMessage = `❌ Failed to save: ${res.error}`;
+        playBuzzerSound();
       }
     } catch (err) {
       eventMessage = `❌ Error: ${err.message}`;
+      playBuzzerSound();
     }
   }
 </script>
+
+<!-- TOAST CONTAINER -->
+<div class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm pointer-events-none">
+  {#each toasts as t (t.id)}
+    <div class="p-3.5 bg-[#2A2521] text-[#F6F2EA] text-xs font-mono rounded shadow-lg border-l-4 pointer-events-auto transition-all duration-300 flex items-center justify-between gap-3 animate-slide-up {t.type === 'error' ? 'border-[#AC3B2A]' : (t.type === 'info' ? 'border-[#D9A441]' : 'border-[#3E6650]')}">
+      <span>{t.message}</span>
+      <button class="text-slate-500 hover:text-white font-bold" onclick={() => toasts = toasts.filter(toast => toast.id !== t.id)}>×</button>
+    </div>
+  {/each}
+</div>
 
 <!-- Outer Market Ledger container -->
 <div class="min-h-screen bg-[#F6F2EA] text-[#2A2521] flex flex-col antialiased">
@@ -376,9 +579,18 @@
 
     <!-- Right Controls and Network status -->
     <div class="flex items-center gap-4">
+      <!-- Sound toggle -->
+      <button onclick={toggleAudio} class="btn-interactive p-2 rounded hover:bg-white/50 border border-transparent hover:border-[#767068]/20 flex items-center gap-1.5 text-xs font-mono text-[#767068]">
+        {#if audioEnabled}
+          <span>🔈</span> <span class="hidden sm:inline">Sound: ON</span>
+        {:else}
+          <span>🔇</span> <span class="hidden sm:inline">Sound: MUTED</span>
+        {/if}
+      </button>
+
       <div class="hidden md:flex items-center gap-2 text-xs font-mono text-[#767068]">
         <span>LEDGER CLOCK:</span>
-        <span class="text-[#2A2521] font-bold">2026-07-06 11:09</span>
+        <span class="text-[#2A2521] font-bold">2026-07-06 13:07</span>
       </div>
       {#if dbStatus === 'connected'}
         <span class="px-3 py-1 text-[10px] font-mono font-bold bg-[#3E6650]/15 text-[#3E6650] border border-[#3E6650]/30 rounded">● POSTGRES ACTIVE</span>
@@ -391,22 +603,22 @@
   <!-- NAVIGATION TABS ROW -->
   <div class="border-b border-[#767068]/20 bg-white/20 px-6 py-2">
     <nav class="flex flex-wrap gap-1">
-      <button onclick={() => activeTab = 'overview'} class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all {activeTab === 'overview' ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
+      <button onclick={() => { playClickSound(); activeTab = 'overview'; }} class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all {activeTab === 'overview' ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
         📋 Overview
       </button>
-      <button onclick={() => activeTab = 'planner'} class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all {activeTab === 'planner' ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
+      <button onclick={() => { playClickSound(); activeTab = 'planner'; }} class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all {activeTab === 'planner' ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
         🍽️ Event Planner
       </button>
-      <button onclick={() => activeTab = 'customers'} class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all {activeTab === 'customers' ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
+      <button onclick={() => { playClickSound(); activeTab = 'customers'; }} class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all {activeTab === 'customers' ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
         👥 Customers
       </button>
-      <button onclick={() => activeTab = 'inventory'} class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all {activeTab === 'inventory' ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
+      <button onclick={() => { playClickSound(); activeTab = 'inventory'; }} class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all {activeTab === 'inventory' ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
         📦 Inventory
       </button>
-      <button onclick={() => activeTab = 'scheduling'} class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all {activeTab === 'scheduling' ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
+      <button onclick={() => { playClickSound(); activeTab = 'scheduling'; }} class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all {activeTab === 'scheduling' ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
         🍳 Kitchen & Roster
       </button>
-      <button onclick={() => activeTab = 'audits'} class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all {activeTab === 'audits' ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
+      <button onclick={() => { playClickSound(); activeTab = 'audits'; }} class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all {activeTab === 'audits' ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
         💰 Anomaly Audits
       </button>
     </nav>
@@ -488,7 +700,7 @@
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             
             <!-- Menu Station -->
-            <button onclick={() => activeTab = 'planner'} class="ticket-card station-card p-4 text-left">
+            <button onclick={() => { playClickSound(); activeTab = 'planner'; }} class="ticket-card station-card p-4 text-left">
               <div class="text-xs font-mono text-[#767068]">STATION 01</div>
               <h3 class="text-lg font-bold text-[#2A2521] mt-1 mb-2">Menu Planner</h3>
               <p class="text-[11px] text-[#767068] leading-snug">Generate margins and dish serving guides.</p>
@@ -496,7 +708,7 @@
             </button>
 
             <!-- Customers Station -->
-            <button onclick={() => activeTab = 'customers'} class="ticket-card station-card p-4 text-left">
+            <button onclick={() => { playClickSound(); activeTab = 'customers'; }} class="ticket-card station-card p-4 text-left">
               <div class="text-xs font-mono text-[#767068]">STATION 02</div>
               <h3 class="text-lg font-bold text-[#2A2521] mt-1 mb-2">Client Registry</h3>
               <p class="text-[11px] text-[#767068] leading-snug">Manage allergies and preference learning.</p>
@@ -504,7 +716,7 @@
             </button>
 
             <!-- Inventory Station -->
-            <button onclick={() => activeTab = 'inventory'} class="ticket-card station-card p-4 text-left">
+            <button onclick={() => { playClickSound(); activeTab = 'inventory'; }} class="ticket-card station-card p-4 text-left">
               <div class="text-xs font-mono text-[#767068]">STATION 03</div>
               <h3 class="text-lg font-bold text-[#2A2521] mt-1 mb-2">Purchasing</h3>
               <p class="text-[11px] text-[#767068] leading-snug">Economic order calculations & suppliers.</p>
@@ -512,7 +724,7 @@
             </button>
 
             <!-- Scheduling Station -->
-            <button onclick={() => activeTab = 'scheduling'} class="ticket-card station-card p-4 text-left">
+            <button onclick={() => { playClickSound(); activeTab = 'scheduling'; }} class="ticket-card station-card p-4 text-left">
               <div class="text-xs font-mono text-[#767068]">STATION 04</div>
               <h3 class="text-lg font-bold text-[#2A2521] mt-1 mb-2">Job Scheduler</h3>
               <p class="text-[11px] text-[#767068] leading-snug">Kitchen task timelines & staff assignments.</p>
@@ -520,7 +732,7 @@
             </button>
 
             <!-- Audits Station -->
-            <button onclick={() => activeTab = 'audits'} class="ticket-card station-card p-4 text-left">
+            <button onclick={() => { playClickSound(); activeTab = 'audits'; }} class="ticket-card station-card p-4 text-left">
               <div class="text-xs font-mono text-[#767068]">STATION 05</div>
               <h3 class="text-lg font-bold text-[#2A2521] mt-1 mb-2">Anomaly Audit</h3>
               <p class="text-[11px] text-[#767068] leading-snug">Post-event isolation forest reviews.</p>
@@ -530,7 +742,7 @@
           </div>
         </div>
 
-        <!-- SECTION 3: SALES FORECASTING (Anchors bottom) -->
+        <!-- SECTION 3: SALES FORECASTING -->
         <div class="ticket-card p-6">
           <div class="flex justify-between items-center mb-6">
             <div>
@@ -540,7 +752,7 @@
             <span class="px-2 py-0.5 text-[10px] font-mono bg-[#3E6650]/15 text-[#3E6650] font-bold rounded">OFFLINE ENGINE ACTIVE</span>
           </div>
 
-          <!-- SVG Forecasting Chart -->
+          <!-- SVG Forecasting Chart with draw-in animation path clipping -->
           <div class="h-56 w-full relative flex items-end justify-between border-b border-l border-[#767068]/30 pb-2 pl-2">
             <svg class="absolute inset-0 h-full w-full" preserveAspectRatio="none">
               <!-- Grid lines -->
@@ -548,11 +760,22 @@
               <line x1="0" y1="50%" x2="100%" y2="50%" stroke="#767068" stroke-opacity="0.15" stroke-dasharray="3" />
               <line x1="0" y1="75%" x2="100%" y2="75%" stroke="#767068" stroke-opacity="0.15" stroke-dasharray="3" />
 
-              <!-- Confidence limit paths -->
-              <path d="M 10 160 Q 90 120, 180 100 T 360 80 T 540 130 T 720 50 L 720 30 T 540 100 T 360 50 T 180 70 T 10 140 Z" fill="rgba(217, 164, 65, 0.08)" />
-              
-              <!-- Forecast Line -->
-              <path d="M 10 150 Q 90 110, 180 85 T 360 65 T 540 115 T 720 40" fill="none" stroke="var(--color-basil)" stroke-width="2.5" />
+              <!-- Define clip path for left-to-right draw-in animation -->
+              <defs>
+                <clipPath id="chart-draw-clip">
+                  <rect x="0" y="0" width="100%" height="100%">
+                    <animate attributeName="width" from="0%" to="100%" dur="1.2s" cubic-bezier="0.16, 1, 0.3, 1" fill="freeze" />
+                  </rect>
+                </clipPath>
+              </defs>
+
+              <g clip-path="url(#chart-draw-clip)">
+                <!-- Confidence limit paths -->
+                <path d="M 10 160 Q 90 120, 180 100 T 360 80 T 540 130 T 720 50 L 720 30 T 540 100 T 360 50 T 180 70 T 10 140 Z" fill="rgba(217, 164, 65, 0.08)" />
+                
+                <!-- Forecast Line -->
+                <path d="M 10 150 Q 90 110, 180 85 T 360 65 T 540 115 T 720 40" fill="none" stroke="var(--color-basil)" stroke-width="2.5" />
+              </g>
             </svg>
 
             <!-- Labels -->
@@ -577,10 +800,10 @@
     {#if activeTab === 'planner'}
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-in">
         
-        <!-- Booking details form (Left 5-cols) -->
+        <!-- Booking details form -->
         <div class="ticket-card p-6 lg:col-span-5 bg-white">
           <div class="mb-4">
-            <span class="ticket-stamp">FORMULATE</span>
+            <span class="ticket-stamp font-mono">FORMULATE</span>
             <h2 class="text-xl font-bold text-[#2A2521] mt-2">Plan New Booking</h2>
           </div>
 
@@ -601,7 +824,7 @@
                 <span class="text-[#3E6650] font-mono font-bold block mb-1">🎯 Cosine Preference Recommendations:</span>
                 <div class="grid grid-cols-3 gap-2 mt-1">
                   {#each selectedReturningCustomerRecs as r}
-                    <button type="button" onclick={() => { eventTheme = r.name; handleGenerateMenu(); }} class="p-2 bg-white rounded border border-[#767068]/20 text-[9px] text-left hover:border-[#3E6650] transition-all">
+                    <button type="button" onclick={() => { eventTheme = r.name; handleGenerateMenu(); }} class="p-2 bg-white rounded border border-[#767068]/20 text-[9px] text-left hover:border-[#3E6650] transition-all btn-interactive">
                       <span class="font-bold text-[#2A2521] block leading-tight">{r.name}</span>
                       <span class="font-mono text-[#D9A441] block mt-0.5">Match: {(r.matchScore*100).toFixed(0)}%</span>
                     </button>
@@ -632,19 +855,30 @@
             </div>
 
             <div class="grid grid-cols-3 gap-4">
-              <div>
+              <div class={shakeGuests ? 'validation-shake' : ''}>
                 <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="plan-guests">Guests</label>
-                <input id="plan-guests" type="number" bind:value={guestCount} class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-[#2A2521] text-xs focus:outline-none" min="10" />
+                <input id="plan-guests" type="number" bind:value={guestCount} class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-[#2A2521] text-xs focus:outline-none" min="1" />
               </div>
-              <div>
+              <div class={shakeBudget ? 'validation-shake' : ''}>
                 <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="plan-budget">Budget (₱)</label>
-                <input id="plan-budget" type="number" bind:value={budget} class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-[#2A2521] text-xs focus:outline-none" min="1000" />
+                <input id="plan-budget" type="number" bind:value={budget} class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-[#2A2521] text-xs focus:outline-none" min="1" />
               </div>
               <div>
                 <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="plan-date">Target Date</label>
                 <input id="plan-date" type="date" bind:value={eventDate} class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-[#2A2521] text-xs focus:outline-none" />
               </div>
             </div>
+
+            <!-- LIVE DRAFT PREVIEW STATE (calculated reactively as user changes input values) -->
+            {#if liveDraftMenu && !generatedMenuResult && !aiGeneratingMenu}
+              <div class="p-3 bg-[#D9A441]/5 border border-[#D9A441]/20 rounded text-[10px] font-mono transition-opacity duration-300">
+                <span class="text-[#D9A441] font-bold block mb-1">📝 LIVE DRAFT PREVIEW (Unoptimized)</span>
+                <div class="flex justify-between">
+                  <span>Selected Draft: <strong>{liveDraftMenu.name}</strong></span>
+                  <span>Est Cost / Guest: ₱{liveDraftMenu.cost_per_serving}</span>
+                </div>
+              </div>
+            {/if}
 
             <div class="grid grid-cols-2 gap-4">
               <div>
@@ -660,10 +894,15 @@
             </div>
 
             <div class="pt-4 flex gap-2">
-              <button type="button" onclick={handleGenerateMenu} class="flex-1 bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-bold text-xs py-3 rounded uppercase tracking-wider transition-all">
-                Optimize Menu
+              <button type="button" onclick={handleGenerateMenu} class="flex-1 bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-bold text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-2">
+                {#if aiGeneratingMenu}
+                  <div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Generating...
+                {:else}
+                  Optimize Menu
+                {/if}
               </button>
-              <button type="submit" class="bg-white border border-[#767068]/30 text-[#2A2521] hover:bg-slate-100 font-bold text-xs py-3 px-4 rounded uppercase tracking-wider transition-all">
+              <button type="submit" class="bg-white border border-[#767068]/30 text-[#2A2521] hover:bg-slate-100 font-bold text-xs py-3 px-4 rounded uppercase tracking-wider transition-all btn-interactive">
                 Approve booking
               </button>
             </div>
@@ -674,22 +913,28 @@
           </form>
         </div>
 
-        <!-- AI Output details (Right 7-cols) -->
+        <!-- AI Output details -->
         <div class="lg:col-span-7 space-y-6">
           
           <!-- Optimized Menu Output (Module 2) -->
-          <div class="ticket-card p-6 {generatedMenuResult ? 'ticket-card-success' : ''}">
-            <div class="flex justify-between items-start mb-4">
-              <span class="ticket-stamp">MODULE 2 MENU SOLVER</span>
-              <span class="mono-data text-xs font-bold text-[#3E6650]">OPTIMIZATION RUN</span>
-            </div>
-
-            {#if aiGeneratingMenu}
-              <div class="py-8 text-center text-xs font-mono text-[#767068] flex items-center justify-center gap-2">
-                <div class="w-4 h-4 border-2 border-[#3E6650] border-t-transparent rounded-full animate-spin"></div>
-                Solving Knapsack Integer Optimization Matrix...
+          {#if aiGeneratingMenu}
+            <!-- Skeleton loader instead of blank spaces -->
+            <div class="skeleton-ticket p-6 skeleton-shimmer space-y-4">
+              <div class="h-4 bg-[#767068]/20 rounded w-1/4"></div>
+              <div class="h-6 bg-[#767068]/20 rounded w-3/4"></div>
+              <div class="ticket-divider"></div>
+              <div class="h-12 bg-[#767068]/20 rounded w-full"></div>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="h-10 bg-[#767068]/20 rounded"></div>
+                <div class="h-10 bg-[#767068]/20 rounded"></div>
               </div>
-            {:else if generatedMenuResult}
+            </div>
+          {:else if generatedMenuResult}
+            <div class="ticket-card p-6 ticket-card-success ticket-print-in">
+              <div class="flex justify-between items-start mb-4">
+                <span class="ticket-stamp">MODULE 2 MENU SOLVER</span>
+                <span class="mono-data text-xs font-bold text-[#3E6650]">OPTIMIZATION RUN</span>
+              </div>
               <div class="space-y-4">
                 <div class="flex justify-between items-end border-b border-[#767068]/20 pb-3">
                   <div>
@@ -716,10 +961,12 @@
                   </div>
                 </div>
               </div>
-            {:else}
+            </div>
+          {:else}
+            <div class="ticket-card p-6">
               <p class="text-xs text-[#767068] py-8 text-center font-mono">Fill booking specs and click "Optimize Menu" to construct knapsack models.</p>
-            {/if}
-          </div>
+            </div>
+          {/if}
 
           <!-- Quantity Predictor (Module 1) -->
           <div class="ticket-card p-6">
@@ -729,9 +976,10 @@
             </div>
 
             {#if aiCalculatingQuantities}
-              <div class="py-6 text-center text-xs font-mono text-[#767068] flex items-center justify-center gap-2">
-                <div class="w-4 h-4 border-2 border-[#D9A441] border-t-transparent rounded-full animate-spin"></div>
-                Evaluating historical portions per customer...
+              <div class="space-y-2">
+                <div class="h-8 bg-[#767068]/15 rounded skeleton-shimmer"></div>
+                <div class="h-8 bg-[#767068]/15 rounded skeleton-shimmer"></div>
+                <div class="h-8 bg-[#767068]/15 rounded skeleton-shimmer"></div>
               </div>
             {:else if predictedQuantities.length > 0}
               <div class="space-y-2.5">
@@ -751,7 +999,13 @@
           </div>
 
           <!-- Risk flags (Module 8) -->
-          {#if riskAssessment}
+          {#if aiCheckingRisks}
+            <div class="skeleton-ticket p-6 skeleton-shimmer">
+              <div class="h-5 bg-[#767068]/20 rounded w-1/3 mb-4"></div>
+              <div class="h-4 bg-[#767068]/20 rounded w-full mb-2"></div>
+              <div class="h-4 bg-[#767068]/20 rounded w-5/6"></div>
+            </div>
+          {:else if riskAssessment}
             <div class="ticket-card ticket-card-risk p-5 ticket-print-in">
               <div class="flex justify-between items-start mb-3">
                 <span class="ticket-stamp" style="color: var(--color-paprika); border-color: var(--color-paprika)">RISK MITIGATION REPORT</span>
@@ -777,7 +1031,7 @@
     {#if activeTab === 'customers'}
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-in">
         
-        <!-- Add Client (Left 4-cols) -->
+        <!-- Add Client -->
         <div class="ticket-card p-6 lg:col-span-4 bg-white">
           <div class="mb-4">
             <span class="ticket-stamp">PROFILING</span>
@@ -811,7 +1065,7 @@
               </select>
             </div>
 
-            <button type="submit" class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-bold text-xs py-3 rounded uppercase tracking-wider transition-all">
+            <button type="submit" class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-bold text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive">
               Register Profile
             </button>
             
@@ -821,7 +1075,7 @@
           </form>
         </div>
 
-        <!-- Client registry table (Right 8-cols) -->
+        <!-- Client registry table -->
         <div class="ticket-card p-6 lg:col-span-8 bg-white">
           <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
             <div>
@@ -882,7 +1136,7 @@
     {#if activeTab === 'inventory'}
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-in">
         
-        <!-- Inventory List (Left 8-cols) -->
+        <!-- Inventory List -->
         <div class="ticket-card p-6 lg:col-span-8 bg-white">
           <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
             <div>
@@ -924,7 +1178,7 @@
           </div>
         </div>
 
-        <!-- EOQ Purchase recommendations (Right 4-cols) -->
+        <!-- EOQ Purchase recommendations -->
         <div class="ticket-card p-6 lg:col-span-4 border-l-4 border-[#D9A441] bg-white">
           <div class="mb-4">
             <span class="ticket-stamp" style="color: var(--color-saffron); border-color: var(--color-saffron)">MODULE 3 PURCHASING</span>
@@ -961,7 +1215,7 @@
 
           </div>
 
-          <button class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-bold text-xs py-3 rounded uppercase tracking-wider transition-all mt-6">
+          <button class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-bold text-xs py-3 rounded uppercase tracking-wider transition-all mt-6 btn-interactive">
             Approve restock tickets
           </button>
         </div>
@@ -981,24 +1235,31 @@
               <h2 class="text-xl font-bold text-[#2A2521] mt-2">Kitchen Prep Gantt Timeline</h2>
               <p class="text-xs text-[#767068]">Minimized makespan search (OR-Tools CP-SAT)</p>
             </div>
-            <button onclick={runKitchenScheduler} class="bg-[#2A2521] hover:bg-slate-800 text-[#F6F2EA] font-bold text-xs px-3.5 py-2 rounded uppercase transition-all">
-              Solve Schedule
+            <button onclick={runKitchenScheduler} class="bg-[#2A2521] hover:bg-slate-800 text-[#F6F2EA] font-bold text-xs px-3.5 py-2 rounded uppercase transition-all btn-interactive flex items-center gap-1.5">
+              {#if aiSchedulingKitchen}
+                <div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Solving...
+              {:else}
+                Solve Schedule
+              {/if}
             </button>
           </div>
 
           {#if aiSchedulingKitchen}
-            <div class="py-12 text-center text-xs font-mono text-[#767068] flex items-center justify-center gap-2">
-              <div class="w-4 h-4 border-2 border-[#3E6650] border-t-transparent rounded-full animate-spin"></div>
-              Solving constraint intervals & equipment capacities...
+            <!-- Skeleton list loader -->
+            <div class="space-y-4">
+              <div class="h-14 bg-[#767068]/15 rounded skeleton-shimmer"></div>
+              <div class="h-14 bg-[#767068]/15 rounded skeleton-shimmer"></div>
+              <div class="h-14 bg-[#767068]/15 rounded skeleton-shimmer"></div>
             </div>
           {:else if kitchenTimeline.length > 0}
             <div class="space-y-4">
               {#each kitchenTimeline as task}
+                <!-- Highlight updated row cells on success matching -->
                 <div class="relative pl-6 border-l border-[#767068]/30">
-                  <!-- Bullet node -->
                   <div class="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-[#3E6650]"></div>
                   
-                  <div class="p-3 bg-[#F6F2EA]/20 border border-[#767068]/20 rounded text-xs font-mono">
+                  <div class="p-3 border border-[#767068]/20 rounded text-xs font-mono {scheduleSolved ? 'cell-updated-flash' : 'bg-[#F6F2EA]/20'}">
                     <div class="flex justify-between items-start font-bold">
                       <span class="text-[#2A2521] font-sans font-bold">{task.task}</span>
                       <span class="text-[10px] text-[#3E6650]">{task.time}</span>
@@ -1024,20 +1285,26 @@
               <h2 class="text-xl font-bold text-[#2A2521] mt-2">Staff Roster Hungarian Allocation</h2>
               <p class="text-xs text-[#767068]">Linear cost-minimizing matching model</p>
             </div>
-            <button onclick={runStaffAssignment} class="bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-bold text-xs px-3.5 py-2 rounded uppercase transition-all">
-              Solve Matches
+            <button onclick={runStaffAssignment} class="bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-bold text-xs px-3.5 py-2 rounded uppercase transition-all btn-interactive flex items-center gap-1.5">
+              {#if aiAssigningStaff}
+                <div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Matching...
+              {:else}
+                Solve Matches
+              {/if}
             </button>
           </div>
 
           {#if aiAssigningStaff}
-            <div class="py-12 text-center text-xs font-mono text-[#767068] flex items-center justify-center gap-2">
-              <div class="w-4 h-4 border-2 border-[#D9A441] border-t-transparent rounded-full animate-spin"></div>
-              Evaluating labor cost bipartite matrices...
+            <div class="space-y-2">
+              <div class="h-10 bg-[#767068]/15 rounded skeleton-shimmer"></div>
+              <div class="h-10 bg-[#767068]/15 rounded skeleton-shimmer"></div>
+              <div class="h-10 bg-[#767068]/15 rounded skeleton-shimmer"></div>
             </div>
           {:else if staffAssignmentsList.length > 0}
             <div class="space-y-2.5">
               {#each staffAssignmentsList as assign}
-                <div class="flex justify-between items-center p-3 bg-[#F6F2EA]/20 border border-[#767068]/20 rounded text-xs font-mono">
+                <div class="flex justify-between items-center p-3 border border-[#767068]/20 rounded text-xs font-mono {staffSolved ? 'cell-updated-flash' : 'bg-[#F6F2EA]/20'}">
                   <div>
                     <h4 class="font-bold text-[#2A2521] font-sans">{assign.role}</h4>
                     <span class="text-[10px] text-[#767068]">{assign.staff} ({assign.rate})</span>
@@ -1060,13 +1327,13 @@
     {#if activeTab === 'audits'}
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-in">
         
-        <!-- Finished events ledger (Left 4-cols) -->
+        <!-- Finished events ledger -->
         <div class="ticket-card p-6 lg:col-span-4 bg-white">
           <span class="ticket-stamp">AUDIT LOGS</span>
           <h2 class="text-lg font-bold text-[#2A2521] mt-2 mb-4">Completed Ledger</h2>
           <div class="space-y-2 max-h-96 overflow-y-auto pr-1 no-scrollbar">
             {#each events.filter(e => e.status === 'Completed') as event}
-              <button onclick={() => runProfitAnalysis(event)} class="w-full p-3 rounded border text-left text-xs transition-all {activeEventForAnalysis?.id === event.id ? 'bg-[#2A2521] border-[#2A2521] text-[#F6F2EA]' : 'bg-white border-[#767068]/30 text-[#2A2521] hover:bg-[#F6F2EA]/50'}">
+              <button onclick={() => runProfitAnalysis(event)} class="w-full p-3 rounded border text-left text-xs transition-all btn-interactive {activeEventForAnalysis?.id === event.id ? 'bg-[#2A2521] border-[#2A2521] text-[#F6F2EA] font-bold' : 'bg-white border-[#767068]/30 text-[#2A2521] hover:bg-[#F6F2EA]/50'}">
                 <div class="flex justify-between font-bold">
                   <span>{event.event_type}</span>
                   <span class="font-mono">₱{event.budget.toLocaleString()}</span>
@@ -1077,7 +1344,7 @@
           </div>
         </div>
 
-        <!-- Module 6 Isolation Forest Audit details (Right 8-cols) -->
+        <!-- Module 6 Isolation Forest Audit details -->
         <div class="ticket-card p-6 lg:col-span-8 bg-white">
           <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
             <div>

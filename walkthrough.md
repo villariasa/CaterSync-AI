@@ -106,3 +106,19 @@ All 9 intelligence modules reside in `/ml-service/app/routes/` and execute local
 Endpoints are fully unit tested:
 * **FastAPI Unit Tests**: Written under **[test_endpoints.py](file:///home/villarias/REPOSITORIES/CLIENT/CaterSync-AI/ml-service/tests/test_endpoints.py)** covering request inputs, status checks, and data returns.
 * **Offline Resiliency**: In the event that SvelteKit runs in standalone offline mode without Postgres, the application automatically triggers local Javascript fallbacks.
+
+---
+
+## ⚡ Interaction & Motion Plan ("The Pass" Alive)
+
+To transition the dashboard from a static visual layout to an operational physical environment, the interaction patterns from **[alive.md](file:///home/villarias/REPOSITORIES/CLIENT/CaterSync-AI/alive.md)** have been built into the Svelte components and global stylesheet:
+
+1. **Button & Card Active Feedback**: All buttons (`.btn-interactive`) transition scaling states down to `scale(0.97)` within 100ms when pressed, providing visceral click confirmation. Station cards compress to `scale(0.98)` on click.
+2. **Visual Ticket Print-In**: Newly compiled menu lists and risk flags slide down from above (`translateY(-12px) -> 0`) and fade in over 260ms with cubic-bezier deceleration, matching the visual motion of a kitchen printer chit.
+3. **Pulsing Shimmer Skeletons**: Wait screens during solver actions are occupied by structured, shimmering skeleton ticket mockups (`.skeleton-ticket` and `.skeleton-shimmer`) rather than raw whitespace.
+4. **Reactive Live Previews**: The Svelte 5 reactive bindings display a real-time `LIVE DRAFT PREVIEW` menu card instantly as the planner inputs guest and budget parameters, before the formal solver is run.
+5. **Form Error Shakes**: Input fields that violate cost rules (e.g. budgets below raw dish costs) perform a physical horizontal shake animation (`.validation-shake`) and sound a synthesizer buzz alert.
+6. **Web Audio API Synth Core**: Features zero-dependency sound synthesis running entirely offline to play click clicks, heavy stamp thumps, and validation warning buzzers.
+7. **Cost Share Transitions**: Grid rows flash highlighted backgrounds on matching triggers, and toast notifications slide in from the bottom-right to track completed processes.
+8. **Reduced Motion Guardrail**: The entire layout is wrapped in a `@media (prefers-reduced-motion: reduce)` block that strips all durations and transition curves for accessibility compliance.
+

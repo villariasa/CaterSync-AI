@@ -11,6 +11,16 @@
   --color-saffron: #D9A441;
   --color-paprika: #AC3B2A;
   --color-steel: #767068;
+
+  /* Motion Tokens */
+  --dur-instant: 100ms;
+  --dur-fast: 180ms;
+  --dur-base: 260ms;
+  --dur-slow: 420ms;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-snap: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Base resets & typography */
@@ -43,6 +53,16 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
+/* Interactive elements configuration */
+input, select, textarea {
+  transition: border-color var(--dur-fast) var(--ease-snap), box-shadow var(--dur-fast) var(--ease-snap);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--color-basil);
+  box-shadow: 0 0 0 3px rgba(62, 102, 80, 0.15);
+}
+
 /* --- THE SIGNATURE TICKET CARD --- */
 .ticket-card {
   position: relative;
@@ -52,6 +72,7 @@ textarea:focus-visible {
   border-bottom: 1px solid rgba(118, 112, 104, 0.25);
   box-shadow: 0 4px 12px rgba(42, 37, 33, 0.05);
   border-radius: 0 0 4px 4px;
+  transition: transform var(--dur-fast) var(--ease-snap), box-shadow var(--dur-fast) var(--ease-snap);
 }
 
 /* Real paper scalloped perforated edge */
@@ -69,12 +90,17 @@ textarea:focus-visible {
 
 /* Hover effects for station cards */
 .station-card {
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-snap);
+  cursor: pointer;
 }
 
 .station-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(42, 37, 33, 0.1);
+}
+
+.station-card:active {
+  transform: translateY(0) scale(0.98);
 }
 
 /* Red ticket variant for risks/alerts */
@@ -83,9 +109,16 @@ textarea:focus-visible {
   border-right: 2px solid var(--color-paprika);
   border-bottom: 2px solid var(--color-paprika);
   background-color: #FFFDFB;
+  animation: risk-arrival-pulse 1.2s var(--ease-overshoot) 1;
 }
+
 .ticket-card-risk::before {
   background-image: radial-gradient(circle, transparent 4px, #FFFDFB 5px);
+}
+
+@keyframes risk-arrival-pulse {
+  0%, 100% { border-color: var(--color-paprika); }
+  50% { border-color: var(--color-saffron); }
 }
 
 /* Green ticket variant for actions/confirmed */
@@ -137,10 +170,27 @@ textarea:focus-visible {
   border-left: 1px solid rgba(118, 112, 104, 0.15);
 }
 
+/* --- MOTION & DYNAMICS CONFIG --- */
+
+/* Interactive buttons feedback */
+.btn-interactive {
+  transition: transform var(--dur-instant) var(--ease-snap), opacity var(--dur-fast) var(--ease-snap), background-color var(--dur-fast) var(--ease-snap);
+  cursor: pointer;
+}
+
+.btn-interactive:active {
+  transform: scale(0.97);
+}
+
+.btn-interactive:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 /* Ticket Print-In Animation */
 @keyframes ticket-print {
   from {
-    transform: translateY(-15px);
+    transform: translateY(-12px);
     opacity: 0;
   }
   to {
@@ -150,13 +200,69 @@ textarea:focus-visible {
 }
 
 .ticket-print-in {
-  animation: ticket-print 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: ticket-print var(--dur-base) var(--ease-out) forwards;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .ticket-print-in {
-    animation: none !important;
-  }
+/* Ticket Slide-Out Animation */
+.ticket-slide-out {
+  transform: translateX(100%);
+  opacity: 0;
+  transition: transform var(--dur-fast) var(--ease-snap), opacity var(--dur-fast) var(--ease-snap);
+}
+
+/* Field error shake animation */
+@keyframes field-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+.validation-shake {
+  animation: field-shake 250ms var(--ease-snap) 1;
+  border-color: var(--color-paprika) !important;
+  box-shadow: 0 0 0 3px rgba(172, 59, 42, 0.15) !important;
+}
+
+/* Row Highlight Flash on update */
+@keyframes cell-highlight {
+  0% { background-color: rgba(217, 164, 65, 0.25); }
+  100% { background-color: transparent; }
+}
+
+.cell-updated-flash {
+  animation: cell-highlight 800ms var(--ease-snap) forwards;
+}
+
+/* Skeleton Placeholder Loader */
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #eae5dc 25%, #f1ebe1 50%, #eae5dc 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite linear;
+}
+
+.skeleton-ticket {
+  border-radius: 0 0 4px 4px;
+  position: relative;
+  background-color: #ffffff;
+  border: 1px solid rgba(118, 112, 104, 0.15);
+  box-shadow: 0 2px 8px rgba(42, 37, 33, 0.02);
+}
+
+.skeleton-ticket::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -1px;
+  right: -1px;
+  height: 8px;
+  background-image: radial-gradient(circle, transparent 4px, #ffffff 5px);
+  background-size: 12px 8px;
+  background-repeat: repeat-x;
 }
 
 /* Custom table adjustments */
@@ -174,6 +280,14 @@ textarea:focus-visible {
   border-bottom: 1px solid rgba(118, 112, 104, 0.15);
 }
 
+.ledger-table tbody tr {
+  transition: background-color var(--dur-fast) var(--ease-snap);
+}
+
+.ledger-table tbody tr:hover {
+  background-color: rgba(118, 112, 104, 0.05);
+}
+
 /* Hide scrollbar helper */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
@@ -181,4 +295,14 @@ textarea:focus-visible {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* --- ACCESSIBILITY GUARDRAIL --- */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
