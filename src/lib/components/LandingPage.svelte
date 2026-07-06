@@ -35,6 +35,13 @@
     loginMessage = '';
     regMessage = '';
     inputPIN = '';
+
+    if (tab === 'pin') {
+      setTimeout(() => {
+        const el = document.getElementById('login-pin');
+        if (el) el.focus();
+      }, 100);
+    }
   }
 
   function handleRegister(e) {

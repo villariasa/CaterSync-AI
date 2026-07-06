@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from 'svelte';
   import { getCateringContext } from '$lib/states.svelte.js';
   import { Fingerprint, CheckCircle2, XCircle } from '@lucide/svelte';
 
@@ -8,6 +9,11 @@
 
   let scanState = $state('idle'); // idle, scanning, success, error
   let scanMessage = $state('Click scanner area to verify identity');
+
+  onMount(() => {
+    // Automatically start biometric verification when mounting
+    triggerBiometricScan();
+  });
 
   async function triggerBiometricScan() {
     if (scanState === 'scanning' || scanState === 'success') return;
