@@ -10,7 +10,6 @@ export class CateringState {
   suppliers = $state([]);
   staff = $state([]);
   demandForecasts = $state([]);
-  toasts = $state([]);
   notifications = $state([]);
   audioEnabled = $state(false);
   clickSound = null;
@@ -19,7 +18,7 @@ export class CateringState {
   activeEventForAnalysis = $state(null);
   anomalyReport = $state(null);
   usingMockData = $state(false);
-  version = '1.3.1';
+  version = '1.3.2';
   isDataLoaded = $state(false);
 
   // Authentication & PWA variables
@@ -106,24 +105,17 @@ export class CateringState {
   }
 
   showToast(message, type = 'success', persist = true) {
+    if (!persist) return; // Completely ignore ignored alerts
+
     const id = Date.now() + Math.random();
-    this.toasts = [...this.toasts, { id, message, type }];
-
-    // Add to persistent notifications list
-    if (persist) {
-      const newNotif = {
-        id,
-        message,
-        type,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        unread: true
-      };
-      this.notifications = [newNotif, ...this.notifications];
-    }
-
-    setTimeout(() => {
-      this.toasts = this.toasts.filter(t => t.id !== id);
-    }, 3500);
+    const newNotif = {
+      id,
+      message,
+      type,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      unread: true
+    };
+    this.notifications = [newNotif, ...this.notifications];
   }
 
   initAudio() {
@@ -145,12 +137,10 @@ export class CateringState {
     if (!this.audioEnabled) {
       this.initAudio();
       this.audioEnabled = true;
-      this.showToast("🔈 Sound effects enabled", "info");
       // Delay play until Howler finishes dynamic import
       setTimeout(() => this.playClickSound(), 150);
     } else {
       this.audioEnabled = false;
-      this.showToast("🔇 Sound effects muted", "info");
     }
   }
 

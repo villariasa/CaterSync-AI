@@ -290,15 +290,6 @@
   <link rel="icon" href={favicon} />
 </svelte:head>
 
-<!-- TOAST CONTAINER -->
-<div class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm pointer-events-none">
-  {#each appState.toasts as t (t.id)}
-    <div class="p-3.5 bg-[#2A2521] text-[#F6F2EA] text-xs font-mono rounded shadow-lg border-l-4 pointer-events-auto transition-all duration-300 flex items-center justify-between gap-3 animate-slide-up {t.type === 'error' ? 'border-[#AC3B2A]' : (t.type === 'info' ? 'border-[#D9A441]' : 'border-[#3E6650]')}">
-      <span>{t.message}</span>
-      <button class="text-slate-500 hover:text-white font-bold" onclick={() => appState.toasts = appState.toasts.filter(toast => toast.id !== t.id)}>×</button>
-    </div>
-  {/each}
-</div>
 
 {#if !appState.isAuthenticated}
   <LandingPage />
@@ -589,7 +580,6 @@
             appState.playClickSound();
             showLogoutModal = false;
             appState.isAuthenticated = false;
-            appState.showToast("🔒 Logged out of console session.", "success", false);
           }} 
           class="py-2.5 rounded bg-[#AC3B2A] text-white hover:bg-[#AC3B2A]/90 transition-all font-bold text-center"
         >
