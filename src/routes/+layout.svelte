@@ -104,19 +104,33 @@
           if (justReloaded) {
             sessionStorage.removeItem('catersync_update_reloaded');
           } else if (reg.waiting) {
-            if (lastClickedVersion === appState.version) {
-              // Already clicked Update Now for this version: skip waiting silently
-              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-            } else {
-              const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-              if (autoUpdateEnabled) {
-                reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-              } else if (isStandalone) {
-                showUpdateModal = true;
-              } else {
-                reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-              }
-            }
+            fetch('/service-worker.js')
+              .then(r => r.text())
+              .then(text => {
+                const match = text.match(/const\s+SW_VERSION\s*=\s*['"]([^'"]+)['"]/);
+                const serverVersion = match ? match[1] : null;
+
+                if (serverVersion && serverVersion === appState.version) {
+                  // Silent skip waiting if version matches
+                  reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                  return;
+                }
+
+                if (lastClickedVersion === appState.version) {
+                  // Already clicked Update Now for this version: skip waiting silently
+                  reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                } else {
+                  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+                  if (autoUpdateEnabled) {
+                    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                  } else if (isStandalone) {
+                    showUpdateModal = true;
+                  } else {
+                    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                  }
+                }
+              })
+              .catch(() => {});
           }
 
           reg.addEventListener('updatefound', () => {
@@ -125,29 +139,46 @@
               newWorker.addEventListener('statechange', () => {
                 // Trigger modal only if there was a previous active controller
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+                  fetch('/service-worker.js')
+                    .then(r => r.text())
+                    .then(text => {
+                      const match = text.match(/const\s+SW_VERSION\s*=\s*['"]([^'"]+)['"]/);
+                      const serverVersion = match ? match[1] : null;
 
-                  if (autoUpdateEnabled) {
-                    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-                  } else if (isStandalone) {
-                    showUpdateModal = true;
+                      if (serverVersion && serverVersion === appState.version) {
+                        console.log("Service Worker files changed but SW_VERSION is identical. Skipping prompt.");
+                        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                        return;
+                      }
 
-                    // Trigger device system notification
-                    if ('Notification' in window && Notification.permission === 'granted') {
-                      reg.showNotification("🚀 CaterSync Upgrade Ready", {
-                        body: "Tap here to reload the console and activate the latest update.",
-                        icon: "/icon-192.png",
-                        badge: "/favicon.svg",
-                        tag: "catersync-update",
-                        renotify: true,
-                        data: { url: '/' }
-                      });
-                    }
-                  } else {
-                    // Update silently on normal web browsers without modal popups
-                    console.log("Web client: applying SW update silently.");
-                    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-                  }
+                      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+                      if (autoUpdateEnabled) {
+                        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                      } else if (isStandalone) {
+                        showUpdateModal = true;
+
+                        // Trigger device system notification
+                        if ('Notification' in window && Notification.permission === 'granted') {
+                          reg.showNotification("🚀 CaterSync Upgrade Ready", {
+                            body: "An update is ready. Click Update to apply the latest console features.",
+                            icon: "/icon-192.png",
+                            badge: "/favicon.svg",
+                            tag: "catersync-update",
+                            renotify: true,
+                            actions: [
+                              { action: 'update', title: 'Update Now' }
+                            ],
+                            data: { url: '/' }
+                          });
+                        }
+                      } else {
+                        // Update silently on normal web browsers without modal popups
+                        console.log("Web client: applying SW update silently.");
+                        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                      }
+                    })
+                    .catch(() => {});
                 }
               });
             }
