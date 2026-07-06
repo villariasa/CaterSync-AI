@@ -64,11 +64,32 @@
     localStorage.setItem('catersync_auto_update', autoUpdateEnabled ? 'true' : 'false');
   }
 
-  onMount(() => {
-    // Set sound enabled if settings default is active
-    if (appState.settings.sound_enabled_default) {
-      appState.audioEnabled = true;
+  // Automatic transaction caching watcher
+  $effect(() => {
+    // Reference state lists to establish reactive dependencies
+    const _watchState = {
+      cust: appState.customers,
+      evts: appState.events,
+      menu: appState.menus,
+      ings: appState.ingredients,
+      sups: appState.suppliers,
+      stff: appState.staff,
+      sett: appState.settings
+    };
+
+    if (appState.isDataLoaded && typeof window !== 'undefined') {
+      appState.saveDataToFile();
     }
+  });
+
+  onMount(() => {
+    // Load transaction data cache from local file
+    appState.loadDataFromFile().then(() => {
+      // Set sound enabled if settings default is active
+      if (appState.settings.sound_enabled_default) {
+        appState.audioEnabled = true;
+      }
+    });
 
     // Register PWA service worker
     if ('serviceWorker' in navigator) {

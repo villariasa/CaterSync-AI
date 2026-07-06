@@ -16,6 +16,7 @@ export class CateringState {
   anomalyReport = $state(null);
   usingMockData = $state(false);
   version = '1.2.5';
+  isDataLoaded = $state(false);
 
   // Authentication & PWA variables
   _isAuthenticated = $state(false);
@@ -270,6 +271,85 @@ export class CateringState {
         this.deferredPrompt = null;
         this.showToast("📲 App installation accepted! Welcome to the Desktop.");
       }
+    }
+  }
+
+  // Save all transaction cache lists to local text file in OPFS
+  async saveDataToFile() {
+    if (typeof window === 'undefined') return;
+    try {
+      const dataToSave = {
+        customers: this.customers,
+        events: this.events,
+        menus: this.menus,
+        ingredients: this.ingredients,
+        suppliers: this.suppliers,
+        staff: this.staff,
+        settings: this.settings
+      };
+      
+      const serialized = JSON.stringify(dataToSave, null, 2);
+
+      // Attempt to save to Origin Private File System (OPFS)
+      if (navigator.storage && navigator.storage.getDirectory) {
+        const root = await navigator.storage.getDirectory();
+        const fileHandle = await root.getFileHandle("catersync_data.txt", { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(serialized);
+        await writable.close();
+        console.log("📝 Saved transaction cache to local OPFS catersync_data.txt");
+      }
+      
+      // Secondary fallback backup in localStorage
+      localStorage.setItem("catersync_data_backup", serialized);
+    } catch (err) {
+      console.warn("Failed to write to OPFS text file:", err);
+    }
+  }
+
+  // Load transaction cache lists from local text file in OPFS
+  async loadDataFromFile() {
+    if (typeof window === 'undefined') return;
+    try {
+      let serialized = null;
+
+      // Attempt reading from OPFS
+      if (navigator.storage && navigator.storage.getDirectory) {
+        try {
+          const root = await navigator.storage.getDirectory();
+          const fileHandle = await root.getFileHandle("catersync_data.txt");
+          const file = await fileHandle.getFile();
+          serialized = await file.text();
+        } catch (e) {
+          console.log("No existing CaterSync OPFS data file found. Checking localStorage backup...");
+        }
+      }
+
+      // Fallback to localStorage if OPFS read was empty or failed
+      if (!serialized) {
+        serialized = localStorage.getItem("catersync_data_backup");
+      }
+
+      if (serialized) {
+        const parsed = JSON.parse(serialized);
+        if (this.usingMockData) {
+          if (parsed.customers) this.customers = parsed.customers;
+          if (parsed.events) this.events = parsed.events;
+          if (parsed.menus) this.menus = parsed.menus;
+          if (parsed.ingredients) this.ingredients = parsed.ingredients;
+          if (parsed.suppliers) this.suppliers = parsed.suppliers;
+          if (parsed.staff) this.staff = parsed.staff;
+          if (parsed.settings) this.settings = { ...this.settings, ...parsed.settings };
+          console.log("🎉 Loaded active transaction data from local file cache.");
+        }
+      } else {
+        // Initial populate to file if none exists
+        await this.saveDataToFile();
+      }
+    } catch (err) {
+      console.warn("Failed to read from local file cache:", err);
+    } finally {
+      this.isDataLoaded = true;
     }
   }
 }
