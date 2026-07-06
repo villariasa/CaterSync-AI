@@ -68,6 +68,21 @@
           console.log("Service Worker registered.");
           swRegistration = reg;
 
+          // Check if an update was already waiting when the user opened the app
+          const justReloaded = sessionStorage.getItem('catersync_update_reloaded') === 'true';
+          if (justReloaded) {
+            sessionStorage.removeItem('catersync_update_reloaded');
+          } else if (reg.waiting) {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+            if (autoUpdateEnabled) {
+              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            } else if (isStandalone) {
+              showUpdateModal = true;
+            } else {
+              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+          }
+
           reg.addEventListener('updatefound', () => {
             const newWorker = reg.installing;
             if (newWorker) {
@@ -108,6 +123,7 @@
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (hadController && !refreshing) {
           refreshing = true;
+          sessionStorage.setItem('catersync_update_reloaded', 'true');
           window.location.reload();
         }
       });

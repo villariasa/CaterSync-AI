@@ -12,8 +12,19 @@ self.addEventListener('install', (event) => {
         '/icon-192.png',
         '/icon-512.png'
       ]);
-    }).then(() => self.skipWaiting())
+    })
   );
+
+  // Show device system notification if this is a software update (registration already has an active controller)
+  if (self.registration.active) {
+    self.registration.showNotification("🚀 CaterSync Upgrade Ready", {
+      body: "Tap here to reload the console and activate the latest update.",
+      icon: "/favicon.svg",
+      tag: "catersync-update",
+      renotify: true,
+      data: { url: '/' }
+    });
+  }
 });
 
 self.addEventListener('activate', (event) => {
