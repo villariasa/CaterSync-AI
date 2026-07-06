@@ -1,1 +1,0 @@
-"""Revenue forecasting model placeholder."""

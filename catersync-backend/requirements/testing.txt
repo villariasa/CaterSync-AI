@@ -1,3 +1,0 @@
--r development.txt
-factory-boy>=3.3,<4.0
-faker>=25.0,<40.0

@@ -15,8 +15,14 @@ pip-wheel-metadata/
 .pytest_cache/
 .coverage
 htmlcov/
+*.egg-info/
+dist/
+*.egg
 
-# Django
+# Alembic
+alembic/versions/__pycache__/
+
+# Django / misc Python web
 db.sqlite3
 media/
 staticfiles/
@@ -26,6 +32,29 @@ node_modules/
 dist/
 build/
 .next/
+.nuxt/
+out/
+
+# pnpm
+.pnpm-store/
+pnpm-debug.log*
+
+# Turborepo
+.turbo/
+
+# Vite
+*.local
+
+# Expo / React Native
+.expo/
+.expo-shared/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
 
 # Flutter/Dart
 .dart_tool/
@@ -40,9 +69,23 @@ coverage/
 *.swp
 Thumbs.db
 .DS_Store
+*.iml
 
-# Logs and generated backups
+# Logs and generated
 *.log
+logs/
 backups/
 *.dump
 *.sql.gz
+
+# Docker
+docker-compose.override.yml
+
+# Coverage reports
+coverage/
+lcov.info
+*.lcov
+
+# Test results
+test-results/
+playwright-report/

@@ -1,4 +1,0 @@
-{
-  "AUTH_INVALID_CREDENTIALS": "The supplied credentials are invalid.",
-  "BOOKING_CONFLICT": "The booking conflicts with an existing event."
-}

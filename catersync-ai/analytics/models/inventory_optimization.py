@@ -1,1 +1,0 @@
-"""Inventory optimization model placeholder."""

@@ -1,1 +1,0 @@
-"""Shared analytics contract placeholder."""

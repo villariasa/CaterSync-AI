@@ -1,1 +1,0 @@
-"""Customer segmentation model placeholder."""

@@ -1,1 +1,0 @@
-"""Shared user contract placeholder."""

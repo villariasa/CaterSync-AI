@@ -1,1 +1,0 @@
-"""Shared booking contract placeholder."""
