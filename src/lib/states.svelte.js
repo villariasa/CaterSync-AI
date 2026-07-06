@@ -246,7 +246,8 @@ export class CateringState {
           navigator.serviceWorker.ready.then((reg) => {
             reg.showNotification(title, {
               body,
-              icon: '/favicon.svg',
+              icon: '/icon-192.png',
+              badge: '/favicon.svg',
               vibrate: [100, 50, 100]
             });
           });

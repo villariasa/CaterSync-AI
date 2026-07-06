@@ -100,7 +100,8 @@
                     if ('Notification' in window && Notification.permission === 'granted') {
                       reg.showNotification("🚀 CaterSync Upgrade Ready", {
                         body: "Tap here to reload the console and activate the latest update.",
-                        icon: "/favicon.svg",
+                        icon: "/icon-192.png",
+                        badge: "/favicon.svg",
                         tag: "catersync-update",
                         renotify: true,
                         data: { url: '/' }

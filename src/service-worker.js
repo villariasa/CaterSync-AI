@@ -19,7 +19,8 @@ self.addEventListener('install', (event) => {
   if (self.registration.active) {
     self.registration.showNotification("🚀 CaterSync Upgrade Ready", {
       body: "An update is ready. Click Update to apply the latest console features.",
-      icon: "/favicon.svg",
+      icon: "/icon-192.png",
+      badge: "/favicon.svg",
       tag: "catersync-update",
       renotify: true,
       actions: [
@@ -84,7 +85,7 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body,
-    icon: '/favicon.svg',
+    icon: '/icon-192.png',
     badge: '/favicon.svg',
     vibrate: [100, 50, 100],
     data: {
@@ -131,7 +132,8 @@ self.addEventListener('message', (event) => {
       setTimeout(() => {
         self.registration.showNotification(title, {
           body,
-          icon: '/favicon.svg',
+          icon: '/icon-192.png',
+          badge: '/favicon.svg',
           vibrate: [100, 50, 100],
           data: { url: '/' }
         });
