@@ -26,8 +26,24 @@
   const appState = new CateringState(data);
   setCateringContext(appState);
 
-  // Live Ledger Clock ticker
+  let confirmLogout = $state(false);
+  let logoutTimeout;
   let currentDateTime = $state('');
+
+  function handleLogoutClick() {
+    appState.playClickSound();
+    if (!confirmLogout) {
+      confirmLogout = true;
+      clearTimeout(logoutTimeout);
+      logoutTimeout = setTimeout(() => {
+        confirmLogout = false;
+      }, 3000);
+    } else {
+      confirmLogout = false;
+      appState.isAuthenticated = false;
+      appState.showToast("🔒 Logged out of console session.");
+    }
+  }
 
   onMount(() => {
     // Set sound enabled if settings default is active
@@ -157,17 +173,12 @@
 
           <!-- Log Out Button -->
           <button 
-            onclick={() => {
-              appState.playClickSound();
-              if (confirm("Are you sure you want to log out of the CaterSync-AI console?")) {
-                appState.isAuthenticated = false;
-                appState.showToast("🔒 Logged out of console session.");
-              }
-            }} 
-            class="btn-interactive p-2 rounded hover:bg-[#AC3B2A]/10 hover:text-[#AC3B2A] border border-transparent hover:border-[#AC3B2A]/20 flex items-center gap-1.5 text-xs font-mono text-[#767068]"
+            onclick={handleLogoutClick} 
+            class="btn-interactive p-2 rounded border transition-all duration-200 flex items-center gap-1.5 text-xs font-mono 
+            {confirmLogout ? 'bg-[#AC3B2A] text-white border-[#AC3B2A] hover:bg-[#AC3B2A]/90' : 'hover:bg-[#AC3B2A]/10 hover:text-[#AC3B2A] border-transparent hover:border-[#AC3B2A]/20 text-[#767068]'}"
           >
-            <LogOut size={14} class="text-[#AC3B2A]" />
-            <span class="hidden sm:inline">Log Out</span>
+            <LogOut size={14} class={confirmLogout ? 'text-white' : 'text-[#AC3B2A]'} />
+            <span class="hidden sm:inline">{confirmLogout ? 'Confirm?' : 'Log Out'}</span>
           </button>
 
           <!-- Live Clock -->
