@@ -90,6 +90,32 @@
   const unreadCount = $derived(appState.notifications.filter(n => n.unread).length);
 
   onMount(() => {
+    // Fade out initial PWA loading screen
+    if (typeof window !== 'undefined') {
+      const loader = document.getElementById('pwa-loading-screen');
+      const percentEl = document.getElementById('pwa-loading-percentage');
+      if (loader) {
+        let progress = 0;
+        const loadInterval = setInterval(() => {
+          progress += Math.floor(Math.random() * 25) + 15;
+          if (progress >= 100) {
+            progress = 100;
+            clearInterval(loadInterval);
+            if (percentEl) percentEl.textContent = '100%';
+            
+            // Fade out overlay
+            loader.style.opacity = '0';
+            loader.style.visibility = 'hidden';
+            setTimeout(() => {
+              try { loader.remove(); } catch (e) {}
+            }, 450);
+          } else {
+            if (percentEl) percentEl.textContent = `${progress}%`;
+          }
+        }, 60);
+      }
+    }
+
     // Load transaction data cache from local file
     appState.loadDataFromFile().then(() => {
       // Set sound enabled if settings default is active
