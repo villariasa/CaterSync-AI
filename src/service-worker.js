@@ -1,19 +1,24 @@
-// Service Worker configuration for SvelteKit PWA offline compliance
-const CACHE_NAME = 'catersync-offline-v1';
-const SW_VERSION = '1.3.3';
+import { build, files, prerendered, version } from '$service-worker';
 
-// Assets will be cached dynamically
+const CACHE_NAME = `catersync-offline-${version}`;
+const SW_VERSION = '1.3.4';
+
+const ASSETS = [
+  '/',
+  '/manifest.json',
+  '/favicon.svg',
+  '/icon-192.png',
+  '/icon-512.png',
+  ...build,
+  ...files,
+  ...prerendered
+];
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll([
-        '/',
-        '/manifest.json',
-        '/favicon.svg',
-        '/icon-192.png',
-        '/icon-512.png'
-      ]);
-    })
+      return cache.addAll(ASSETS);
+    }).then(() => self.skipWaiting())
   );
 });
 
@@ -31,18 +36,13 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Network first fallback cache fetch handler
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
   if (event.request.method !== 'GET') return;
-
-  // Skip tracking chrome extensions/api proxy paths
   if (event.request.url.startsWith('chrome-extension://') || event.request.url.includes('/api/')) return;
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cache successful requests dynamically
         if (response.status === 200) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -52,7 +52,15 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        return caches.match(event.request);
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          // If a page request fails (offline client navigation / reload), serve cached root index.html
+          if (event.request.mode === 'navigate' || (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html'))) {
+            return caches.match('/') || caches.match('/index.html');
+          }
+        });
       })
   );
 });
