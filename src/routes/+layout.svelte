@@ -74,10 +74,27 @@
               newWorker.addEventListener('statechange', () => {
                 // Trigger modal only if there was a previous active controller
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
                   if (autoUpdateEnabled) {
                     reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-                  } else {
+                  } else if (isStandalone) {
                     showUpdateModal = true;
+
+                    // Trigger device system notification
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                      reg.showNotification("🚀 CaterSync Upgrade Ready", {
+                        body: "Tap here to reload the console and activate the latest update.",
+                        icon: "/favicon.svg",
+                        tag: "catersync-update",
+                        renotify: true,
+                        data: { url: '/' }
+                      });
+                    }
+                  } else {
+                    // Update silently on normal web browsers without modal popups
+                    console.log("Web client: applying SW update silently.");
+                    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
                   }
                 }
               });
