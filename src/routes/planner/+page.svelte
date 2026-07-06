@@ -243,20 +243,37 @@
     e.preventDefault();
     if (!selectedCustomer || !eventDate || !budget) return;
 
+    const payload = {
+      customer_id: selectedCustomer,
+      event_type: eventType,
+      guest_count: guestCount,
+      event_date: eventDate,
+      budget: budget,
+      theme: eventTheme,
+      venue_type: venueType,
+      is_outdoor: isOutdoor
+    };
+
+    if (appState.usingMockData) {
+      const customerObj = appState.customers.find(c => c.id == selectedCustomer) || { name: 'Walk-In Customer' };
+      const mockEvent = {
+        id: Date.now(),
+        customer_name: customerObj.name,
+        status: 'Confirmed',
+        ...payload
+      };
+      appState.events = [mockEvent, ...appState.events];
+      eventMessage = `✅ Event ticket registered successfully in local device storage.`;
+      appState.showToast("📅 Catering ticket booked");
+      appState.playStampSound();
+      return;
+    }
+
     try {
       const response = await fetch('/api/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customer_id: selectedCustomer,
-          event_type: eventType,
-          guest_count: guestCount,
-          event_date: eventDate,
-          budget: budget,
-          theme: eventTheme,
-          venue_type: venueType,
-          is_outdoor: isOutdoor
-        })
+        body: JSON.stringify(payload)
       });
 
       const res = await response.json();

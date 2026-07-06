@@ -32,15 +32,30 @@
     e.preventDefault();
     if (!name) return;
 
+    const payload = {
+      name,
+      reliability_score: reliabilityScore,
+      avg_lead_time_days: avgLeadTime
+    };
+
+    if (appState.usingMockData) {
+      const mockSupplier = {
+        id: Date.now(),
+        ...payload
+      };
+      appState.suppliers = [...appState.suppliers, mockSupplier];
+      supplierMessage = `✅ Supplier profile "${mockSupplier.name}" added successfully locally.`;
+      name = '';
+      appState.showToast("🚚 Supplier account verified");
+      appState.playStampSound();
+      return;
+    }
+
     try {
       const response = await fetch('/api/suppliers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          reliability_score: reliabilityScore,
-          avg_lead_time_days: avgLeadTime
-        })
+        body: JSON.stringify(payload)
       });
 
       const res = await response.json();

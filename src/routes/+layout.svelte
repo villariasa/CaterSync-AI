@@ -18,7 +18,8 @@
     Download,
     LogOut,
     Menu,
-    X
+    X,
+    Bell
   } from '@lucide/svelte';
   import { page } from '$app/state';
   import { CateringState, setCateringContext } from '$lib/states.svelte.js';
@@ -35,6 +36,7 @@
   let autoUpdateEnabled = $state(false);
   let swRegistration = $state(null);
   let showMobileMenu = $state(false);
+  let showNotificationsDropdown = $state(false);
   let shouldReloadOnControllerChange = false;
 
   function handleLogoutClick() {
@@ -84,6 +86,8 @@
       appState.saveDataToFile();
     }
   });
+
+  const unreadCount = $derived(appState.notifications.filter(n => n.unread).length);
 
   onMount(() => {
     // Load transaction data cache from local file
@@ -341,6 +345,70 @@
               <span class="hidden sm:inline text-[10px]">Sound: MUTED</span>
             {/if}
           </button>
+
+          <!-- Notification Bell with Dropdown -->
+          <div class="relative">
+            <button 
+              onclick={() => {
+                appState.playClickSound();
+                showNotificationsDropdown = !showNotificationsDropdown;
+                // Mark all as read when opened
+                if (showNotificationsDropdown) {
+                  appState.notifications.forEach(n => n.unread = false);
+                }
+              }} 
+              class="btn-interactive p-1.5 rounded hover:bg-white/50 border border-transparent hover:border-[#767068]/20 flex items-center gap-1 text-[#767068] relative"
+              title="Notifications"
+            >
+              <Bell size={13} class={unreadCount > 0 ? 'text-[#AC3B2A] animate-bounce' : ''} />
+              <span class="hidden sm:inline text-[10px]">Alerts</span>
+              
+              {#if unreadCount > 0}
+                <span class="absolute -top-1 -right-1 bg-[#AC3B2A] text-white text-[8px] font-mono font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              {/if}
+            </button>
+
+            {#if showNotificationsDropdown}
+              <div 
+                transition:slide={{ duration: 200 }} 
+                class="absolute right-0 mt-2 w-72 bg-white border border-[#767068]/30 rounded shadow-xl py-2 z-50 text-[#2A2521] text-xs font-sans max-h-96 overflow-y-auto"
+              >
+                <div class="px-4 py-2 border-b border-[#767068]/15 flex items-center justify-between font-mono text-[10px] text-[#767068] font-bold">
+                  <span>SYSTEM NOTIFICATIONS</span>
+                  <button 
+                    onclick={() => {
+                      appState.playClickSound();
+                      appState.notifications = [];
+                      showNotificationsDropdown = false;
+                    }}
+                    class="hover:text-[#AC3B2A] transition-all uppercase"
+                  >
+                    Clear All
+                  </button>
+                </div>
+                
+                {#if appState.notifications.length === 0}
+                  <div class="px-4 py-6 text-center text-[#767068]/60 font-mono text-[10px] uppercase">
+                    No active notifications
+                  </div>
+                {:else}
+                  <div class="divide-y divide-[#767068]/10 max-h-64 overflow-y-auto">
+                    {#each appState.notifications as notif}
+                      <div class="p-3 hover:bg-slate-50 flex items-start gap-2.5 transition-all">
+                        <span class="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 {notif.type === 'error' ? 'bg-[#AC3B2A]' : (notif.type === 'info' ? 'bg-[#D9A441]' : 'bg-[#3E6650]')}"></span>
+                        <div class="min-w-0 flex-1">
+                          <p class="leading-relaxed text-[11px] text-[#2A2521]">{notif.message}</p>
+                          <span class="text-[8px] font-mono text-slate-400 block mt-1">{notif.timestamp}</span>
+                        </div>
+                      </div>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+            {/if}
+          </div>
 
           <!-- Log Out Button -->
           <button 

@@ -46,17 +46,33 @@
     e.preventDefault();
     if (!name) return;
 
+    const payload = {
+      name,
+      category,
+      cost_per_serving: costPerServing,
+      price_per_serving: pricePerServing,
+      cuisine_tags: cuisineTags ? cuisineTags.split(',').map(x => x.trim()) : []
+    };
+
+    if (appState.usingMockData) {
+      const mockMenu = {
+        id: Date.now(),
+        ...payload
+      };
+      appState.menus = [...appState.menus, mockMenu];
+      menuMessage = `✅ Menu template "${mockMenu.name}" added successfully locally.`;
+      name = '';
+      cuisineTags = '';
+      appState.showToast("🍽️ Menu index created");
+      appState.playStampSound();
+      return;
+    }
+
     try {
       const response = await fetch('/api/menus', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          category,
-          cost_per_serving: costPerServing,
-          price_per_serving: pricePerServing,
-          cuisine_tags: cuisineTags ? cuisineTags.split(',').map(x => x.trim()) : []
-        })
+        body: JSON.stringify(payload)
       });
 
       const res = await response.json();

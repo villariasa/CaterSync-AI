@@ -45,16 +45,31 @@
     e.preventDefault();
     if (!name) return;
 
+    const payload = {
+      name,
+      role,
+      hourly_rate: hourlyRate,
+      max_hours_per_week: maxHours
+    };
+
+    if (appState.usingMockData) {
+      const mockStaff = {
+        id: Date.now(),
+        ...payload
+      };
+      appState.staff = [...appState.staff, mockStaff];
+      staffMessage = `✅ Staff member "${mockStaff.name}" enrolled locally.`;
+      name = '';
+      appState.showToast("👥 Worker registered");
+      appState.playStampSound();
+      return;
+    }
+
     try {
       const response = await fetch('/api/staff', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          role,
-          hourly_rate: hourlyRate,
-          max_hours_per_week: maxHours
-        })
+        body: JSON.stringify(payload)
       });
 
       const res = await response.json();

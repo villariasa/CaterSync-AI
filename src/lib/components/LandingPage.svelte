@@ -1,6 +1,7 @@
 <script>
   import { getCateringContext } from '$lib/states.svelte.js';
   import BiometricScanner from './BiometricScanner.svelte';
+  import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { 
     Lock, 
@@ -75,6 +76,7 @@
       appState.isAuthenticated = true;
       appState.showToast(`🔒 Welcome, ${username}`);
       appState.playStampSound();
+      goto('/');
     } else {
       loginMessage = '❌ Invalid credentials.';
       appState.playBuzzerSound();
@@ -92,6 +94,7 @@
           appState.isAuthenticated = true;
           appState.showToast("🔓 Quick access PIN granted");
           appState.playStampSound();
+          goto('/');
         } else {
           appState.showToast("❌ Incorrect access PIN", "error");
           appState.playBuzzerSound();
@@ -104,6 +107,7 @@
   function handleBiometricsSuccess() {
     appState.isAuthenticated = true;
     appState.showToast("🧬 Biometric validation granted");
+    goto('/');
   }
 
   onMount(async () => {

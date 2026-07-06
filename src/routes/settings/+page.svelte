@@ -64,20 +64,30 @@
     e.preventDefault();
     appState.playClickSound();
     
+    const payload = {
+      business_name: bizName,
+      currency_symbol: currency,
+      overhead_rate: parseFloat(overhead),
+      min_budget_per_guest: parseFloat(minBudget),
+      risk_medium_threshold: parseFloat(riskMed),
+      risk_high_threshold: parseFloat(riskHigh),
+      low_stock_alerts_enabled: alertsEnabled,
+      sound_enabled_default: soundDefault
+    };
+
+    if (appState.usingMockData) {
+      appState.settings = { ...appState.settings, ...payload };
+      bizMessage = '✅ Configuration parameters saved locally.';
+      appState.showToast("⚙️ Settings updated");
+      appState.playStampSound();
+      return;
+    }
+
     try {
       const response = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          business_name: bizName,
-          currency_symbol: currency,
-          overhead_rate: parseFloat(overhead),
-          min_budget_per_guest: parseFloat(minBudget),
-          risk_medium_threshold: parseFloat(riskMed),
-          risk_high_threshold: parseFloat(riskHigh),
-          low_stock_alerts_enabled: alertsEnabled,
-          sound_enabled_default: soundDefault
-        })
+        body: JSON.stringify(payload)
       });
 
       const res = await response.json();
@@ -112,6 +122,19 @@
   // Deactivate worker
   async function deactivateStaff(id) {
     appState.playClickSound();
+
+    if (appState.usingMockData) {
+      appState.staff = appState.staff.map(s => {
+        if (s.id === id) {
+          return { ...s, is_active: false };
+        }
+        return s;
+      });
+      appState.showToast("👥 Staff member deactivated");
+      appState.playStampSound();
+      return;
+    }
+
     try {
       const response = await fetch(`/api/staff?id=${id}`, {
         method: 'DELETE'
@@ -135,6 +158,14 @@
   // Delete menu template
   async function deleteMenu(id) {
     appState.playClickSound();
+
+    if (appState.usingMockData) {
+      appState.menus = appState.menus.filter(m => m.id !== id);
+      appState.showToast("🍽️ Menu deleted");
+      appState.playStampSound();
+      return;
+    }
+
     try {
       const response = await fetch(`/api/menus?id=${id}`, {
         method: 'DELETE'

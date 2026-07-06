@@ -48,17 +48,35 @@
     e.preventDefault();
     if (!newCustName) return;
 
+    const payload = {
+      name: newCustName,
+      contact: newCustContact,
+      allergies: newCustAllergies ? newCustAllergies.split(',').map(x => x.trim()) : [],
+      dietary_prefs: newCustDiet ? newCustDiet.split(',').map(x => x.trim()) : [],
+      preferred_theme: newCustTheme
+    };
+
+    if (appState.usingMockData) {
+      const mockCustomer = {
+        id: Date.now(),
+        ...payload
+      };
+      appState.customers = [...appState.customers, mockCustomer];
+      customerMessage = `✅ Customer profile "${mockCustomer.name}" registered successfully locally.`;
+      newCustName = '';
+      newCustContact = '';
+      newCustAllergies = '';
+      newCustDiet = '';
+      appState.showToast("👥 New customer profile created");
+      appState.playStampSound();
+      return;
+    }
+
     try {
       const response = await fetch('/api/customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newCustName,
-          contact: newCustContact,
-          allergies: newCustAllergies ? newCustAllergies.split(',').map(x => x.trim()) : [],
-          dietary_prefs: newCustDiet ? newCustDiet.split(',').map(x => x.trim()) : [],
-          preferred_theme: newCustTheme
-        })
+        body: JSON.stringify(payload)
       });
 
       const res = await response.json();

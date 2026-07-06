@@ -101,6 +101,26 @@
 
   async function approveRestockTicket(item) {
     appState.playClickSound();
+
+    if (appState.usingMockData) {
+      appState.showToast(`🛒 PO ordered: +${item.quantity} ${item.unit} added to ${item.name}`);
+      appState.playStampSound();
+      
+      appState.ingredients = appState.ingredients.map(ing => {
+        if (ing.id === item.ingredient_id) {
+          return {
+            ...ing,
+            current_stock: (parseFloat(ing.current_stock) + item.quantity).toFixed(1)
+          };
+        }
+        return ing;
+      });
+
+      // Filter out approved suggestion
+      eoqSuggestions = eoqSuggestions.filter(s => s.ingredient_id !== item.ingredient_id);
+      return;
+    }
+
     try {
       const response = await fetch('/api/purchase-orders', {
         method: 'POST',
