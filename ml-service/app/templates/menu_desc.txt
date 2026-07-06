@@ -1,0 +1,1 @@
+Elegant {{ menu_name }} tailored for {{ guest_count }} guests. Specially optimized for a "{{ theme }}" theme, maintaining a high {{ margin }}% profit margin with an estimated total raw cost of ₱{{ est_cost }} and projected profit of ₱{{ est_profit }}.

@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres:15-alpine
+    container_name: catersync_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: catersync
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Mount the schema and seed scripts to auto-initialize on startup
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/1_schema.sql
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/2_seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d catersync"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: catersync_ml_service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgrespassword@database:5432/catersync
+      - MODELS_DIR=/app/models
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      - ml_models_volume:/app/models
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: catersync_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgrespassword@database:5432/catersync
+      - ML_SERVICE_URL=http://ml-service:8000/api/v1
+    depends_on:
+      database:
+        condition: service_healthy
+      ml-service:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  ml_models_volume:

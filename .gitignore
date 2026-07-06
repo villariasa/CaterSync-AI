@@ -1,91 +1,23 @@
-# Environment and secrets
+node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
 .env
 .env.*
 !.env.example
-
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-.Python
-.venv/
-venv/
-env/
-pip-wheel-metadata/
-.pytest_cache/
-.coverage
-htmlcov/
-*.egg-info/
-dist/
-*.egg
-
-# Alembic
-alembic/versions/__pycache__/
-
-# Django / misc Python web
-db.sqlite3
-media/
-staticfiles/
-
-# Node and frontend
-node_modules/
-dist/
-build/
-.next/
-.nuxt/
-out/
-
-# pnpm
-.pnpm-store/
-pnpm-debug.log*
-
-# Turborepo
-.turbo/
+!.env.test
 
 # Vite
-*.local
-
-# Expo / React Native
-.expo/
-.expo-shared/
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-*.orig.*
-web-build/
-
-# Flutter/Dart
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-coverage/
-
-# IDE and OS
-.idea/
-.vscode/
-*.swp
-Thumbs.db
-.DS_Store
-*.iml
-
-# Logs and generated
-*.log
-logs/
-backups/
-*.dump
-*.sql.gz
-
-# Docker
-docker-compose.override.yml
-
-# Coverage reports
-coverage/
-lcov.info
-*.lcov
-
-# Test results
-test-results/
-playwright-report/
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*

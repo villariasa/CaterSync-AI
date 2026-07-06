@@ -1,0 +1,184 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Public Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  --color-paper: #F6F2EA;
+  --color-ink: #2A2521;
+  --color-basil: #3E6650;
+  --color-saffron: #D9A441;
+  --color-paprika: #AC3B2A;
+  --color-steel: #767068;
+}
+
+/* Base resets & typography */
+:root {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+}
+
+body {
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--color-ink);
+}
+
+.mono-data {
+  font-family: var(--font-mono);
+  letter-spacing: 0.03em;
+}
+
+/* Custom interactive outlines for accessibility */
+button:focus-visible, 
+input:focus-visible, 
+select:focus-visible, 
+textarea:focus-visible {
+  outline: 2px solid var(--color-basil);
+  outline-offset: 2px;
+}
+
+/* --- THE SIGNATURE TICKET CARD --- */
+.ticket-card {
+  position: relative;
+  background-color: #ffffff;
+  border-left: 1px solid rgba(118, 112, 104, 0.2);
+  border-right: 1px solid rgba(118, 112, 104, 0.2);
+  border-bottom: 1px solid rgba(118, 112, 104, 0.25);
+  box-shadow: 0 4px 12px rgba(42, 37, 33, 0.05);
+  border-radius: 0 0 4px 4px;
+}
+
+/* Real paper scalloped perforated edge */
+.ticket-card::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -1px;
+  right: -1px;
+  height: 8px;
+  background-image: radial-gradient(circle, transparent 4px, #ffffff 5px);
+  background-size: 12px 8px;
+  background-repeat: repeat-x;
+}
+
+/* Hover effects for station cards */
+.station-card {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+}
+
+.station-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(42, 37, 33, 0.1);
+}
+
+/* Red ticket variant for risks/alerts */
+.ticket-card-risk {
+  border-left: 2px solid var(--color-paprika);
+  border-right: 2px solid var(--color-paprika);
+  border-bottom: 2px solid var(--color-paprika);
+  background-color: #FFFDFB;
+}
+.ticket-card-risk::before {
+  background-image: radial-gradient(circle, transparent 4px, #FFFDFB 5px);
+}
+
+/* Green ticket variant for actions/confirmed */
+.ticket-card-success {
+  border-left: 2px solid var(--color-basil);
+  border-right: 2px solid var(--color-basil);
+  border-bottom: 2px solid var(--color-basil);
+}
+
+/* --- TICKET STAMP & MONOSPACE DETAILS --- */
+.ticket-stamp {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-steel);
+  border: 1px dashed rgba(118, 112, 104, 0.3);
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
+/* CSS Perforation Line Separator */
+.ticket-divider {
+  border-top: 1px dashed rgba(118, 112, 104, 0.3);
+  margin: 1rem 0;
+  position: relative;
+}
+.ticket-divider::before {
+  content: '';
+  position: absolute;
+  left: -13px;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  background: var(--color-paper);
+  border-radius: 50%;
+  border-right: 1px solid rgba(118, 112, 104, 0.15);
+}
+.ticket-divider::after {
+  content: '';
+  position: absolute;
+  right: -13px;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  background: var(--color-paper);
+  border-radius: 50%;
+  border-left: 1px solid rgba(118, 112, 104, 0.15);
+}
+
+/* Ticket Print-In Animation */
+@keyframes ticket-print {
+  from {
+    transform: translateY(-15px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.ticket-print-in {
+  animation: ticket-print 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticket-print-in {
+    animation: none !important;
+  }
+}
+
+/* Custom table adjustments */
+.ledger-table th {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-steel);
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid var(--color-ink);
+}
+
+.ledger-table td {
+  border-bottom: 1px solid rgba(118, 112, 104, 0.15);
+}
+
+/* Hide scrollbar helper */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

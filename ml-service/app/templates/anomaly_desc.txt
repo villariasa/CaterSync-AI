@@ -1,0 +1,1 @@
+ANOMALY: {{ category }} cost ratio reached {{ ratio }}% of revenue (Target: {{ target }}%). Suggestion: {{ advice }}

@@ -1,0 +1,17 @@
+fastapi==0.111.0
+uvicorn==0.30.1
+scikit-learn==1.5.0
+xgboost==2.0.3
+prophet==1.1.5
+statsmodels==0.14.2
+pulp==2.8.0
+ortools==9.10.4067
+jinja2==3.1.4
+pandas==2.2.2
+numpy==1.26.4
+joblib==1.4.2
+pydantic==2.7.4
+pydantic-settings==2.3.4
+requests==2.32.3
+python-dotenv==1.0.1
+psycopg2-binary==2.9.9
