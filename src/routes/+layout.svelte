@@ -68,6 +68,9 @@
           console.log("Service Worker registered.");
           swRegistration = reg;
 
+          // Force check for updates to the service worker on reload
+          reg.update().catch((err) => console.warn("Failed to check for updates:", err));
+
           // Check if an update was already waiting when the user opened the app
           const justReloaded = sessionStorage.getItem('catersync_update_reloaded') === 'true';
           if (justReloaded) {
