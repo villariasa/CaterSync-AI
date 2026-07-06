@@ -12,10 +12,13 @@ export class CateringState {
   demandForecasts = $state([]);
   toasts = $state([]);
   audioEnabled = $state(false);
+  clickSound = null;
+  stampSound = null;
+  buzzerSound = null;
   activeEventForAnalysis = $state(null);
   anomalyReport = $state(null);
   usingMockData = $state(false);
-  version = '1.2.8';
+  version = '1.2.9';
   isDataLoaded = $state(false);
 
   // Authentication & PWA variables
@@ -110,12 +113,18 @@ export class CateringState {
   }
 
   initAudio() {
-    if (!this.audioCtx) {
-      this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (this.audioCtx.state === 'suspended') {
-      this.audioCtx.resume();
-    }
+    if (typeof window === 'undefined') return;
+    if (this.clickSound) return; // Already initialized Howl instances
+
+    import('howler').then((module) => {
+      const Howl = module.Howl;
+      this.clickSound = new Howl({ src: ['/sounds/click.wav'], volume: 0.35 });
+      this.stampSound = new Howl({ src: ['/sounds/stamp.mp3'], volume: 0.55 });
+      this.buzzerSound = new Howl({ src: ['/sounds/error.wav'], volume: 0.40 });
+      console.log("🔊 Howler.js UI audio sound assets initialized successfully.");
+    }).catch(err => {
+      console.warn("Failed to load Howler sounds", err);
+    });
   }
 
   toggleAudio() {
@@ -123,7 +132,8 @@ export class CateringState {
       this.initAudio();
       this.audioEnabled = true;
       this.showToast("🔈 Sound effects enabled", "info");
-      this.playClickSound();
+      // Delay play until Howler finishes dynamic import
+      setTimeout(() => this.playClickSound(), 150);
     } else {
       this.audioEnabled = false;
       this.showToast("🔇 Sound effects muted", "info");
@@ -131,109 +141,32 @@ export class CateringState {
   }
 
   playClickSound() {
-    if (!this.audioEnabled || !this.audioCtx) return;
-    try {
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(this.audioCtx.destination);
-      
-      osc.frequency.setValueAtTime(800, this.audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(150, this.audioCtx.currentTime + 0.08);
-      
-      gain.gain.setValueAtTime(0.04, this.audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.08);
-      
-      osc.start();
-      osc.stop(this.audioCtx.currentTime + 0.08);
-    } catch (e) {
-      console.warn("Audio click failed", e);
+    if (!this.audioEnabled) return;
+    this.initAudio();
+    if (this.clickSound) {
+      this.clickSound.play();
     }
   }
 
   playStampSound() {
-    if (!this.audioEnabled || !this.audioCtx) return;
-    try {
-      const bufferSize = this.audioCtx.sampleRate * 0.12;
-      const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        data[i] = Math.random() * 2 - 1;
-      }
-      
-      const noise = this.audioCtx.createBufferSource();
-      noise.buffer = buffer;
-      
-      const filter = this.audioCtx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(250, this.audioCtx.currentTime);
-      filter.Q.setValueAtTime(5, this.audioCtx.currentTime);
-      
-      const gain = this.audioCtx.createGain();
-      gain.gain.setValueAtTime(0.12, this.audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.12);
-      
-      noise.connect(filter);
-      filter.connect(gain);
-      gain.connect(this.audioCtx.destination);
-      
-      noise.start();
-      
-      const osc = this.audioCtx.createOscillator();
-      const oscGain = this.audioCtx.createGain();
-      osc.connect(oscGain);
-      oscGain.connect(this.audioCtx.destination);
-      osc.frequency.setValueAtTime(75, this.audioCtx.currentTime);
-      osc.frequency.linearRampToValueAtTime(40, this.audioCtx.currentTime + 0.10);
-      oscGain.gain.setValueAtTime(0.20, this.audioCtx.currentTime);
-      oscGain.gain.linearRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.12);
-      osc.start();
-      osc.stop(this.audioCtx.currentTime + 0.12);
-    } catch (e) {
-      console.warn("Audio stamp failed", e);
+    if (!this.audioEnabled) return;
+    this.initAudio();
+    if (this.stampSound) {
+      this.stampSound.play();
     }
   }
 
   playBuzzerSound() {
-    if (!this.audioEnabled || !this.audioCtx) return;
-    try {
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(this.audioCtx.destination);
-      
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(140, this.audioCtx.currentTime);
-      
-      gain.gain.setValueAtTime(0.15, this.audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.25);
-      
-      osc.start();
-      osc.stop(this.audioCtx.currentTime + 0.25);
-    } catch (e) {
-      console.warn("Audio buzzer failed", e);
+    if (!this.audioEnabled) return;
+    this.initAudio();
+    if (this.buzzerSound) {
+      this.buzzerSound.play();
     }
   }
 
   playScanSuccessSound() {
-    if (!this.audioEnabled || !this.audioCtx) return;
-    try {
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(this.audioCtx.destination);
-      
-      osc.frequency.setValueAtTime(300, this.audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(1000, this.audioCtx.currentTime + 0.15);
-      
-      gain.gain.setValueAtTime(0.08, this.audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.18);
-      
-      osc.start();
-      osc.stop(this.audioCtx.currentTime + 0.18);
-    } catch (e) {
-      console.warn("Scan sound failed", e);
-    }
+    if (!this.audioEnabled) return;
+    this.playClickSound();
   }
 
   // Push notifications generator
