@@ -73,31 +73,24 @@
     }
   }
 
-  // Mechanical PIN Dial grid presses
-  function pressPinKey(num) {
-    if (inputPIN.length >= 4) return;
-    appState.playClickSound();
-    inputPIN += num;
+  // Native Keyboard PIN input handler
+  function handlePinInput() {
+    inputPIN = inputPIN.replace(/[^0-9]/g, '');
     
     if (inputPIN.length === 4) {
       setTimeout(() => {
         const correctPIN = appState.registeredPIN || '1234';
         if (inputPIN === correctPIN) {
           appState.isAuthenticated = true;
-          appState.showToast("🔓 Access granted");
+          appState.showToast("🔓 Quick access PIN granted");
           appState.playStampSound();
         } else {
-          appState.showToast("❌ Incorrect PIN", "error");
+          appState.showToast("❌ Incorrect access PIN", "error");
           appState.playBuzzerSound();
           inputPIN = '';
         }
       }, 350);
     }
-  }
-
-  function clearPIN() {
-    appState.playClickSound();
-    inputPIN = '';
   }
 
   function handleBiometricsSuccess() {
@@ -222,45 +215,25 @@
 
       <!-- ---------------- PIN TAB ---------------- -->
       {#if activeTab === 'pin'}
-        <div class="space-y-4 flex flex-col items-center">
-          <!-- Pin Dots Visualizer -->
-          <div class="flex gap-4 mb-2">
-            {#each Array(4) as _, idx}
-              <div class="w-4 h-4 rounded-full border-2 border-[#2A2521] flex items-center justify-center transition-all duration-150">
-                {#if inputPIN.length > idx}
-                  <div class="w-2 h-2 rounded-full bg-[#2A2521] animate-fade-in"></div>
-                {/if}
-              </div>
-            {/each}
+        <div class="space-y-4 text-left">
+          <div>
+            <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="login-pin">Enter 4-Digit Access PIN</label>
+            <input 
+              id="login-pin"
+              type="password" 
+              pattern="[0-9]*" 
+              inputmode="numeric" 
+              maxlength="4" 
+              bind:value={inputPIN} 
+              oninput={handlePinInput}
+              class="w-full text-center text-xl tracking-[1.2em] pl-6 py-2.5 rounded border border-[#767068]/30 bg-white focus:outline-none focus:border-[#3E6650] font-mono"
+              placeholder="••••"
+              required 
+            />
           </div>
-
-          <!-- PIN Dial Grid Keypad -->
-          <div class="grid grid-cols-3 gap-3 w-56 font-mono">
-            {#each [1, 2, 3, 4, 5, 6, 7, 8, 9] as num}
-              <button
-                type="button"
-                onclick={() => pressPinKey(num)}
-                class="w-16 h-12 bg-[#F6F2EA]/40 border border-[#767068]/30 hover:bg-[#F6F2EA] hover:border-[#2A2521] text-sm font-bold rounded flex items-center justify-center transition-all cursor-pointer select-none"
-              >
-                {num}
-              </button>
-            {/each}
-            <button
-              type="button"
-              onclick={clearPIN}
-              class="w-16 h-12 text-[10px] font-bold text-[#AC3B2A] hover:bg-red-50 rounded flex items-center justify-center transition-all cursor-pointer"
-            >
-              CLEAR
-            </button>
-            <button
-              type="button"
-              onclick={() => pressPinKey(0)}
-              class="w-16 h-12 bg-[#F6F2EA]/40 border border-[#767068]/30 hover:bg-[#F6F2EA] hover:border-[#2A2521] text-sm font-bold rounded flex items-center justify-center transition-all cursor-pointer select-none"
-            >
-              0
-            </button>
-            <div class="w-16 h-12"></div>
-          </div>
+          <p class="text-[9px] text-[#767068] font-mono text-center">
+            Verification occurs automatically upon entering the 4th digit.
+          </p>
         </div>
       {/if}
 
