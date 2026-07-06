@@ -42,10 +42,20 @@
 
   function triggerAppUpdate() {
     appState.playClickSound();
+    
+    // Save version flag to localStorage to prevent repeated modals for this version
+    localStorage.setItem('catersync_last_update_clicked_version', appState.version);
+
     if (swRegistration && swRegistration.waiting) {
       swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
     }
     showUpdateModal = false;
+
+    // Force page reload immediately after message dispatch to trigger activation reload
+    sessionStorage.setItem('catersync_update_reloaded', 'true');
+    setTimeout(() => {
+      window.location.reload();
+    }, 400);
   }
 
   function toggleAutoUpdate() {
@@ -88,16 +98,23 @@
 
           // Check if an update was already waiting when the user opened the app
           const justReloaded = sessionStorage.getItem('catersync_update_reloaded') === 'true';
+          const lastClickedVersion = localStorage.getItem('catersync_last_update_clicked_version');
+
           if (justReloaded) {
             sessionStorage.removeItem('catersync_update_reloaded');
           } else if (reg.waiting) {
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-            if (autoUpdateEnabled) {
+            if (lastClickedVersion === appState.version) {
+              // Already clicked Update Now for this version: skip waiting silently
               reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-            } else if (isStandalone) {
-              showUpdateModal = true;
             } else {
-              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+              const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+              if (autoUpdateEnabled) {
+                reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+              } else if (isStandalone) {
+                showUpdateModal = true;
+              } else {
+                reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+              }
             }
           }
 

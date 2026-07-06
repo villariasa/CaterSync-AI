@@ -330,14 +330,14 @@
           class="text-[10px] font-mono text-[#F6F2EA] bg-[#3E6650] hover:bg-[#3E6650]/90 flex items-center gap-1 px-2.5 py-1.5 rounded border border-transparent shadow-sm transition-all btn-interactive"
         >
           <Download size={12} />
-          <span>Install PWA App</span>
+          <span>Install App</span>
         </button>
       {/if}
     </div>
 
     <!-- App Version -->
     <div class="text-center mt-3 text-[10px] font-mono text-[#767068] opacity-75">
-      Catersync PWA Console v{appState.version}
+      Catersync Console v{appState.version}
     </div>
 
   </div>
