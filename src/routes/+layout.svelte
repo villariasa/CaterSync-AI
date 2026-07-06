@@ -15,7 +15,9 @@
     Settings,
     FileText,
     Download,
-    LogOut
+    LogOut,
+    Menu,
+    X
   } from '@lucide/svelte';
   import { page } from '$app/state';
   import { CateringState, setCateringContext } from '$lib/states.svelte.js';
@@ -31,6 +33,7 @@
   let showUpdateModal = $state(false);
   let autoUpdateEnabled = $state(false);
   let swRegistration = $state(null);
+  let showMobileMenu = $state(false);
 
   function handleLogoutClick() {
     appState.playClickSound();
@@ -178,66 +181,154 @@
     <!-- STICKY HEADER & NAV CONTAINER -->
     <div class="sticky top-0 z-30 bg-[#F6F2EA]/90 backdrop-blur-md border-b border-[#767068]/30 animate-fade-in">
       <!-- TOP BAR -->
-      <header class="px-6 py-4 flex items-center justify-between bg-white/50">
-        <div class="flex items-center gap-3">
+      <header class="px-4 sm:px-6 py-3 flex items-center justify-between bg-white/50">
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0">
           <!-- Minimalist receipt stamp logo -->
-          <div class="px-2.5 py-1 border-2 border-[#2A2521] font-mono text-sm font-black tracking-tighter uppercase select-none">
+          <div class="hidden sm:block px-2.5 py-1 border-2 border-[#2A2521] font-mono text-sm font-black tracking-tighter uppercase select-none">
             THE PASS
           </div>
-          <div>
-            <h1 class="text-lg font-black tracking-tight leading-none uppercase">{appState.settings.business_name}</h1>
-            <span class="text-[9px] font-mono text-[#767068] tracking-widest uppercase">System Core Control</span>
+          <div class="truncate">
+            <h1 class="text-sm sm:text-base md:text-lg font-black tracking-tight leading-none uppercase truncate">{appState.settings.business_name}</h1>
+            <span class="text-[8px] sm:text-[9px] font-mono text-[#767068] tracking-widest uppercase block mt-0.5">System Core Control</span>
           </div>
         </div>
 
         <!-- Right Controls and Network status -->
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 sm:gap-4 shrink-0 font-mono text-xs">
           <!-- PWA Install app Button -->
           {#if appState.pwaInstallable}
             <button 
               onclick={() => appState.executeAppInstall()} 
-              class="btn-interactive px-3 py-1.5 rounded bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-mono text-[10px] font-bold flex items-center gap-1.5 transition-all shadow-sm"
+              class="btn-interactive px-2 py-1.5 rounded bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] text-[10px] font-bold flex items-center gap-1 transition-all shadow-sm"
+              title="Install App"
             >
-              <Download size={12} /> Install App
+              <Download size={12} />
+              <span class="hidden sm:inline">Install App</span>
             </button>
           {/if}
 
           <!-- Sound toggle -->
-          <button onclick={() => appState.toggleAudio()} class="btn-interactive p-2 rounded hover:bg-white/50 border border-transparent hover:border-[#767068]/20 flex items-center gap-1.5 text-xs font-mono text-[#767068]">
+          <button onclick={() => appState.toggleAudio()} class="btn-interactive p-1.5 rounded hover:bg-white/50 border border-transparent hover:border-[#767068]/20 flex items-center gap-1 text-[#767068]">
             {#if appState.audioEnabled}
-              <Volume2 size={14} class="text-[#3E6650]" />
-              <span class="hidden sm:inline">Sound: ON</span>
+              <Volume2 size={13} class="text-[#3E6650]" />
+              <span class="hidden sm:inline text-[10px]">Sound: ON</span>
             {:else}
-              <VolumeX size={14} class="text-[#AC3B2A]" />
-              <span class="hidden sm:inline">Sound: MUTED</span>
+              <VolumeX size={13} class="text-[#AC3B2A]" />
+              <span class="hidden sm:inline text-[10px]">Sound: MUTED</span>
             {/if}
           </button>
 
           <!-- Log Out Button -->
           <button 
             onclick={handleLogoutClick} 
-            class="btn-interactive p-2 rounded border border-transparent hover:bg-[#AC3B2A]/10 hover:text-[#AC3B2A] hover:border-[#AC3B2A]/20 flex items-center gap-1.5 text-xs font-mono text-[#767068]"
+            class="btn-interactive p-1.5 rounded border border-transparent hover:bg-[#AC3B2A]/10 hover:text-[#AC3B2A] hover:border-[#AC3B2A]/20 flex items-center gap-1 text-[#767068]"
+            title="Log Out"
           >
-            <LogOut size={14} class="text-[#AC3B2A]" />
-            <span class="hidden sm:inline">Log Out</span>
+            <LogOut size={13} class="text-[#AC3B2A]" />
+            <span class="hidden sm:inline text-[10px]">Log Out</span>
           </button>
 
           <!-- Live Clock -->
-          <div class="hidden md:flex items-center gap-2 text-xs font-mono text-[#767068]">
+          <div class="hidden lg:flex items-center gap-1.5 text-[#767068]">
             <span>CLOCK:</span>
             <span class="text-[#2A2521] font-bold">{currentDateTime || '2026-07-06 13:33'}</span>
           </div>
 
           {#if appState.usingMockData}
-            <span class="px-3 py-1 text-[10px] font-mono font-bold bg-[#D9A441]/15 text-[#D9A441] border border-[#D9A441]/30 rounded">▲ OFFLINE SIMULATION</span>
+            <span class="hidden md:inline-block px-2.5 py-0.5 text-[9px] font-bold bg-[#D9A441]/15 text-[#D9A441] border border-[#D9A441]/30 rounded">▲ OFFLINE SIMULATION</span>
           {:else}
-            <span class="px-3 py-1 text-[10px] font-mono font-bold bg-[#3E6650]/15 text-[#3E6650] border border-[#3E6650]/30 rounded">● POSTGRES ACTIVE</span>
+            <span class="hidden md:inline-block px-2.5 py-0.5 text-[9px] font-bold bg-[#3E6650]/15 text-[#3E6650] border border-[#3E6650]/30 rounded">● POSTGRES ACTIVE</span>
           {/if}
+
+          <!-- Mobile Hamburger Toggle -->
+          <button 
+            onclick={() => { appState.playClickSound(); showMobileMenu = !showMobileMenu; }} 
+            class="md:hidden p-1.5 rounded hover:bg-white/50 border border-transparent hover:border-[#767068]/20 text-[#767068]"
+            aria-label="Toggle Menu"
+          >
+            {#if showMobileMenu}
+              <X size={16} />
+            {:else}
+              <Menu size={16} />
+            {/if}
+          </button>
         </div>
       </header>
 
-      <!-- NAVIGATION TABS ROW -->
-      <div class="bg-white/20 px-6 py-2 border-t border-[#767068]/15">
+      <!-- MOBILE NAVIGATION TABS (Toggled) -->
+      {#if showMobileMenu}
+        <div class="md:hidden bg-white/95 border-t border-[#767068]/20 px-6 py-4 space-y-2 animate-fade-in">
+          <nav class="flex flex-col gap-2 font-sans">
+            <a 
+              href="/" 
+              onclick={() => { showMobileMenu = false; appState.playClickSound(); }}
+              class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-2 {isRouteActive('/') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521] bg-slate-50' }"
+            >
+              <LayoutDashboard size={14} />
+              Overview
+            </a>
+            <a 
+              href="/planner" 
+              onclick={() => { showMobileMenu = false; appState.playClickSound(); }}
+              class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-2 {isRouteActive('/planner') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521] bg-slate-50' }"
+            >
+              <UtensilsCrossed size={14} />
+              Planner
+            </a>
+            <a 
+              href="/customers" 
+              onclick={() => { showMobileMenu = false; appState.playClickSound(); }}
+              class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-2 {isRouteActive('/customers') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521] bg-slate-50' }"
+            >
+              <Users size={14} />
+              Customers
+            </a>
+            <a 
+              href="/menus" 
+              onclick={() => { showMobileMenu = false; appState.playClickSound(); }}
+              class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-2 {isRouteActive('/menus') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521] bg-slate-50' }"
+            >
+              <FileText size={14} />
+              Menus
+            </a>
+            <a 
+              href="/inventory" 
+              onclick={() => { showMobileMenu = false; appState.playClickSound(); }}
+              class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-2 {isRouteActive('/inventory') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521] bg-slate-50' }"
+            >
+              <Package size={14} />
+              Inventory
+            </a>
+            <a 
+              href="/scheduling" 
+              onclick={() => { showMobileMenu = false; appState.playClickSound(); }}
+              class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-2 {isRouteActive('/scheduling') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521] bg-slate-50' }"
+            >
+              <ChefHat size={14} />
+              Kitchen & Roster
+            </a>
+            <a 
+              href="/audits" 
+              onclick={() => { showMobileMenu = false; appState.playClickSound(); }}
+              class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-2 {isRouteActive('/audits') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521] bg-slate-50' }"
+            >
+              <Wallet size={14} />
+              Audits
+            </a>
+            <a 
+              href="/settings" 
+              onclick={() => { showMobileMenu = false; appState.playClickSound(); }}
+              class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-2 {isRouteActive('/settings') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521] bg-slate-50' }"
+            >
+              <Settings size={14} />
+              Settings
+            </a>
+          </nav>
+        </div>
+      {/if}
+
+      <!-- DESKTOP NAVIGATION TABS ROW -->
+      <div class="hidden md:block bg-white/20 px-6 py-2 border-t border-[#767068]/15">
         <nav class="flex flex-wrap gap-1">
           <a href="/" class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-1.5 {isRouteActive('/') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
             <LayoutDashboard size={13} />
