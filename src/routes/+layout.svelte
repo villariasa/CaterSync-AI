@@ -89,25 +89,6 @@
 
   const unreadCount = $derived(appState.notifications.filter(n => n.unread).length);
 
-  $effect(() => {
-    if (appState.settings.broadcasted_update_version && 
-        appState.settings.broadcasted_update_version !== appState.version) {
-      
-      const notifMessage = `📢 System Update Broadcast: Version ${appState.settings.broadcasted_update_version} is available. Details: ${appState.settings.broadcasted_update_message}`;
-      
-      // Add to Notification Bell Center history if not already present
-      const alreadyNotified = appState.notifications.some(n => n.message.includes(notifMessage));
-      if (!alreadyNotified) {
-        appState.showToast(notifMessage, "info");
-        // Only trigger update modal if they haven't explicitly closed it for this version
-        const lastClosedBroadcastVersion = localStorage.getItem('catersync_last_closed_broadcast');
-        if (lastClosedBroadcastVersion !== appState.settings.broadcasted_update_version) {
-          showUpdateModal = true;
-        }
-      }
-    }
-  });
-
   onMount(() => {
     // Load transaction data cache from local file
     appState.loadDataFromFile().then(() => {
@@ -634,13 +615,7 @@
 
       <div class="grid grid-cols-2 gap-3 pt-2 font-mono text-xs">
         <button 
-          onclick={() => { 
-            appState.playClickSound(); 
-            showUpdateModal = false; 
-            if (appState.settings.broadcasted_update_version) {
-              localStorage.setItem('catersync_last_closed_broadcast', appState.settings.broadcasted_update_version);
-            }
-          }} 
+          onclick={() => { appState.playClickSound(); showUpdateModal = false; }} 
           class="py-2.5 rounded border border-[#767068]/30 text-[#767068] bg-slate-50 hover:bg-slate-100 transition-all font-bold text-center"
         >
           Later

@@ -11,8 +11,7 @@
     Save, 
     Plus, 
     Trash2, 
-    UserX,
-    Bell
+    UserX 
   } from '@lucide/svelte';
 
   const appState = getCateringContext();
@@ -182,27 +181,6 @@
     }
   }
 
-  // Broadcast update bindings
-  let broadcastVersion = $state('');
-  let broadcastMessage = $state('');
-  let broadcastStatus = $state('');
-
-  async function submitBroadcast(e) {
-    e.preventDefault();
-    if (!broadcastVersion || !broadcastMessage) return;
-    appState.playClickSound();
-    
-    broadcastStatus = "Broadcasting update...";
-    const res = await appState.broadcastUpdate(broadcastVersion, broadcastMessage);
-    if (res.success) {
-      broadcastStatus = `✅ Broadcast successful! Version ${broadcastVersion} alerted.`;
-      broadcastVersion = '';
-      broadcastMessage = '';
-    } else {
-      broadcastStatus = `❌ Broadcast failed: ${res.error}`;
-    }
-  }
-
   import { onMount } from 'svelte';
   onMount(() => {
     window.deactivateStaff = deactivateStaff;
@@ -251,12 +229,6 @@
         class="w-full text-left px-3 py-2 rounded transition-colors flex items-center gap-2 {activeSection === 'suppliers' ? 'bg-[#2A2521] text-[#F6F2EA] font-bold' : 'hover:bg-[#F6F2EA]/80 text-[#767068]'}"
       >
         <Truck size={13} /> Suppliers Registry
-      </button>
-      <button 
-        onclick={() => { appState.playClickSound(); activeSection = 'broadcast'; }}
-        class="w-full text-left px-3 py-2 rounded transition-colors flex items-center gap-2 {activeSection === 'broadcast' ? 'bg-[#2A2521] text-[#F6F2EA] font-bold' : 'hover:bg-[#F6F2EA]/80 text-[#767068]'}"
-      >
-        <Bell size={13} /> Update Broadcast
       </button>
     </nav>
   </div>
@@ -438,57 +410,6 @@
             { key: 'avg_lead_time_days', label: 'Lead Time', render: (row) => `${row.avg_lead_time_days} days` }
           ]}
         />
-      </div>
-    {/if}
-
-    <!-- ----------------------- BROADCAST UPDATE ----------------------- -->
-    {#if activeSection === 'broadcast'}
-      <div class="ticket-card p-6 bg-white animate-fade-in">
-        <div class="mb-4">
-          <span class="ticket-stamp">SYSTEM TELEMETRY</span>
-          <h2 class="text-lg font-bold text-[#2A2521] mt-2">Broadcast System Update</h2>
-          <p class="text-xs text-[#767068] mt-1 leading-relaxed">
-            Dispatch a system-wide update notice. Any connected active operator terminals will instantly display the update prompt overlay and queue a persistent alert to their bell logs.
-          </p>
-        </div>
-
-        <form onsubmit={submitBroadcast} class="space-y-4 font-sans text-xs">
-          <div>
-            <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="broadcast-version">New Version Code</label>
-            <input 
-              id="broadcast-version"
-              type="text" 
-              bind:value={broadcastVersion} 
-              placeholder="e.g. 1.3.3"
-              class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs focus:outline-none focus:border-[#3E6650]" 
-              required
-            />
-          </div>
-          <div>
-            <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="broadcast-desc">Update Description / Changelog</label>
-            <textarea 
-              id="broadcast-desc"
-              bind:value={broadcastMessage} 
-              placeholder="e.g. Critical security fixes for quick access pin validations."
-              rows="4"
-              class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs focus:outline-none focus:border-[#3E6650]" 
-              required
-            ></textarea>
-          </div>
-
-          <button 
-            type="submit" 
-            class="px-4 py-2.5 bg-[#AC3B2A] hover:bg-[#AC3B2A]/90 text-[#F6F2EA] font-mono text-xs font-bold rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1.5"
-          >
-            <Save size={13} /> Dispatch Update Notification
-          </button>
-        </form>
-
-        {#if broadcastStatus}
-          <div class="mt-4 p-3 bg-slate-50 border border-[#767068]/20 font-mono text-[10px] uppercase text-[#2A2521]">
-            {broadcastStatus}
-          </div>
-        {/if}
       </div>
     {/if}
 
