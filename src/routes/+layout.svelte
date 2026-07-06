@@ -68,19 +68,11 @@
           console.log("Service Worker registered.");
           swRegistration = reg;
 
-          // Check if there is an update already waiting
-          if (reg.waiting) {
-            if (autoUpdateEnabled) {
-              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-            } else {
-              showUpdateModal = true;
-            }
-          }
-
           reg.addEventListener('updatefound', () => {
             const newWorker = reg.installing;
             if (newWorker) {
               newWorker.addEventListener('statechange', () => {
+                // Trigger modal only if there was a previous active controller
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                   if (autoUpdateEnabled) {
                     reg.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -95,8 +87,9 @@
         .catch((err) => console.warn("Service Worker registration failed:", err));
 
       let refreshing = false;
+      const hadController = !!navigator.serviceWorker.controller;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
+        if (hadController && !refreshing) {
           refreshing = true;
           window.location.reload();
         }
