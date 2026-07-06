@@ -35,6 +35,7 @@
   let autoUpdateEnabled = $state(false);
   let swRegistration = $state(null);
   let showMobileMenu = $state(false);
+  let shouldReloadOnControllerChange = false;
 
   function handleLogoutClick() {
     appState.playClickSound();
@@ -46,6 +47,8 @@
     
     // Save version flag to localStorage to prevent repeated modals for this version
     localStorage.setItem('catersync_last_update_clicked_version', appState.version);
+
+    shouldReloadOnControllerChange = true;
 
     if (swRegistration && swRegistration.waiting) {
       swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -133,9 +136,12 @@
 
                 if (serverVersion && serverVersion === appState.version) {
                   // Silent skip waiting if version matches
+                  shouldReloadOnControllerChange = false;
                   reg.waiting.postMessage({ type: 'SKIP_WAITING' });
                   return;
                 }
+
+                shouldReloadOnControllerChange = true;
 
                 if (lastClickedVersion === appState.version) {
                   // Already clicked Update Now for this version: skip waiting silently
@@ -168,9 +174,12 @@
 
                       if (serverVersion && serverVersion === appState.version) {
                         console.log("Service Worker files changed but SW_VERSION is identical. Skipping prompt.");
+                        shouldReloadOnControllerChange = false;
                         reg.waiting.postMessage({ type: 'SKIP_WAITING' });
                         return;
                       }
+
+                      shouldReloadOnControllerChange = true;
 
                       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
@@ -210,7 +219,7 @@
       let refreshing = false;
       const hadController = !!navigator.serviceWorker.controller;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (hadController && !refreshing) {
+        if (hadController && !refreshing && shouldReloadOnControllerChange) {
           refreshing = true;
           sessionStorage.setItem('catersync_update_reloaded', 'true');
           window.location.reload();
