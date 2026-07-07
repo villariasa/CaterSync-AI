@@ -29,6 +29,7 @@
   // Review states
   let rating = $state(5);
   let comments = $state('');
+  let agreedToTerms = $state(false);
 
   // Countdown timer reactive variables
   let days = $state(0);
@@ -333,8 +334,18 @@
     }
   }
 
-  onMount(() => {
+  onMount(async () => {
     // Canvas sizing setup on tab switch
+    const urlParams = new URLSearchParams(window.location.search);
+    const contactParam = urlParams.get('contact') || urlParams.get('token');
+    
+    if (contactParam) {
+      console.log('🔗 Auto-login query parameter detected:', contactParam);
+      customerContact = contactParam;
+      // Trigger login automatically
+      await handleLogin();
+    }
+
     return () => {
       clearInterval(intervalId);
     };
@@ -723,9 +734,22 @@
                         </div>
                       </div>
 
+                      <div class="flex items-start gap-2.5 pt-2">
+                        <input 
+                          id="agree-checkbox" 
+                          type="checkbox" 
+                          bind:checked={agreedToTerms} 
+                          class="mt-0.5 h-3.5 w-3.5 accent-[#D9A441] rounded border-[#767068]/40 bg-[#1F1B18]"
+                        />
+                        <label for="agree-checkbox" class="text-[10px] text-[#767068] select-none leading-relaxed">
+                          I agree to the Terms of Service, cancellation policies, and data Privacy Policy.
+                        </label>
+                      </div>
+
                       <button 
                         onclick={submitSignature}
-                        class="px-4 py-2 bg-[#D9A441] text-[#1F1B18] hover:bg-[#D9A441]/90 rounded transition-all font-bold text-xs uppercase tracking-wider"
+                        disabled={!agreedToTerms}
+                        class="px-4 py-2 bg-[#D9A441] text-[#1F1B18] hover:bg-[#D9A441]/90 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-all font-bold text-xs uppercase tracking-wider"
                       >
                         Submit Signature
                       </button>

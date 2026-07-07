@@ -41,7 +41,19 @@
         return `<span class="text-slate-300">—</span>`;
       }
     },
-    { key: 'preferred_theme', label: 'Preferred Theme', sortable: true, isSans: true, align: 'right' }
+    { key: 'preferred_theme', label: 'Preferred Theme', sortable: true, isSans: true },
+    {
+      key: 'portal_link',
+      label: 'Portal Link',
+      sortable: false,
+      render: (row) => {
+        const link = `${typeof window !== 'undefined' ? window.location.origin : ''}/portal?contact=${encodeURIComponent(row.contact || row.name)}`;
+        return `<button 
+          onclick="navigator.clipboard.writeText('${link}'); alert('📋 Direct Client Portal Link Copied:\\n${link}');" 
+          class="px-2 py-0.5 bg-[#2A2521] text-white hover:bg-[#D9A441] hover:text-[#1F1B18] rounded text-[10px] uppercase font-bold tracking-wider transition-all"
+        >Copy Link</button>`;
+      }
+    }
   ];
 
   async function submitCustomer(e) {
