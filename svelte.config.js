@@ -1,8 +1,11 @@
-import adapter from '@sveltejs/adapter-cloudflare';
+import adapterCloudflare from '@sveltejs/adapter-cloudflare';
+import adapterNode from '@sveltejs/adapter-node';
+
+const isDev = !process.env.CF_PAGES;
 
 export default {
   kit: {
-    adapter: adapter()
+    adapter: isDev ? adapterNode() : adapterCloudflare()
   }
 };
 
