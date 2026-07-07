@@ -491,12 +491,10 @@
       <header class="px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4 bg-white/50 dark:bg-[#24201E]/50">
         <!-- LEFT: LOGO & TITLE & SEARCH -->
         <div class="flex items-center gap-3 min-w-0 shrink-0">
-          <div class="hidden lg:block px-2 py-0.5 border border-[#2A2521] dark:border-[#ECE7DF] font-mono text-[9px] font-black tracking-tighter uppercase select-none">
-            THE PASS
-          </div>
-          <div class="truncate mr-1">
-            <h1 class="text-xs sm:text-sm font-black tracking-tight leading-none uppercase truncate">{appState.settings.business_name}</h1>
-          </div>
+          <a href="/" onclick={() => appState.playClickSound()} class="flex items-center gap-2 no-underline text-[#2A2521] dark:text-[#EBE5DC] select-none hover:opacity-90 active:scale-95 transition-all">
+            <img src={favicon} alt="Logo" class="w-6 h-6 object-contain" />
+            <h1 class="text-xs font-black tracking-tight leading-none uppercase truncate">{appState.settings.business_name}</h1>
+          </a>
           
           <!-- Global Search (Facebook style) -->
           <div class="relative hidden md:block select-none">
@@ -546,9 +544,6 @@
         <!-- CENTER: DESKTOP HEADER NAVIGATION (Sleek Centered Icons) -->
         <div class="hidden md:flex flex-1 justify-center min-w-0 px-4">
           <nav class="app-nav-row justify-center max-w-full">
-            <a href="/" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/') ? 'active' : ''}" data-tooltip="Overview">
-              <LayoutDashboard size={16} />
-            </a>
             <a href="/planner" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/planner') ? 'active' : ''}" data-tooltip="Planner">
               <UtensilsCrossed size={16} />
             </a>
@@ -869,9 +864,7 @@
       <!-- MOBILE-ONLY HEADER NAVIGATION (Scrollable Row Under Logo row) -->
       <div class="md:hidden bg-white/20 dark:bg-[#24201E]/20 px-4 py-2 border-t border-[#767068]/15 backdrop-blur-sm">
         <nav class="app-nav-row justify-center max-w-full">
-          <a href="/" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/') ? 'active' : ''}" data-tooltip="Overview">
-            <LayoutDashboard size={16} />
-          </a>
+
           <a href="/planner" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/planner') ? 'active' : ''}" data-tooltip="Planner">
             <UtensilsCrossed size={16} />
           </a>
