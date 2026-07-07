@@ -66,7 +66,12 @@
           startCountdown();
         }
       } else {
-        errorMessage = data.error || 'Identity check failed. Please check your contact identifier.';
+        if (response.status === 503 || data.offlineFallback) {
+          console.warn("DB offline fallback triggered via 503 response code.");
+          mockOfflineLogin();
+        } else {
+          errorMessage = data.error || 'Identity check failed. Please check your contact identifier.';
+        }
       }
     } catch (err) {
       errorMessage = 'Unable to reach authentication server.';

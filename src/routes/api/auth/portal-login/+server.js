@@ -55,6 +55,9 @@ export async function POST({ request, cookies }) {
       } : null
     });
   } catch (err) {
+    if (err.message.includes('ECONNREFUSED') || err.message.includes('connection')) {
+      return json({ offlineFallback: true, error: 'Database service is offline. Falling back to local offline simulation.' }, { status: 503 });
+    }
     return json({ error: err.message }, { status: 500 });
   }
 }
