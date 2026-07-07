@@ -24,13 +24,25 @@ export async function POST({ request }) {
       return json({ error: 'Credential ID and Public Key are required' }, { status: 400 });
     }
 
-    // Insert credential
-    await pool.query(
-      `INSERT INTO webauthn_credentials (account_id, account_type, credential_id, public_key, sign_count, device_label)
-       VALUES ($1, $2, $3, $4, 0, $5)
-       ON CONFLICT (credential_id) DO UPDATE SET public_key = EXCLUDED.public_key, device_label = EXCLUDED.device_label`,
-      [accountId, type, credentialId, publicKey, deviceLabel || 'Biometric Device']
+    // Safe upsert check
+    const existRes = await pool.query(
+      'SELECT id FROM webauthn_credentials WHERE credential_id = $1 LIMIT 1',
+      [credentialId]
     );
+
+    if (existRes.rows.length > 0) {
+      // Update existing
+      await pool.query(
+        'UPDATE webauthn_credentials SET public_key = $1, device_label = $2 WHERE credential_id = $3',
+        [publicKey, deviceLabel || 'Biometric Device', credentialId]
+      );
+    } else {
+      // Insert new
+      await pool.query(
+        'INSERT INTO webauthn_credentials (account_id, account_type, credential_id, public_key, sign_count, device_label) VALUES ($1, $2, $3, $4, 0, $5)',
+        [accountId, type, credentialId, publicKey, deviceLabel || 'Biometric Device']
+      );
+    }
 
     return json({ success: true, message: 'WebAuthn passkey registered successfully' });
   } catch (err) {

@@ -49,6 +49,13 @@
   let showWelcomeScreen = $state(false);
   let welcomeName = $state('');
 
+  function getSafeUsername() {
+    if (appState.currentUser && appState.currentUser.username) {
+      return appState.currentUser.username;
+    }
+    return username || 'Operator';
+  }
+
   function getGreeting() {
     const hr = new Date().getHours();
     if (hr >= 5 && hr < 12) return 'Good morning';
@@ -59,7 +66,11 @@
   function triggerWelcomeRedirect(name) {
     welcomeName = name || 'Operator';
     showWelcomeScreen = true;
-    appState.playStampSound();
+    try {
+      appState.playStampSound();
+    } catch (e) {
+      console.warn("Welcome sound error:", e);
+    }
     setTimeout(() => {
       appState.isAuthenticated = true;
       goto('/');
@@ -67,16 +78,32 @@
   }
 
   function startBiometricRegistration() {
-    appState.playClickSound();
+    try {
+      appState.playClickSound();
+    } catch (e) {
+      console.warn("Click sound error:", e);
+    }
     showBiometricSetupPrompt = false;
     showBiometricRegisterScanner = true;
   }
 
   function skipBiometricRegistration() {
-    appState.playClickSound();
+    try {
+      appState.playClickSound();
+    } catch (e) {
+      console.warn("Click sound error:", e);
+    }
     showBiometricSetupPrompt = false;
     showBiometricRegisterScanner = false;
-    triggerWelcomeRedirect(appState.currentUser?.name || username.trim().split('@')[0]);
+    
+    let safeName = 'Operator';
+    try {
+      const u = getSafeUsername();
+      safeName = appState.currentUser?.name || (u ? u.trim().split('@')[0] : 'Operator');
+    } catch (e) {
+      console.warn("Operator name resolve error:", e);
+    }
+    triggerWelcomeRedirect(safeName);
   }
 
   $effect(() => {
@@ -640,12 +667,19 @@
             <h2 class="text-xs font-mono font-bold uppercase tracking-tight text-[#767068] text-center">Registering Device Biometrics</h2>
             <BiometricScanner
               action="register"
-              username={username.trim()}
-              email={username.trim()}
+              username={getSafeUsername()}
+              email={getSafeUsername()}
               accountType="operator"
               onsuccess={() => {
                 showBiometricRegisterScanner = false;
-                triggerWelcomeRedirect(appState.currentUser?.name || username.trim().split('@')[0]);
+                let safeName = 'Operator';
+                try {
+                  const u = getSafeUsername();
+                  safeName = appState.currentUser?.name || (u ? u.trim().split('@')[0] : 'Operator');
+                } catch (e) {
+                  console.warn("Operator name resolve error:", e);
+                }
+                triggerWelcomeRedirect(safeName);
               }}
               oncancel={skipBiometricRegistration}
             />
