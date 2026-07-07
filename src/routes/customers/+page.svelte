@@ -63,13 +63,25 @@
           email: row.email,
           name: row.name,
           contact: row.contact,
+          preferred_theme: row.preferred_theme,
+          dietary_prefs: row.dietary_prefs,
           emailConfig: appState.settings.emailConfig
         })
       });
 
       const res = await response.json();
       if (res.success) {
-        appState.showToast(`✅ Email successfully sent to ${row.email}!`);
+        if (res.usingFallback) {
+          appState.showToast(`✉️ Sandbox Email Dispatched! Link copied.`, 'success');
+          if (typeof window !== 'undefined' && window.navigator && window.navigator.clipboard) {
+            window.navigator.clipboard.writeText(res.previewUrl).then(() => {
+              appState.showToast(`📋 Sandbox email preview link copied!`, 'info');
+            }).catch(() => {});
+          }
+          console.log(`✉️ CaterSync Sandbox Email Preview URL: ${res.previewUrl}`);
+        } else {
+          appState.showToast(`✅ Email successfully sent to ${row.email}!`, 'success');
+        }
         appState.playStampSound();
       } else {
         throw new Error(res.error);
