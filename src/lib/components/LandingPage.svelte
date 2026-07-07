@@ -24,7 +24,7 @@
   let inputPIN = $state('');
   let isChecking = $state(false);
   let availableMethods = $state(['password']);
-  let selectedMethod = $state('password'); // password, pin, biometric
+  let selectedMethod = $state('password'); // password, pin, biometric, totp, totp-setup
 
   // Signup fields
   let isSignupMode = $state(false);
@@ -37,6 +37,11 @@
   let showInstallHelp = $state(false);
   let installHelp = $derived(appState.getPwaInstallHelp());
 
+  // TOTP Authenticator states
+  let totpToken = $state('');
+  let totpSetupSecret = $state('');
+  let totpSetupQrUrl = $state('');
+
   async function handleIdentifierSubmit(e) {
     if (e) e.preventDefault();
     if (!username.trim()) return;
@@ -44,16 +49,23 @@
     appState.playClickSound();
     isChecking = true;
     loginMessage = '';
+    totpToken = '';
 
     if (appState.usingMockData) {
       isChecking = false;
       const isRegistered = appState.currentUser && appState.currentUser.username === username.trim();
       const isLinkAdmin = username.trim().toLowerCase() === 'admin';
-      availableMethods = isRegistered ? (isLinkAdmin ? ['password', 'pin'] : ['pin']) : (isLinkAdmin ? ['password'] : []);
-      if (googleClientId) {
-        availableMethods.push('google');
+      availableMethods = isRegistered ? (isLinkAdmin ? ['password', 'pin'] : ['totp', 'pin']) : (isLinkAdmin ? ['password'] : ['totp-setup']);
+      
+      if (!isLinkAdmin && !isRegistered) {
+        totpSetupSecret = 'OFFLINETOTPSECRET';
+        totpSetupQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth%3A%2F%2Ftotp%2FCaterSync-AI%3Aoffline%3Fsecret%3DOFFLINETOTPSECRET%26issuer%3DCaterSync-AI';
+      } else {
+        totpSetupSecret = '';
+        totpSetupQrUrl = '';
       }
-      selectedMethod = availableMethods[0] || 'password';
+      
+      selectedMethod = availableMethods[0] || 'totp';
       step = 2;
     } else {
       try {
@@ -70,10 +82,14 @@
           if (!isLinkAdmin) {
             availableMethods = availableMethods.filter(m => m !== 'password');
           }
-          if (googleClientId) {
-            availableMethods.push('google');
+          if (res.totpSetup) {
+            totpSetupSecret = res.totpSetup.secret;
+            totpSetupQrUrl = res.totpSetup.qrCodeUrl;
+          } else {
+            totpSetupSecret = '';
+            totpSetupQrUrl = '';
           }
-          selectedMethod = availableMethods[0] || 'password';
+          selectedMethod = availableMethods[0] || 'totp';
           step = 2;
         } else {
           loginMessage = `❌ ${res.error || 'User not found or inactive.'}`;
@@ -83,11 +99,15 @@
         isChecking = false;
         console.warn("Pre-auth check fallback to local check:", err.message);
         const isLinkAdmin = username.trim().toLowerCase() === 'admin';
-        availableMethods = isLinkAdmin ? ['password', 'pin'] : ['pin'];
-        if (googleClientId) {
-          availableMethods.push('google');
+        availableMethods = isLinkAdmin ? ['password', 'pin'] : ['totp-setup', 'pin'];
+        if (!isLinkAdmin) {
+          totpSetupSecret = 'OFFLINETOTPSECRET';
+          totpSetupQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth%3A%2F%2Ftotp%2FCaterSync-AI%3Aoffline%3Fsecret%3DOFFLINETOTPSECRET%26issuer%3DCaterSync-AI';
+        } else {
+          totpSetupSecret = '';
+          totpSetupQrUrl = '';
         }
-        selectedMethod = availableMethods[0] || 'password';
+        selectedMethod = availableMethods[0] || 'totp';
         step = 2;
       }
     }
@@ -139,6 +159,54 @@
         loginMessage = `❌ Connection Error: ${err.message}`;
         appState.playBuzzerSound();
       }
+    }
+  }
+
+  async function handleTotpSubmit(e) {
+    if (e) e.preventDefault();
+    isChecking = true;
+    loginMessage = '';
+
+    if (appState.usingMockData || totpSetupSecret === 'OFFLINETOTPSECRET') {
+      isChecking = false;
+      if (totpToken.trim().length === 6 && !isNaN(totpToken.trim())) {
+        appState.isAuthenticated = true;
+        appState.currentUser = { username: username.trim(), role: 'Operator' };
+        appState.playStampSound();
+        goto('/');
+      } else {
+        loginMessage = '❌ Invalid code (Offline simulation requires 6 digits).';
+        appState.playBuzzerSound();
+      }
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/verify-totp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: username.trim(),
+          token: totpToken.trim(),
+          setupSecret: selectedMethod === 'totp-setup' ? totpSetupSecret : undefined
+        })
+      });
+      const data = await response.json();
+      isChecking = false;
+
+      if (response.ok && data.success) {
+        appState.isAuthenticated = true;
+        appState.currentUser = data.user;
+        appState.playStampSound();
+        goto('/');
+      } else {
+        loginMessage = `❌ ${data.error || 'Verification failed.'}`;
+        appState.playBuzzerSound();
+      }
+    } catch (err) {
+      isChecking = false;
+      loginMessage = `❌ Connection error: ${err.message}`;
+      appState.playBuzzerSound();
     }
   }
 
@@ -234,118 +302,8 @@
     }
   }
 
-  let googleClientId = $state('');
-
-  // Dynamic Google identity script loader
-  function loadGoogleScript() {
-    if (typeof window === 'undefined') return;
-    if (document.getElementById('google-gsi-client-operator')) {
-      initializeGoogleButton();
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.id = 'google-gsi-client-operator';
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      initializeGoogleButton();
-    };
-    document.head.appendChild(script);
-  }
-
-  function initializeGoogleButton() {
-    if (typeof window === 'undefined' || !window.google || !googleClientId) return;
-
-    try {
-      window.google.accounts.id.initialize({
-        client_id: googleClientId,
-        callback: handleGoogleCredentialResponse,
-        auto_select: false,
-        cancel_on_tap_outside: true
-      });
-
-      const parentDiv = document.getElementById('google-btn-operator');
-      if (parentDiv) {
-        window.google.accounts.id.renderButton(
-          parentDiv,
-          { theme: 'outline', size: 'large', width: parentDiv.offsetWidth, text: isSignupMode ? 'signup_with' : 'signin_with' }
-        );
-      }
-    } catch (err) {
-      console.error("Google Identity Operator initialization error:", err);
-    }
-  }
-
-  async function handleGoogleCredentialResponse(response) {
-    isChecking = true;
-    loginMessage = '';
-    regMessage = '';
-
-    try {
-      const res = await fetch('/api/auth/google-operator-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential: response.credential })
-      });
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        appState.isAuthenticated = true;
-        appState.currentUser = data.user;
-        appState.playStampSound();
-        goto('/');
-      } else {
-        const errMsg = data.error || 'Google Authentication failed.';
-        if (isSignupMode) regMessage = errMsg;
-        else loginMessage = errMsg;
-        appState.playBuzzerSound();
-      }
-    } catch (err) {
-      const errMsg = 'Google auth error: ' + err.message;
-      if (isSignupMode) regMessage = errMsg;
-      else loginMessage = errMsg;
-      appState.playBuzzerSound();
-    } finally {
-      isChecking = false;
-    }
-  }
-
-  $effect(() => {
-    if (isSignupMode !== undefined && googleClientId) {
-      setTimeout(initializeGoogleButton, 80);
-    }
-  });
-
-  $effect(() => {
-    if (step === 1 && googleClientId) {
-      setTimeout(initializeGoogleButton, 80);
-    }
-  });
-
-  $effect(() => {
-    if (selectedMethod === 'google' && googleClientId) {
-      setTimeout(initializeGoogleButton, 80);
-    }
-  });
-
   onMount(async () => {
-    // 1. Fetch settings to see if Google Client ID is configured
-    try {
-      const res = await fetch('/api/settings');
-      const data = await res.json();
-      if (res.ok && data.success) {
-        googleClientId = data.settings.googleClientId || '';
-        if (googleClientId) {
-          loadGoogleScript();
-        }
-      }
-    } catch (e) {
-      console.warn("Could not load settings in LandingPage:", e.message);
-    }
-
-    // 2. Check biometrics availability
+    // Check if biometric authentication is available
     if (window.PublicKeyCredential && 
         typeof window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function') {
       try {
@@ -433,12 +391,7 @@
             Register Profile
           </button>
 
-          {#if googleClientId}
-            <div class="border-t border-[#767068]/15 pt-4 my-2 text-center">
-              <span class="text-[9px] uppercase text-[#767068] font-bold block mb-3 font-mono">Or connect with Google</span>
-              <div id="google-btn-operator" class="w-full flex justify-center min-h-[40px]"></div>
-            </div>
-          {/if}
+
 
           <button 
             type="button" 
@@ -480,12 +433,7 @@
             {/if}
           </button>
 
-          {#if googleClientId}
-            <div class="border-t border-[#767068]/15 pt-4 my-2 text-center">
-              <span class="text-[9px] uppercase text-[#767068] font-bold block mb-3 font-mono">Or connect with Google</span>
-              <div id="google-btn-operator" class="w-full flex justify-center min-h-[40px]"></div>
-            </div>
-          {/if}
+
 
           <button 
             type="button" 
@@ -520,10 +468,10 @@
               {#each availableMethods as method}
                 <button
                   type="button"
-                  onclick={() => { appState.playClickSound(); selectedMethod = method; loginMessage = ''; }}
+                  onclick={() => { appState.playClickSound(); selectedMethod = method; loginMessage = ''; totpToken = ''; }}
                   class="py-1 rounded text-center transition-all {selectedMethod === method ? 'bg-white text-[#2A2521] font-bold shadow-sm' : 'text-[#767068] hover:text-[#2A2521]'}"
                 >
-                  {method}
+                  {method === 'totp' ? 'Authenticator' : method === 'totp-setup' ? 'Setup 2FA' : method}
                 </button>
               {/each}
             </div>
@@ -585,14 +533,77 @@
             />
           {/if}
 
-          {#if selectedMethod === 'google'}
-            <div class="space-y-4 text-center">
-              <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1 text-left">Authenticate with Google</label>
-              <div id="google-btn-operator" class="w-full flex justify-center min-h-[40px] my-2"></div>
-              <p class="text-[9px] text-[#767068] font-mono text-center">
-                Click the button above to sign in using your verified Google workspace account.
-              </p>
-            </div>
+          {#if selectedMethod === 'totp'}
+            <form onsubmit={handleTotpSubmit} class="space-y-4">
+              <div>
+                <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="totp-code">Google Authenticator Code</label>
+                <input 
+                  id="totp-code"
+                  type="text" 
+                  pattern="[0-9]*"
+                  inputmode="numeric"
+                  maxlength="6"
+                  bind:value={totpToken} 
+                  class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs text-center font-bold tracking-[1em] focus:outline-none focus:border-[#3E6650]" 
+                  placeholder="000000"
+                  required 
+                  autofocus
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                class="w-full bg-[#2A2521] hover:bg-slate-800 text-[#F6F2EA] font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1"
+              >
+                Verify Code <ChevronRight size={14} />
+              </button>
+            </form>
+          {/if}
+
+          {#if selectedMethod === 'totp-setup'}
+            <form onsubmit={handleTotpSubmit} class="space-y-4 text-center">
+              <div class="space-y-2">
+                <label class="block text-xs font-mono font-bold text-[#767068] uppercase text-left">Setup Google Authenticator</label>
+                <p class="text-[10px] text-[#767068] leading-relaxed text-left">
+                  Scan the QR code with your Google Authenticator or generic TOTP app, then enter the 6-digit verification code below.
+                </p>
+                
+                <div class="flex justify-center bg-white p-3 rounded border border-[#767068]/20 w-fit mx-auto shadow-sm">
+                  {#if totpSetupQrUrl}
+                    <img src={totpSetupQrUrl} alt="Google Authenticator QR Code" class="w-40 h-40 object-contain" />
+                  {:else}
+                    <div class="w-40 h-40 flex items-center justify-center text-xs font-mono text-slate-400">Loading QR...</div>
+                  {/if}
+                </div>
+
+                <div class="bg-[#F6F2EA] px-2 py-1.5 rounded border border-[#767068]/10 text-center">
+                  <span class="text-[8px] uppercase tracking-wider text-[#767068] block">Manual Key</span>
+                  <code class="text-xs font-mono font-bold tracking-wider text-[#2A2521] select-all">{totpSetupSecret}</code>
+                </div>
+
+                <div class="text-left pt-2">
+                  <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="totp-setup-code">Verification Code</label>
+                  <input 
+                    id="totp-setup-code"
+                    type="text" 
+                    pattern="[0-9]*"
+                    inputmode="numeric"
+                    maxlength="6"
+                    bind:value={totpToken} 
+                    class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs text-center font-bold tracking-[1em] focus:outline-none focus:border-[#3E6650]" 
+                    placeholder="000000"
+                    required 
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-white font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1"
+              >
+                Verify & Enable 2FA <ChevronRight size={14} />
+              </button>
+            </form>
           {/if}
 
           {#if loginMessage}

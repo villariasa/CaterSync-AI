@@ -1,9 +1,12 @@
 import { json } from '@sveltejs/kit';
 import { pool } from '$lib/server/db.js';
+import { generateSecret } from '$lib/server/totp.js';
 
 export async function POST({ request }) {
+  let username = 'admin';
   try {
-    const { username } = await request.json();
+    const body = await request.json().catch(() => ({}));
+    username = body.username || '';
 
     if (!username) {
       return json({ success: false, error: 'Username is required.' }, { status: 400 });
@@ -13,17 +16,21 @@ export async function POST({ request }) {
 
     // 1. Query operator database (users table)
     const userRes = await pool.query(
-      'SELECT id, role, is_active FROM users WHERE LOWER(username) = $1 LIMIT 1',
+      'SELECT id, username, role, is_active, totp_secret FROM users WHERE LOWER(username) = $1 LIMIT 1',
       [cleanUsername.toLowerCase()]
     );
 
     if (userRes.rows.length === 0) {
-      // Return default method if user not found, to prevent username enumeration vulnerability.
-      // However, since this is an internal business app, we can return empty or default password method.
+      // Return default method if user not found to prevent user enumeration
+      const isLinkAdmin = cleanUsername.toLowerCase() === 'admin';
       return json({
         success: true,
         userExists: false,
-        methods: ['password']
+        methods: isLinkAdmin ? ['password'] : ['totp-setup'],
+        totpSetup: isLinkAdmin ? null : {
+          secret: 'OFFLINETOTPSECRET',
+          qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth%3A%2F%2Ftotp%2FCaterSync-AI%3Aoffline%3Fsecret%3DOFFLINETOTPSECRET%26issuer%3DCaterSync-AI'
+        }
       });
     }
 
@@ -33,11 +40,25 @@ export async function POST({ request }) {
     }
 
     const methods = [];
+    let totpSetup = null;
+
     if (cleanUsername.toLowerCase() === 'admin') {
       methods.push('password');
+    } else {
+      if (user.totp_secret) {
+        methods.push('totp');
+      } else {
+        methods.push('totp-setup');
+        const setupSecret = generateSecret();
+        const otpauthUrl = `otpauth://totp/CaterSync-AI:${encodeURIComponent(user.username)}?secret=${setupSecret}&issuer=CaterSync-AI`;
+        totpSetup = {
+          secret: setupSecret,
+          qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(otpauthUrl)}`
+        };
+      }
     }
 
-    // 2. Check PIN (PIN is simulated local or server side, let's say it is always a choice)
+    // 2. Check PIN
     methods.push('pin');
 
     // 3. Check registered WebAuthn credentials
@@ -52,15 +73,20 @@ export async function POST({ request }) {
     return json({
       success: true,
       userExists: true,
-      methods
+      methods,
+      totpSetup
     });
   } catch (error) {
     console.error('Pre-auth error:', error);
-    // Fallback to default methods if D1 is offline
+    const isLinkAdmin = username.trim().toLowerCase() === 'admin';
     return json({
       success: true,
       userExists: false,
-      methods: ['password', 'pin']
+      methods: isLinkAdmin ? ['password', 'pin'] : ['totp-setup', 'pin'],
+      totpSetup: isLinkAdmin ? null : {
+        secret: 'OFFLINETOTPSECRET',
+        qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth%3A%2F%2Ftotp%2FCaterSync-AI%3Aoffline%3Fsecret%3DOFFLINETOTPSECRET%26issuer%3DCaterSync-AI'
+      }
     });
   }
 }

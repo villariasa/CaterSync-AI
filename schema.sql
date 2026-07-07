@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'Operator',
     is_active INTEGER DEFAULT 1 NOT NULL,
+    totp_secret TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 

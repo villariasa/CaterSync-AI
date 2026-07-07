@@ -208,6 +208,8 @@ if (env.DATABASE_URL) {
         ALTER TABLE business_settings ADD COLUMN IF NOT EXISTS smtp_host VARCHAR(255);
         ALTER TABLE business_settings ADD COLUMN IF NOT EXISTS smtp_port INT;
         
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret VARCHAR(128);
+
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             username VARCHAR(255) NOT NULL UNIQUE,
