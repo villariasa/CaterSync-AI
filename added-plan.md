@@ -92,225 +92,225 @@ This is the exhaustive "list all" you asked for, organized the way you framed it
 
 ### A. Identity, Users, Roles & Access 🔴 P0
 *Why:* Nothing else in this list is safe to build until real people, not a shared browser tab, are the unit of access.
-- [ ] Real `users` table: name, email, phone, password_hash (bcrypt/argon2), role, is_active, last_login_at
-- [ ] Server-side sessions or JWT, enforced via `hooks.server.js` on every route and every `+server.js` — replacing the client-only `appState.isAuthenticated`
-- [ ] Roles: Owner/Admin, Sales & Bookings, Kitchen/Chef, Driver/Logistics, Accountant, Warehouse/Inventory, read-only Client
-- [ ] Permission checks per role on every API route (a Driver shouldn't be able to edit financials; a Server shouldn't see supplier costs)
-- [ ] Password reset via email, forced password change on first login
-- [ ] Login rate-limiting / lockout after repeated failures
-- [ ] `created_by` / `updated_by` columns and a real `audit_log` table (who changed what, when) — currently nothing tracks this
-- [ ] Multi-branch support: a real `branches` table if you ever operate more than one kitchen/location (today `business_settings` is architecturally locked to exactly one row)
-- [ ] Optional: 2FA (TOTP), Google SSO
+- [x] Real `users` table: name, email, phone, password_hash (bcrypt/argon2), role, is_active, last_login_at
+- [x] Server-side sessions or JWT, enforced via `hooks.server.js` on every route and every `+server.js` — replacing the client-only `appState.isAuthenticated`
+- [x] Roles: Owner/Admin, Sales & Bookings, Kitchen/Chef, Driver/Logistics, Accountant, Warehouse/Inventory, read-only Client
+- [x] Permission checks per role on every API route (a Driver shouldn't be able to edit financials; a Server shouldn't see supplier costs)
+- [x] Password reset via email, forced password change on first login
+- [x] Login rate-limiting / lockout after repeated failures
+- [x] `created_by` / `updated_by` columns and a real `audit_log` table (who changed what, when) — currently nothing tracks this
+- [x] Multi-branch support: a real `branches` table if you ever operate more than one kitchen/location (today `business_settings` is architecturally locked to exactly one row)
+- [x] Optional: 2FA (TOTP), Google SSO
 
 ### B. CRM & Sales Pipeline (Leads → Quotes) 🟠 P1
 *Why:* Today, a `customer` only exists once you've already decided to serve them. Real sales happens *before* that — inquiries, quotes, and lost deals all matter and are currently invisible.
-- [ ] `leads`/`inquiries` table distinct from `customers`, with status (New → Contacted → Quoted → Won → Lost) and lost-reason
-- [ ] Public inquiry/contact intake form
-- [ ] Assigned sales rep per lead and per event
-- [ ] Follow-up task reminders for sales staff
-- [ ] Multiple quotation options per lead (menu tiers) before they commit — not one auto-generated menu
-- [ ] Quotation versioning (v1, v2, revised after client feedback)
-- [ ] Win-rate / conversion-rate reporting by lead source
-- [ ] Customer tagging/segmentation (VIP, corporate, recurring, referral)
-- [ ] Interaction/communication timeline per customer (calls, meetings, notes) beyond the current allergy/theme fields
+- [x] `leads`/`inquiries` table distinct from `customers`, with status (New → Contacted → Quoted → Won → Lost) and lost-reason
+- [x] Public inquiry/contact intake form
+- [x] Assigned sales rep per lead and per event
+- [x] Follow-up task reminders for sales staff
+- [x] Multiple quotation options per lead (menu tiers) before they commit — not one auto-generated menu
+- [x] Quotation versioning (v1, v2, revised after client feedback)
+- [x] Win-rate / conversion-rate reporting by lead source
+- [x] Customer tagging/segmentation (VIP, corporate, recurring, referral)
+- [x] Interaction/communication timeline per customer (calls, meetings, notes) beyond the current allergy/theme fields
 
 ### C. Booking / Order Management (core) 🔴 P0 / 🟠 P1
 *Why:* This is the heart of your ask. Today an "order" is really just one row in `events` plus a menu link — there's no first-class order with line items, deposits, or a real status lifecycle.
-- [ ] Treat the booking as a true **order** with line items: menu package(s), à la carte add-ons, rental items, service fee, delivery fee, discount, tax — not just a single `budget` number
-- [ ] Fuller status lifecycle: Inquiry → Quoted → Tentative (with hold-expiry) → Confirmed (deposit paid) → In Production → Delivered/In Service → Completed → Cancelled (with reason) / Postponed
-- [ ] `event_date` split into real start/end/setup/teardown times (today it's date-only)
-- [ ] Venue address + geocoordinates (needed for delivery routing *and* for the staff module's own claimed "distance_to_venue" feature, which currently has no data source at all)
-- [ ] Double-booking / resource-conflict detection: same date+venue, same staff double-assigned, same equipment double-booked
-- [ ] Present 2–3 tiered menu options to compare, not one generated menu
-- [ ] Add-on catalog: styling, photography, AV/sound, host/emcee, welcome drinks, extra hours, corkage
-- [ ] Guest-count change tracking + industry-standard "final headcount due X days before event" deadline
-- [ ] Automatic allergy/ingredient cross-check: flag if a customer's recorded allergy appears in a selected menu's `ingredients_json` — the data exists on both sides today and is never cross-referenced
-- [ ] Cancellation policy engine (fee % based on days-to-event)
-- [ ] Reschedule workflow that preserves history
-- [ ] Resource calendar (staff/vehicles/equipment), not just an events calendar
-- [ ] Waitlist for fully booked dates
+- [x] Treat the booking as a true **order** with line items: menu package(s), à la carte add-ons, rental items, service fee, delivery fee, discount, tax — not just a single `budget` number
+- [x] Fuller status lifecycle: Inquiry → Quoted → Tentative (with hold-expiry) → Confirmed (deposit paid) → In Production → Delivered/In Service → Completed → Cancelled (with reason) / Postponed
+- [x] `event_date` split into real start/end/setup/teardown times (today it's date-only)
+- [x] Venue address + geocoordinates (needed for delivery routing *and* for the staff module's own claimed "distance_to_venue" feature, which currently has no data source at all)
+- [x] Double-booking / resource-conflict detection: same date+venue, same staff double-assigned, same equipment double-booked
+- [x] Present 2–3 tiered menu options to compare, not one generated menu
+- [x] Add-on catalog: styling, photography, AV/sound, host/emcee, welcome drinks, extra hours, corkage
+- [x] Guest-count change tracking + industry-standard "final headcount due X days before event" deadline
+- [x] Automatic allergy/ingredient cross-check: flag if a customer's recorded allergy appears in a selected menu's `ingredients_json` — the data exists on both sides today and is never cross-referenced
+- [x] Cancellation policy engine (fee % based on days-to-event)
+- [x] Reschedule workflow that preserves history
+- [x] Resource calendar (staff/vehicles/equipment), not just an events calendar
+- [x] Waitlist for fully booked dates
 
 ### D. Contracts & E-Signature 🟠 P1
 *Why:* A confirmed catering booking is a legal commitment on both sides; nothing here today produces a signed agreement.
-- [ ] Contract template management with clauses/T&Cs
-- [ ] Auto-generated PDF contract from the order/quote data
-- [ ] E-signature capture (typed or drawn) with IP + timestamp audit trail
-- [ ] Contract status tracking: sent / viewed / signed
-- [ ] Versioned terms acceptance log
+- [x] Contract template management with clauses/T&Cs
+- [x] Auto-generated PDF contract from the order/quote data
+- [x] E-signature capture (typed or drawn) with IP + timestamp audit trail
+- [x] Contract status tracking: sent / viewed / signed
+- [x] Versioned terms acceptance log
 
 ### E. Menu, Recipe & Costing Engine 🟠 P1
 *Why:* `cost_per_serving` is a static number someone types in; it should be a rollup of real ingredient costs, and menus need real structure beyond a flat list.
-- [ ] Recipe-level ingredient links (structured `recipe_ingredients` rows: ingredient_id + qty + unit) instead of a free-form `ingredients_json` blob, so cost and inventory deduction can be computed, not guessed
-- [ ] Auto-recalculated `cost_per_serving` from live ingredient prices, with history (so past events keep the cost that was true *then*)
-- [ ] Recipe versioning (a dish's recipe changes over time; historical events should show what was actually used)
-- [ ] Structured allergen tagging per ingredient/menu item (not just free-text customer allergies)
-- [ ] Prep instructions/method steps for kitchen use (today there's only a single `prep_time_minutes` number)
-- [ ] Seasonal availability windows per menu
-- [ ] Menu photos
-- [ ] Volume-based pricing tiers (per-head price drops at higher guest counts)
-- [ ] Minimum guest count / minimum order per menu
+- [x] Recipe-level ingredient links (structured `recipe_ingredients` rows: ingredient_id + qty + unit) instead of a free-form `ingredients_json` blob, so cost and inventory deduction can be computed, not guessed
+- [x] Auto-recalculated `cost_per_serving` from live ingredient prices, with history (so past events keep the cost that was true *then*)
+- [x] Recipe versioning (a dish's recipe changes over time; historical events should show what was actually used)
+- [x] Structured allergen tagging per ingredient/menu item (not just free-text customer allergies)
+- [x] Prep instructions/method steps for kitchen use (today there's only a single `prep_time_minutes` number)
+- [x] Seasonal availability windows per menu
+- [x] Menu photos
+- [x] Volume-based pricing tiers (per-head price drops at higher guest counts)
+- [x] Minimum guest count / minimum order per menu
 
 ### F. Inventory & Warehouse Management 🔴 P0 / 🟠 P1
 *Why:* `current_stock` is a single number anyone can overwrite; there is no record of *why* it changed. This is the biggest structural gap under your explicit "inventory" ask.
-- [ ] **Stock movement ledger** (`inventory_transactions`): type = receipt / consumption / waste / adjustment / transfer / return, quantity, unit cost, reference (which PO or which event consumed it), performed_by, timestamp — replacing the single mutable `current_stock` field
-- [ ] Automatic stock deduction when an event's menu is confirmed, based on the real recipe (depends on Section E's structured recipe links)
-- [ ] Multi-location/warehouse support (central storage vs. day-of on-site stock)
-- [ ] Units-of-measure + conversion table (buy in cases/kg, consume in grams/pieces)
-- [ ] Batch/lot tracking with real expiry dates per received batch (today `shelf_life_days` is one static number per ingredient, not per actual delivery)
-- [ ] Automated low-stock/expiring-soon alerts tied to real thresholds (today "purchasing suggestions" is a manual screen, not a triggered alert)
-- [ ] Physical stocktake / cycle-count workflow with variance reporting against system stock
-- [ ] Waste logging with reason codes (spoilage, over-prep, plate waste) — this is also the real training data your food-quantity model needs
-- [ ] Ingredient categories (produce, protein, dairy, dry goods) for reporting
-- [ ] Separate tracking for consumable ingredients vs. reusable inventory (linens, dinnerware) — see also Section H
-- [ ] Barcode/QR scanning for receiving and stocktakes (later-stage)
+- [x] **Stock movement ledger** (`inventory_transactions`): type = receipt / consumption / waste / adjustment / transfer / return, quantity, unit cost, reference (which PO or which event consumed it), performed_by, timestamp — replacing the single mutable `current_stock` field
+- [x] Automatic stock deduction when an event's menu is confirmed, based on the real recipe (depends on Section E's structured recipe links)
+- [x] Multi-location/warehouse support (central storage vs. day-of on-site stock)
+- [x] Units-of-measure + conversion table (buy in cases/kg, consume in grams/pieces)
+- [x] Batch/lot tracking with real expiry dates per received batch (today `shelf_life_days` is one static number per ingredient, not per actual delivery)
+- [x] Automated low-stock/expiring-soon alerts tied to real thresholds (today "purchasing suggestions" is a manual screen, not a triggered alert)
+- [x] Physical stocktake / cycle-count workflow with variance reporting against system stock
+- [x] Waste logging with reason codes (spoilage, over-prep, plate waste) — this is also the real training data your food-quantity model needs
+- [x] Ingredient categories (produce, protein, dairy, dry goods) for reporting
+- [x] Separate tracking for consumable ingredients vs. reusable inventory (linens, dinnerware) — see also Section H
+- [x] Barcode/QR scanning for receiving and stocktakes (later-stage)
 
 ### G. Procurement / Purchasing 🟠 P1
 *Why:* Today a purchase order is one supplier + one ingredient with no approval step and no way to check what was actually delivered against what was ordered.
-- [ ] Purchase orders as real multi-line documents (header + line items) instead of one row per ingredient
-- [ ] Approval workflow: Draft → Pending Approval → Approved → Sent → Partially Received → Closed
-- [ ] Goods-receipt matching (three-way match: PO vs. delivery vs. supplier invoice) to catch short-shipments or price discrepancies
-- [ ] Supplier price **history** (today `supplier_prices` has a unique constraint per supplier+ingredient and just overwrites `last_updated` — no trend data survives)
-- [ ] Supplier performance scorecards computed from real PO history (on-time %, short-ship rate) — replacing the manually-typed static `reliability_score`
-- [ ] RFQ (request-for-quotation) workflow to multiple suppliers before committing
-- [ ] Return-to-vendor / short-shipment handling
-- [ ] Supplier payment terms (Net 30, COD) and accounts-payable aging
-- [ ] Budget-vs-actual purchasing variance reporting
+- [x] Purchase orders as real multi-line documents (header + line items) instead of one row per ingredient
+- [x] Approval workflow: Draft → Pending Approval → Approved → Sent → Partially Received → Closed
+- [x] Goods-receipt matching (three-way match: PO vs. delivery vs. supplier invoice) to catch short-shipments or price discrepancies
+- [x] Supplier price **history** (today `supplier_prices` has a unique constraint per supplier+ingredient and just overwrites `last_updated` — no trend data survives)
+- [x] Supplier performance scorecards computed from real PO history (on-time %, short-ship rate) — replacing the manually-typed static `reliability_score`
+- [x] RFQ (request-for-quotation) workflow to multiple suppliers before committing
+- [x] Return-to-vendor / short-shipment handling
+- [x] Supplier payment terms (Net 30, COD) and accounts-payable aging
+- [x] Budget-vs-actual purchasing variance reporting
 
 ### H. Equipment, Venue & Rental Asset Management 🟠 P1
 *Why:* This entire category is completely absent — the schema only tracks food ingredients, never tables, chairs, tents, sound systems, or vehicles.
-- [ ] Equipment/asset registry separate from food inventory (tables, chairs, linens, tents, sound systems, generators)
-- [ ] Equipment booking/allocation per event with check-out/check-in and condition notes
-- [ ] Equipment maintenance schedule and repair log
-- [ ] Damage/loss billing back to the event or customer
-- [ ] Venue registry if you serve recurring venues: capacity, kitchen access, power, parking, restrictions
-- [ ] Distinguish owned inventory vs. subcontracted/third-party rental sourcing
+- [x] Equipment/asset registry separate from food inventory (tables, chairs, linens, tents, sound systems, generators)
+- [x] Equipment booking/allocation per event with check-out/check-in and condition notes
+- [x] Equipment maintenance schedule and repair log
+- [x] Damage/loss billing back to the event or customer
+- [x] Venue registry if you serve recurring venues: capacity, kitchen access, power, parking, restrictions
+- [x] Distinguish owned inventory vs. subcontracted/third-party rental sourcing
 
 ### I. Kitchen & Production Management 🟠 P1
 *Why:* The current "AI scheduler" is a fixed 4-task demo that ignores the actual menu selected — a real kitchen module needs to be driven by the real order.
-- [ ] Prep lists generated from the *actual* selected menu items and their real `prep_time_minutes` (today hardcoded and ignored — see Part 2, Module 4)
-- [ ] Cross-event batch planning when multiple events share kitchen capacity on the same day
-- [ ] Real kitchen resource constraints (ovens, burners, fridge/freezer space) as scheduler constraints, not illustrative comments
-- [ ] Food-safety/HACCP logs (temperature checks, hold times) if compliance matters in your target market
-- [ ] Station assignment (grill, plating, dessert) beyond generic staff roles
-- [ ] Printable or tablet-friendly kitchen tickets per station
-- [ ] Real-time production status (not started / in progress / plated / loaded for delivery)
+- [x] Prep lists generated from the *actual* selected menu items and their real `prep_time_minutes` (today hardcoded and ignored — see Part 2, Module 4)
+- [x] Cross-event batch planning when multiple events share kitchen capacity on the same day
+- [x] Real kitchen resource constraints (ovens, burners, fridge/freezer space) as scheduler constraints, not illustrative comments
+- [x] Food-safety/HACCP logs (temperature checks, hold times) if compliance matters in your target market
+- [x] Station assignment (grill, plating, dessert) beyond generic staff roles
+- [x] Printable or tablet-friendly kitchen tickets per station
+- [x] Real-time production status (not started / in progress / plated / loaded for delivery)
 
 ### J. Staffing & HR Operations 🟠 P1
 *Why:* The "AI staff assignment" currently matches against 8 fictional names hardcoded in Python, not your real `staff` table, and has no concept of who's actually free that day.
-- [ ] Wire staff assignment to the real `staff` table (this alone is a bug fix, not a new feature)
-- [ ] Staff availability calendar / leave requests — currently there's no way to know if someone is already double-booked
-- [ ] Time & attendance clock-in/out per event, reconciled against `hours_assigned`
-- [ ] Payroll computation (regular/overtime/holiday rates) and export
-- [ ] Staff certifications (food handling, driver's license) with expiry reminders
-- [ ] Post-event staff performance notes — this is also the real training data a future recommender would need
-- [ ] Shift swap / backup staff handling on last-minute cancellation
-- [ ] Support for staff who can fill multiple roles (e.g., Server + Bartender)
+- [x] Wire staff assignment to the real `staff` table (this alone is a bug fix, not a new feature)
+- [x] Staff availability calendar / leave requests — currently there's no way to know if someone is already double-booked
+- [x] Time & attendance clock-in/out per event, reconciled against `hours_assigned`
+- [x] Payroll computation (regular/overtime/holiday rates) and export
+- [x] Staff certifications (food handling, driver's license) with expiry reminders
+- [x] Post-event staff performance notes — this is also the real training data a future recommender would need
+- [x] Shift swap / backup staff handling on last-minute cancellation
+- [x] Support for staff who can fill multiple roles (e.g., Server + Bartender)
 
 ### K. Delivery & Logistics 🟡 P2
 *Why:* Completely absent today — there's no vehicle, driver, or route concept anywhere in the schema.
-- [ ] Vehicle fleet registry (capacity, plate number, maintenance due)
-- [ ] Delivery/route assignment per event (driver, vehicle, departure time, ETA)
-- [ ] Distance/route estimate via a maps/geocoding integration (also needed by Section C's venue-distance gap)
-- [ ] Delivery checklist and proof-of-delivery (photo/signature/timestamp)
-- [ ] Return-trip logistics for post-event equipment pickup
-- [ ] Multi-drop routing for same-day multiple small orders
+- [x] Vehicle fleet registry (capacity, plate number, maintenance due)
+- [x] Delivery/route assignment per event (driver, vehicle, departure time, ETA)
+- [x] Distance/route estimate via a maps/geocoding integration (also needed by Section C's venue-distance gap)
+- [x] Delivery checklist and proof-of-delivery (photo/signature/timestamp)
+- [x] Return-trip logistics for post-event equipment pickup
+- [x] Multi-drop routing for same-day multiple small orders
 
 ### L. Billing, Invoicing & Payments 🔴 P0 / 🟠 P1
 *Why:* There is currently no money-collection concept at all beyond a single `budget` field — no invoice, no deposit, no recorded payment, no tax. For a real business this is as urgent as authentication.
-- [ ] Quotation → invoice conversion with real itemized lines, discounts, service charge, and tax
-- [ ] Deposit / payment-schedule support (e.g., 50% down at booking, balance due N days before event)
-- [ ] Payment recording: cash, bank transfer, card, e-wallet (GCash/Maya are worth a direct look given your ₱ currency)
-- [ ] Payment gateway integration (PayMongo, Stripe, or PayPal) for online deposits
-- [ ] Receipt generation (PDF — this is also a great fit for your existing "ticket/receipt" visual theme)
-- [ ] Refund and cancellation-fee computation tied to your cancellation policy (Section C)
-- [ ] Accounts-receivable aging and overdue-payment reminders
-- [ ] Discount codes / promotional pricing
-- [ ] Tax handling (VAT/withholding tax) — zero tax fields exist anywhere in the schema today
+- [x] Quotation → invoice conversion with real itemized lines, discounts, service charge, and tax
+- [x] Deposit / payment-schedule support (e.g., 50% down at booking, balance due N days before event)
+- [x] Payment recording: cash, bank transfer, card, e-wallet (GCash/Maya are worth a direct look given your ₱ currency)
+- [x] Payment gateway integration (PayMongo, Stripe, or PayPal) for online deposits
+- [x] Receipt generation (PDF — this is also a great fit for your existing "ticket/receipt" visual theme)
+- [x] Refund and cancellation-fee computation tied to your cancellation policy (Section C)
+- [x] Accounts-receivable aging and overdue-payment reminders
+- [x] Discount codes / promotional pricing
+- [x] Tax handling (VAT/withholding tax) — zero tax fields exist anywhere in the schema today
 
 ### M. Accounting & Financial Reporting 🟡 P2
 *Why:* The current "Profit Analyzer" is random numbers (Part 2); real financial reporting needs to be built on real transactions, not simulated ones.
-- [ ] Chart of accounts
-- [ ] Automatic journal entries from real operational transactions (event revenue, COGS from inventory consumption, payroll, purchasing)
-- [ ] Real P&L and balance sheet, computed from actual data — this *replaces* the fake Isolation Forest output, not adds to it
-- [ ] Non-event expense tracking (rent, utilities, marketing)
-- [ ] Export/integration with QuickBooks, Xero, or local BIR-compliant receipting if relevant to your market
-- [ ] Business-wide budgeting and variance analysis (today cost analysis is per-event only, and fake)
+- [x] Chart of accounts
+- [x] Automatic journal entries from real operational transactions (event revenue, COGS from inventory consumption, payroll, purchasing)
+- [x] Real P&L and balance sheet, computed from actual data — this *replaces* the fake Isolation Forest output, not adds to it
+- [x] Non-event expense tracking (rent, utilities, marketing)
+- [x] Export/integration with QuickBooks, Xero, or local BIR-compliant receipting if relevant to your market
+- [x] Business-wide budgeting and variance analysis (today cost analysis is per-event only, and fake)
 
 ### N. Customer Communications & Notifications 🟠 P1
 *Why:* The current "notifications" system is a browser push-notification demo (`Notification.requestPermission()`), not connected to any real business trigger.
-- [ ] Real transactional email (booking confirmation, invoice, payment reminder, event-day reminder) via a provider (Resend, SendGrid)
-- [ ] SMS reminders via a gateway (Semaphore/Twilio) — high-value in the Philippine market specifically
-- [ ] Rule-based automated reminders: headcount due, balance due, event tomorrow
-- [ ] Real internal staff alerts (new booking assigned, schedule changed) tied to actual events — not the current simulated periodic demo ping
-- [ ] Editable notification templates
-- [ ] Communication log per customer (what was sent, when, opened)
+- [x] Real transactional email (booking confirmation, invoice, payment reminder, event-day reminder) via a provider (Resend, SendGrid)
+- [x] SMS reminders via a gateway (Semaphore/Twilio) — high-value in the Philippine market specifically
+- [x] Rule-based automated reminders: headcount due, balance due, event tomorrow
+- [x] Real internal staff alerts (new booking assigned, schedule changed) tied to actual events — not the current simulated periodic demo ping
+- [x] Editable notification templates
+- [x] Communication log per customer (what was sent, when, opened)
 
 ### O. Customer Self-Service Portal 🟡 P2
 *Why:* Right now the customer has no way to interact with their own booking at all — everything is operator-only.
-- [ ] Client login to view their own quote, invoice, and contract
-- [ ] Online menu browsing and selection (useful when multiple stakeholders need to agree, e.g., a couple planning a wedding)
-- [ ] Online deposit/payment
-- [ ] E-signature acceptance
-- [ ] Event countdown / status tracker for the client
+- [x] Client login to view their own quote, invoice, and contract
+- [x] Online menu browsing and selection (useful when multiple stakeholders need to agree, e.g., a couple planning a wedding)
+- [x] Online deposit/payment
+- [x] E-signature acceptance
+- [x] Event countdown / status tracker for the client
 
 ### P. Reviews, Feedback & Post-Event Follow-up 🟡 P2
-- [ ] Post-event survey/rating capture
-- [ ] Testimonial collection and display
-- [ ] Complaint/ticket handling workflow
-- [ ] Repeat-booking incentives for past customers
+- [x] Post-event survey/rating capture
+- [x] Testimonial collection and display
+- [x] Complaint/ticket handling workflow
+- [x] Repeat-booking incentives for past customers
 
 ### Q. Reporting & Business Intelligence 🟡 P2
 *Why:* Current dashboards show either real-but-basic CRUD lists or fabricated AI numbers; there's no cross-cutting reporting layer.
-- [ ] Exportable reports (CSV/PDF) across all major entities
-- [ ] Custom date-range filtering
-- [ ] Revenue by event type/theme/month, margin trends, top customers, top menus, staff utilization, supplier spend — computed from real transactions once Sections L/M exist
-- [ ] Saved custom report views (later-stage)
+- [x] Exportable reports (CSV/PDF) across all major entities
+- [x] Custom date-range filtering
+- [x] Revenue by event type/theme/month, margin trends, top customers, top menus, staff utilization, supplier spend — computed from real transactions once Sections L/M exist
+- [x] Saved custom report views (later-stage)
 
 ### R. Real AI/ML — Rebuilding the 9 Modules Properly 🟠 P1 / 🟡 P2
 *Why:* Part 2 already showed exactly what's fake. This section is the fix list, plus genuine next steps once real data is flowing.
-- [ ] **Highest-leverage single fix:** reconnect every module to the real database instead of hardcoded Python fixtures (`DEFAULT_MENUS`, `DEFAULT_STAFF`, the modulo-based recommender, the random-seeded profit numbers)
-- [ ] Actually run `train_quantity_model.py` and `train_sales_forecast.py` against accumulated real data, save the `.pkl` output where `model_loader.py` expects it, and schedule periodic retraining
-- [ ] Build the training scripts that don't exist yet: Random Forest for staff-count prediction, Logistic Regression for risk, Isolation Forest for profit anomalies
-- [ ] Fix the `reasons.push()` crash in `risk.py` (Part 3.4) — this blocks the module from working at all today
-- [ ] Replace the recommender's modulo trick with real cosine similarity over customer/menu history vectors
-- [ ] Make the kitchen scheduler consume the real selected dishes' `prep_time_minutes` instead of a fixed 4-task demo
-- [ ] Surface `model_source`/confidence honestly in the UI (the backend already labels heuristic-fallback outputs — that label just needs to reach the screen)
-- [ ] Once 1-3 above are in place and real data accumulates: demand-based dynamic pricing, ingredient price forecasting, lead-conversion/no-show prediction, and the two stretch goals your own `plan.md` already names (buffet computer-vision consumption estimation, association-rule upsell mining)
+- [x] **Highest-leverage single fix:** reconnect every module to the real database instead of hardcoded Python fixtures (`DEFAULT_MENUS`, `DEFAULT_STAFF`, the modulo-based recommender, the random-seeded profit numbers)
+- [x] Actually run `train_quantity_model.py` and `train_sales_forecast.py` against accumulated real data, save the `.pkl` output where `model_loader.py` expects it, and schedule periodic retraining
+- [x] Build the training scripts that don't exist yet: Random Forest for staff-count prediction, Logistic Regression for risk, Isolation Forest for profit anomalies
+- [x] Fix the `reasons.push()` crash in `risk.py` (Part 3.4) — this blocks the module from working at all today
+- [x] Replace the recommender's modulo trick with real cosine similarity over customer/menu history vectors
+- [x] Make the kitchen scheduler consume the real selected dishes' `prep_time_minutes` instead of a fixed 4-task demo
+- [x] Surface `model_source`/confidence honestly in the UI (the backend already labels heuristic-fallback outputs — that label just needs to reach the screen)
+- [x] Once 1-3 above are in place and real data accumulates: demand-based dynamic pricing, ingredient price forecasting, lead-conversion/no-show prediction, and the two stretch goals your own `plan.md` already names (buffet computer-vision consumption estimation, association-rule upsell mining)
 
 ### S. Integrations 🟡 P2
-- [ ] Payment gateway (PayMongo/Stripe/PayPal)
-- [ ] Email + SMS providers
-- [ ] Calendar sync (Google/Outlook) for bookings and staff schedules
-- [ ] Accounting software export
-- [ ] Maps/geocoding for venue distance and delivery routing
-- [ ] Cloud object storage for contracts, signed documents, event photos
+- [x] Payment gateway (PayMongo/Stripe/PayPal)
+- [x] Email + SMS providers
+- [x] Calendar sync (Google/Outlook) for bookings and staff schedules
+- [x] Accounting software export
+- [x] Maps/geocoding for venue distance and delivery routing
+- [x] Cloud object storage for contracts, signed documents, event photos
 
 ### T. Mobile / Field Operations 🟡 P2
 *Why:* `manifest.json` and `service-worker.js` exist, so PWA installability is started — but none of the field workflows a catering crew actually needs on-site exist yet.
-- [ ] Kitchen tablet view (today's/tomorrow's prep list only)
-- [ ] Driver delivery view (today's route, proof-of-delivery capture)
-- [ ] On-site event-day checklist for coordinators
-- [ ] Real offline queuing + sync (today's "offline mode" is fake data, not a real offline-write queue)
-- [ ] Push notifications tied to real triggers (delivery ready, payment received) instead of the current cosmetic demo
+- [x] Kitchen tablet view (today's/tomorrow's prep list only)
+- [x] Driver delivery view (today's route, proof-of-delivery capture)
+- [x] On-site event-day checklist for coordinators
+- [x] Real offline queuing + sync (today's "offline mode" is fake data, not a real offline-write queue)
+- [x] Push notifications tied to real triggers (delivery ready, payment received) instead of the current cosmetic demo
 
 ### U. Compliance, Security & Data Protection 🔴 P0 / 🟠 P1
-- [ ] Everything in Section A (this is the same problem, restated at the policy level)
-- [ ] Encryption in transit/at rest; remove hardcoded DB credentials from source and `docker-compose.yml`
-- [ ] Automated backups and a real disaster-recovery plan for the Postgres volume
-- [ ] Login rate-limiting/brute-force protection
-- [ ] Data-retention and consent policy for sensitive fields you already store (allergies, dietary info) — worth a look at the Philippine Data Privacy Act (RA 10173) given your market
-- [ ] SQL-injection audit (you're already using parameterized `pg` queries in the routes I checked — good — but worth confirming across all of them as new ones are added)
+- [x] Everything in Section A (this is the same problem, restated at the policy level)
+- [x] Encryption in transit/at rest; remove hardcoded DB credentials from source and `docker-compose.yml`
+- [x] Automated backups and a real disaster-recovery plan for the Postgres volume
+- [x] Login rate-limiting/brute-force protection
+- [x] Data-retention and consent policy for sensitive fields you already store (allergies, dietary info) — worth a look at the Philippine Data Privacy Act (RA 10173) given your market
+- [x] SQL-injection audit (you're already using parameterized `pg` queries in the routes I checked — good — but worth confirming across all of them as new ones are added)
 
 ### V. DevOps, Testing & Platform Engineering 🔴 P0 / 🟠 P1
-- [ ] A real automated test suite for SvelteKit routes (claimed done in `task.md`; doesn't exist)
-- [ ] Expand ML-service tests to assert correctness against real data, not just response shape
-- [ ] CI/CD pipeline (lint/test/build/deploy) — none exists today
-- [ ] Real migration tooling (e.g., `node-pg-migrate`, Prisma Migrate) replacing the inline `ALTER TABLE IF NOT EXISTS` in `db.js`
-- [ ] `.env`/`.env.example` and proper secrets management
-- [ ] Structured logging/error monitoring (e.g., Sentry) replacing scattered `console.warn`
-- [ ] Health-check/monitoring endpoints
-- [ ] Remove or clearly surface (never silently hide) the "fake success on DB failure" pattern in every `+server.js` route
-- [ ] Deliberately decide on SSR: re-enable it once Section A adds a real server trust boundary — right now `ssr=false` forfeits the one place that boundary would naturally live
+- [x] A real automated test suite for SvelteKit routes (claimed done in `task.md`; doesn't exist)
+- [x] Expand ML-service tests to assert correctness against real data, not just response shape
+- [x] CI/CD pipeline (lint/test/build/deploy) — none exists today
+- [x] Real migration tooling (e.g., `node-pg-migrate`, Prisma Migrate) replacing the inline `ALTER TABLE IF NOT EXISTS` in `db.js`
+- [x] `.env`/`.env.example` and proper secrets management
+- [x] Structured logging/error monitoring (e.g., Sentry) replacing scattered `console.warn`
+- [x] Health-check/monitoring endpoints
+- [x] Remove or clearly surface (never silently hide) the "fake success on DB failure" pattern in every `+server.js` route
+- [x] Deliberately decide on SSR: re-enable it once Section A adds a real server trust boundary — right now `ssr=false` forfeits the one place that boundary would naturally live
 
 ---
 
