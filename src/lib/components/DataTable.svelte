@@ -153,10 +153,10 @@
               {#each columns as col}
                 <td class="py-2.5 px-4 {col.align === 'right' ? 'text-right' : 'text-left'}">
                   {#if col.render}
-                    {#if typeof col.render === 'function'}
-                      {@html col.render(row)}
-                    {:else}
+                    {#if col.isSnippet}
                       {@render col.render(row)}
+                    {:else}
+                      {@html col.render(row)}
                     {/if}
                   {:else}
                     <span class={col.isSans ? 'font-sans text-[#2A2521]' : 'text-[#2A2521]'}>

@@ -38,7 +38,6 @@
   const appState = new CateringState(data);
   setCateringContext(appState);
 
-  let currentDateTime = $state('');
   let showLogoutModal = $state(false);
   let showUpdateModal = $state(false);
   let autoUpdateEnabled = $state(false);
@@ -344,18 +343,6 @@
       Notification.requestPermission();
     }
 
-    const updateClock = () => {
-      const now = new Date();
-      const yr = now.getFullYear();
-      const mo = String(now.getMonth() + 1).padStart(2, '0');
-      const dy = String(now.getDate()).padStart(2, '0');
-      const hr = String(now.getHours()).padStart(2, '0');
-      const mi = String(now.getMinutes()).padStart(2, '0');
-      currentDateTime = `${yr}-${mo}-${dy} ${hr}:${mi}`;
-    };
-
-    updateClock();
-    const interval = setInterval(updateClock, 1000);
 
     // Periodic simulation push notifications to highlight capability
     const notificationInterval = setInterval(() => {
@@ -391,7 +378,6 @@
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      clearInterval(interval);
       clearInterval(notificationInterval);
       window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
       window.removeEventListener('keydown', handleKeyDown);
@@ -474,16 +460,6 @@
             </button>
           {/if}
 
-          <!-- Sound toggle -->
-          <button onclick={() => appState.toggleAudio()} class="btn-interactive p-1.5 rounded hover:bg-white/50 dark:hover:bg-zinc-800/30 border border-transparent hover:border-[#767068]/20 flex items-center gap-1 text-[#767068] dark:text-zinc-400">
-            {#if appState.audioEnabled}
-              <Volume2 size={13} class="text-[#3E6650]" />
-              <span class="hidden lg:inline text-[9px]">ON</span>
-            {:else}
-              <VolumeX size={13} class="text-[#AC3B2A]" />
-              <span class="hidden lg:inline text-[9px]">MUTED</span>
-            {/if}
-          </button>
 
           <!-- Notification Bell with Dropdown -->
           <div class="relative">
@@ -624,11 +600,6 @@
             {/if}
           </div>
 
-          <!-- Live Clock -->
-          <div class="hidden lg:flex items-center gap-1.5 text-steel">
-            <span>CLOCK:</span>
-            <span class="text-ink font-bold">{currentDateTime || '2026-07-06 13:33'}</span>
-          </div>
 
           {#if appState.usingMockData}
             <span class="hidden md:inline-block px-2.5 py-0.5 text-[9px] font-bold bg-[#D9A441]/15 text-[#D9A441] border border-[#D9A441]/30 rounded font-mono">▲ OFFLINE</span>

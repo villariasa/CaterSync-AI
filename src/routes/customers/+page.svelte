@@ -308,7 +308,8 @@
         key: 'portal_link',
         label: 'Portal & Management Actions',
         sortable: false,
-        render: portalActionSnippet
+        render: portalActionSnippet,
+        isSnippet: true
       }
     ];
   });
