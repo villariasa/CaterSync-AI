@@ -1114,38 +1114,6 @@
   </div>
 {/if}
 
-<!-- MODAL: PROFILE SWITCH CONFIRMATION -->
-{#if showProfileSwitchModal}
-  <div class="fixed inset-0 bg-[#2A2521]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-    <div class="ticket-card bg-white dark:bg-[#24201E] p-6 max-w-sm w-full border border-[#767068]/30 dark:border-zinc-800 shadow-2xl relative animate-scale-up text-[#2A2521] dark:text-[#EBE5DC]">
-      <div class="mb-4">
-        <span class="ticket-stamp bg-emerald-50 text-[#3E6650] border-[#3E6650]/25 dark:bg-[#3E6650]/15 dark:text-emerald-400">SWITCH OPERATOR</span>
-        <h3 class="text-base font-bold text-[#2A2521] dark:text-[#EBE5DC] mt-2">Confirm Operator Swap</h3>
-        <p class="text-xs text-[#767068] dark:text-zinc-400 leading-relaxed mt-1.5">
-          Are you sure you want to switch the active operator console profile to <strong class="text-[#3E6650] dark:text-[#3E6650]">{pendingProfileToSwitch}</strong>? All future actions and changes will be logged under this user name.
-        </p>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3 pt-3 border-t border-[#767068]/20 dark:border-zinc-850 font-mono text-xs">
-        <button 
-          onclick={() => { appState.playClickSound(); showProfileSwitchModal = false; pendingProfileToSwitch = ''; }} 
-          class="py-2.5 rounded border border-[#767068]/30 text-[#767068] bg-slate-50 hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-[#EBE5DC] transition-all font-bold text-center"
-        >
-          Cancel
-        </button>
-        <button 
-          onclick={() => {
-            switchProfile(pendingProfileToSwitch);
-            showProfileSwitchModal = false;
-          }} 
-          class="py-2.5 rounded bg-[#3E6650] text-[#F6F2EA] hover:bg-[#3E6650]/90 transition-all font-bold text-center"
-        >
-          Switch Profile
-        </button>
-      </div>
-    </div>
-  </div>
-{/if}
 
 <!-- MODAL: PWA VERSION UPDATE -->
 {#if showUpdateModal}
