@@ -29,7 +29,8 @@
     Info,
     User,
     Search,
-    Truck
+    Truck,
+    Trash2
   } from '@lucide/svelte';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
