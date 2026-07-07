@@ -62,6 +62,10 @@
   let problemDescription = $state('');
   let darkThemeEnabled = $state(false);
 
+  // Profile switch confirmation modal state
+  let showProfileSwitchModal = $state(false);
+  let pendingProfileToSwitch = $state('');
+
   function toggleDarkTheme() {
     appState.playClickSound();
     darkThemeEnabled = !darkThemeEnabled;
@@ -75,6 +79,19 @@
     }
   }
 
+  function initiateProfileSwitch(name) {
+    appState.playClickSound();
+    if (name === activeProfile) {
+      showProfileDropdown = false;
+      showAllProfilesModal = false;
+      return;
+    }
+    pendingProfileToSwitch = name;
+    showProfileSwitchModal = true;
+    showProfileDropdown = false;
+    showAllProfilesModal = false;
+  }
+
   function switchProfile(name) {
     appState.playClickSound();
     if (name === secondaryProfile) {
@@ -83,7 +100,6 @@
       secondaryProfile = oldActive;
       appState.showToast(`👤 Switched operator profile to ${activeProfile}`, 'success');
       appState.playStampSound();
-      showProfileDropdown = false;
     }
   }
 
@@ -755,7 +771,7 @@
 
                   <!-- Secondary profile switcher -->
                   <div 
-                    onclick={() => switchProfile(secondaryProfile)}
+                    onclick={() => initiateProfileSwitch(secondaryProfile)}
                     class="flex items-center justify-between py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded px-2 cursor-pointer transition-all mt-1"
                   >
                     <div class="flex items-center gap-3">
@@ -919,6 +935,39 @@
           class="py-2.5 rounded bg-[#AC3B2A] text-white hover:bg-[#AC3B2A]/90 transition-all font-bold text-center"
         >
           Log Out
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- MODAL: PROFILE SWITCH CONFIRMATION -->
+{#if showProfileSwitchModal}
+  <div class="fixed inset-0 bg-[#2A2521]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="ticket-card bg-white dark:bg-[#24201E] p-6 max-w-sm w-full border border-[#767068]/30 dark:border-zinc-800 shadow-2xl relative animate-scale-up text-[#2A2521] dark:text-[#EBE5DC]">
+      <div class="mb-4">
+        <span class="ticket-stamp bg-emerald-50 text-[#3E6650] border-[#3E6650]/25 dark:bg-[#3E6650]/15 dark:text-emerald-400">SWITCH OPERATOR</span>
+        <h3 class="text-base font-bold text-[#2A2521] dark:text-[#EBE5DC] mt-2">Confirm Operator Swap</h3>
+        <p class="text-xs text-[#767068] dark:text-zinc-400 leading-relaxed mt-1.5">
+          Are you sure you want to switch the active operator console profile to <strong class="text-[#3E6650] dark:text-[#3E6650]">{pendingProfileToSwitch}</strong>? All future actions and changes will be logged under this user name.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 pt-3 border-t border-[#767068]/20 dark:border-zinc-850 font-mono text-xs">
+        <button 
+          onclick={() => { appState.playClickSound(); showProfileSwitchModal = false; pendingProfileToSwitch = ''; }} 
+          class="py-2.5 rounded border border-[#767068]/30 text-[#767068] bg-slate-50 hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-[#EBE5DC] transition-all font-bold text-center"
+        >
+          Cancel
+        </button>
+        <button 
+          onclick={() => {
+            switchProfile(pendingProfileToSwitch);
+            showProfileSwitchModal = false;
+          }} 
+          class="py-2.5 rounded bg-[#3E6650] text-[#F6F2EA] hover:bg-[#3E6650]/90 transition-all font-bold text-center"
+        >
+          Switch Profile
         </button>
       </div>
     </div>
@@ -1129,7 +1178,7 @@
 
       <div class="space-y-2 py-2 text-left">
         <button 
-          onclick={() => { switchProfile(activeProfile); showAllProfilesModal = false; }}
+          onclick={() => initiateProfileSwitch(activeProfile)}
           class="w-full flex items-center justify-between p-3 bg-[#F6F2EA]/60 dark:bg-zinc-900/20 rounded border-2 border-[#3E6650] hover:bg-[#767068]/5 transition-all text-left"
         >
           <div class="flex items-center gap-3">
@@ -1142,7 +1191,7 @@
         </button>
 
         <button 
-          onclick={() => { switchProfile(secondaryProfile); showAllProfilesModal = false; }}
+          onclick={() => initiateProfileSwitch(secondaryProfile)}
           class="w-full flex items-center justify-between p-3 bg-slate-50 dark:bg-zinc-850 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded border border-[#767068]/15 dark:border-zinc-800 transition-all text-left"
         >
           <div class="flex items-center gap-3">
