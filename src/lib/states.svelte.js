@@ -19,7 +19,7 @@ export class CateringState {
   activeEventForAnalysis = $state(null);
   anomalyReport = $state(null);
   usingMockData = $state(false);
-  version = '1.3.7';
+  version = '1.3.9';
   isDataLoaded = $state(false);
 
   // Authentication & PWA variables
@@ -192,9 +192,6 @@ export class CateringState {
 
   // Push notifications generator
   triggerSystemNotification(title, body) {
-    // Standard visual toast fallback
-    this.showToast(`🔔 ${title}: ${body}`, "info");
-
     // Real browser Notification API if authorized
     if ('Notification' in window) {
       if (Notification.permission === 'granted') {
@@ -400,13 +397,13 @@ export class CateringState {
       const help = this.getPwaInstallHelp();
 
       if (!isSecureInstallOrigin) {
-        this.showToast("Install on phones needs HTTPS. Open CaterSync from a secure link, then install again.", "error");
+        console.warn("Install on phones needs HTTPS. Open CaterSync from a secure link, then install again.");
       } else if (!hasServiceWorker) {
-        this.showToast("This browser does not support the service worker needed for app install.", "error");
+        console.warn("This browser does not support the service worker needed for app install.");
       } else if (help.platform.startsWith('android')) {
-        this.showToast("Chrome has not marked this PWA installable yet. Use HTTPS, reload once, then tap Install App again.", "error");
+        console.warn("Chrome has not marked this PWA installable yet. Use HTTPS, reload once, then tap Install App again.");
       } else {
-        this.showToast(help.platform.startsWith('ios') ? "On iPhone, use Safari Share > Add to Home Screen." : "Use the browser menu: Install app / Add to Home screen.", "info");
+        console.info(help.platform.startsWith('ios') ? "On iPhone, use Safari Share > Add to Home Screen." : "Use the browser menu: Install app / Add to Home screen.");
       }
       return false;
     }
@@ -421,7 +418,6 @@ export class CateringState {
 
       if (outcome === 'accepted') {
         this.markPwaInstalled();
-        this.showToast("📲 App installation accepted! Welcome to the Desktop.");
         return true;
       } else {
         this.pwaInstallable = !this.pwaInstalled;
@@ -429,7 +425,7 @@ export class CateringState {
       }
     } catch (err) {
       this.pwaInstallable = !this.pwaInstalled;
-      this.showToast(`Install prompt failed: ${err.message || 'browser blocked the prompt'}`, "error");
+      console.error(`Install prompt failed: ${err.message || 'browser blocked the prompt'}`);
       return false;
     }
   }

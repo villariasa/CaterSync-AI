@@ -1,9 +1,14 @@
 <script>
   import { onMount } from 'svelte';
-  import { FileText, Calendar, Sparkles, MapPin, Receipt, Star, CheckCircle, PenTool, LogOut, Info } from '@lucide/svelte';
+  import { FileText, Calendar, Sparkles, MapPin, Receipt, Star, CheckCircle, PenTool, LogOut, Info, ShieldAlert, KeyRound, ChevronLeft, ArrowRight, Lock } from '@lucide/svelte';
+  import { encryptSessionWithPIN, decryptSessionWithPIN, hasSecureSessionStored, wipeSecureSession } from '$lib/crypto.js';
 
-  // State managers
-  let customerContact = $state('');
+  // Auth flow states
+  let portalLoginStep = $state('email'); // 'email', 'otp', 'pin', 'setup_pin'
+  let customerContact = $state(''); // email or phone
+  let otpCode = $state('');
+  let setupPIN = $state('');
+  let inputPIN = $state('');
   let isAuthenticated = $state(false);
   let isChecking = $state(false);
   let errorMessage = $state('');
@@ -20,72 +25,212 @@
     review: null
   });
 
-  // Client side drawing pad states
+  // Client drawing pad
   let signaturePad = $state(null);
   let isDrawing = false;
   let signerName = $state('');
   let signaturePoints = $state([]);
 
-  // Review states
+  // Reviews & conditions
   let rating = $state(5);
   let comments = $state('');
   let agreedToTerms = $state(false);
 
-  // Countdown timer reactive variables
+  // Countdown timer
   let days = $state(0);
   let hours = $state(0);
   let minutes = $state(0);
   let seconds = $state(0);
   let intervalId = null;
 
-  // Active section tab
+  // Tabs
   let activeTab = $state('billing'); // billing, menu, contract, feedback
 
-  // Handle customer login
-  async function handleLogin(e) {
+  // Step 1: Identifier Check
+  async function checkIdentifier(e) {
     if (e) e.preventDefault();
     if (!customerContact.trim()) return;
 
     isChecking = true;
     errorMessage = '';
-    
+
+    // Check if we have a secure local vault session matching this identifier
+    const hasLocalSession = await hasSecureSessionStored();
+    if (hasLocalSession) {
+      portalLoginStep = 'pin';
+      isChecking = false;
+      return;
+    }
+
     try {
-      const response = await fetch('/api/auth/portal-login', {
+      // Hit subscriber pre-auth check
+      const response = await fetch('/api/auth/pre-auth-subscriber', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contact: customerContact })
+        body: JSON.stringify({ email: customerContact.trim() })
       });
       const data = await response.json();
-      
-      if (response.ok) {
-        customer = data.customer;
-        event = data.event;
-        isAuthenticated = true;
-        
-        if (event) {
-          await loadPortalData();
-          startCountdown();
+
+      if (response.ok && data.success) {
+        if (data.registered) {
+          // Send OTP automatically to login
+          await sendOtpRequest();
+        } else {
+          // Not registered yet, allow registration claim flow
+          errorMessage = 'Profile not registered. Click below to claim your account and receive a secure OTP code.';
         }
       } else {
-        if (response.status === 503 || data.offlineFallback) {
-          console.warn("DB offline fallback triggered via 503 response code.");
-          mockOfflineLogin();
-        } else {
-          errorMessage = data.error || 'Identity check failed. Please check your contact identifier.';
-        }
+        errorMessage = data.error || 'Identifier check failed.';
       }
     } catch (err) {
-      errorMessage = 'Unable to reach authentication server.';
-      // Offline fallback check
-      console.warn("Auth endpoint unavailable, performing client-side mock check.");
+      errorMessage = 'Auth server unreachable. Running offline mock fallback.';
+      console.warn("Subscriber pre-auth failed, launching mock offline login.");
       mockOfflineLogin();
     } finally {
       isChecking = false;
     }
   }
 
+  // Request/Send OTP code
+  async function sendOtpRequest() {
+    isChecking = true;
+    errorMessage = '';
+    successMessage = '';
+
+    try {
+      const res = await fetch('/api/auth/register-subscriber', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: customerContact.trim() })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        successMessage = 'Verification code sent! Please check your email inbox.';
+        portalLoginStep = 'otp';
+        if (data.usingFallback && data.previewUrl) {
+          console.log(`✉️ Sandboxed Email Dispatch URL: ${data.previewUrl}`);
+          window.open(data.previewUrl, '_blank');
+        }
+      } else {
+        errorMessage = data.error || 'Failed to dispatch verification code.';
+      }
+    } catch (err) {
+      errorMessage = 'Error dispatching verification code: ' + err.message;
+    } finally {
+      isChecking = false;
+    }
+  }
+
+  // Verify OTP code
+  async function verifyOtpCode(e) {
+    if (e) e.preventDefault();
+    if (!otpCode) return;
+
+    isChecking = true;
+    errorMessage = '';
+    successMessage = '';
+
+    try {
+      const response = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: customerContact.trim(), otpCode: otpCode.trim() })
+      });
+      const res = await response.json();
+
+      if (response.ok && res.success) {
+        // Retrieve full portal dataset
+        await executeBackendLogin(customerContact.trim());
+      } else {
+        errorMessage = res.error || 'Invalid OTP code entered.';
+      }
+    } catch (err) {
+      errorMessage = 'Error verifying code: ' + err.message;
+    } finally {
+      isChecking = false;
+    }
+  }
+
+  // Execute database login session setting
+  async function executeBackendLogin(contactString) {
+    try {
+      const response = await fetch('/api/auth/portal-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contact: contactString })
+      });
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        customer = data.customer;
+        event = data.event;
+        
+        if (event) {
+          await loadPortalData();
+          startCountdown();
+        }
+
+        // Ask for quick device-local PIN registration
+        const hasPin = await hasSecureSessionStored();
+        if (!hasPin) {
+          portalLoginStep = 'setup_pin';
+        } else {
+          isAuthenticated = true;
+        }
+      } else {
+        errorMessage = data.error || 'Login verification failed.';
+      }
+    } catch (err) {
+      errorMessage = 'Backend verification error: ' + err.message;
+    }
+  }
+
+  // Handle device-local PIN unlock
+  async function unlockWithPin() {
+    errorMessage = '';
+    try {
+      const decryptedString = await decryptSessionWithPIN(inputPIN);
+      const session = JSON.parse(decryptedString);
+      
+      customerContact = session.email || session.contact;
+      
+      // Complete backend login using unlocked credentials
+      isChecking = true;
+      await executeBackendLogin(customerContact);
+      isAuthenticated = true;
+      isChecking = false;
+    } catch (err) {
+      errorMessage = err.message;
+      inputPIN = '';
+    }
+  }
+
+  // Setup Device quick lock PIN
+  async function handleSetupPin(e) {
+    if (e) e.preventDefault();
+    if (setupPIN.length !== 4) {
+      errorMessage = 'PIN must be exactly 4 digits.';
+      return;
+    }
+
+    try {
+      const payload = {
+        email: customer.email || customerContact,
+        contact: customer.contact || customerContact,
+        name: customer.name
+      };
+
+      await encryptSessionWithPIN(setupPIN, JSON.stringify(payload));
+      successMessage = '📲 Secure Device PIN configured successfully!';
+      isAuthenticated = true;
+    } catch (err) {
+      errorMessage = 'Failed to encrypt local session.';
+    }
+  }
+
   function mockOfflineLogin() {
-    customer = { id: 101, name: 'Offline Client Sample', contact: customerContact };
+    customer = { id: 101, name: 'Offline Client Sample', contact: customerContact, email: customerContact };
     event = {
       id: 505,
       event_type: 'Birthday Celebration',
@@ -122,7 +267,6 @@
     startCountdown();
   }
 
-  // Fetch billing, contract, menus, review
   async function loadPortalData() {
     if (!event) return;
     try {
@@ -140,16 +284,21 @@
     }
   }
 
-  // Handle logout
   async function handleLogout() {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch (err) {
       console.warn('Server logout skipped:', err);
     }
+    await wipeSecureSession();
     isAuthenticated = false;
     customer = null;
     event = null;
+    portalLoginStep = 'email';
+    customerContact = '';
+    otpCode = '';
+    setupPIN = '';
+    inputPIN = '';
     portalData = {
       menus: [],
       contract: null,
@@ -161,7 +310,6 @@
     clearInterval(intervalId);
   }
 
-  // Countdown timer calculations
   function startCountdown() {
     if (!event || !event.event_date) return;
     clearInterval(intervalId);
@@ -188,7 +336,7 @@
     intervalId = setInterval(updateTime, 1000);
   }
 
-  // Signature canvas handlers
+  // Signature canvas
   function startDrawing(e) {
     isDrawing = true;
     const pos = getPos(e);
@@ -242,7 +390,6 @@
     signaturePoints = [];
   }
 
-  // Convert canvas signature to SVG paths
   function getSignatureSvg() {
     if (signaturePoints.length === 0) return '';
     let d = `M ${signaturePoints[0].x} ${signaturePoints[0].y}`;
@@ -252,7 +399,6 @@
     return `<svg viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg"><path d="${d}" fill="none" stroke="#2A2521" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   }
 
-  // Submit contract signature
   async function submitSignature() {
     if (!signerName.trim()) {
       errorMessage = 'Please input your full legal name.';
@@ -290,7 +436,7 @@
         errorMessage = data.error || 'Failed to submit signature.';
       }
     } catch (err) {
-      console.warn("Sign endpoint unavailable. Simulating offline signature.");
+      console.warn("Sign endpoint failed, falling back to mock signature:", err.message);
       portalData.signature = {
         signer_name: signerName,
         signature_svg: signatureSvg,
@@ -301,7 +447,6 @@
     }
   }
 
-  // Submit event review
   async function submitReview() {
     errorMessage = '';
     successMessage = '';
@@ -324,7 +469,7 @@
         errorMessage = data.error || 'Failed to submit feedback.';
       }
     } catch (err) {
-      console.warn("Review endpoint unavailable. Simulating offline review.");
+      console.warn("Review endpoint failed, running fallback review:", err.message);
       portalData.review = {
         rating,
         comments,
@@ -335,15 +480,12 @@
   }
 
   onMount(async () => {
-    // Canvas sizing setup on tab switch
     const urlParams = new URLSearchParams(window.location.search);
     const contactParam = urlParams.get('contact') || urlParams.get('token');
     
     if (contactParam) {
-      console.log('🔗 Auto-login query parameter detected:', contactParam);
       customerContact = contactParam;
-      // Trigger login automatically
-      await handleLogin();
+      await checkIdentifier();
     }
 
     return () => {
@@ -353,7 +495,7 @@
 </script>
 
 <div class="min-h-screen bg-[#1F1B18] text-[#F6F2EA] flex flex-col font-mono selection:bg-[#D9A441] selection:text-[#1F1B18]">
-  <!-- TOP BAR -->
+  
   <header class="border-b border-[#767068]/30 bg-[#2A2521] px-6 py-4 flex items-center justify-between shadow-md">
     <div class="flex items-center gap-3">
       <div class="h-8 w-8 bg-[#D9A441] text-[#1F1B18] rounded flex items-center justify-center font-bold text-sm shadow">
@@ -376,51 +518,219 @@
     {/if}
   </header>
 
-  <!-- MAIN AREA -->
   <div class="flex-1 flex items-center justify-center p-6">
     {#if !isAuthenticated}
-      <!-- CLIENT LOGIN SCREEN -->
+      <!-- CLIENT LOGIN WIZARD -->
       <div class="max-w-md w-full ticket-card bg-white text-[#2A2521] border border-[#767068]/30 shadow-2xl p-6 rounded relative animate-scale-up">
+        
         <div class="border-b-2 border-dashed border-[#767068]/30 pb-4 mb-6">
           <div class="flex justify-between items-start">
             <span class="ticket-stamp bg-slate-100 text-slate-700">CLIENT CHECK-IN</span>
             <span class="text-xs text-[#767068]">GATEWAY #01</span>
           </div>
-          <h2 class="text-lg font-bold mt-2 uppercase tracking-wide">Enter Registration</h2>
-          <p class="text-xs text-[#767068] mt-1">Provide your registered customer contact phone, email, or client name to load your catering dashboard.</p>
+          <h2 class="text-lg font-bold mt-2 uppercase tracking-wide">Client Portal Entry</h2>
+          <p class="text-xs text-[#767068] mt-1">Review event packages, sign agreements, specify dietary preferences, and browse menus.</p>
         </div>
 
-        <form onsubmit={handleLogin} class="space-y-4">
-          <div>
-            <label for="contact-input" class="block text-[10px] uppercase font-bold tracking-wider text-[#767068] mb-1.5">Contact Detail / Name</label>
-            <input 
-              id="contact-input" 
-              type="text" 
-              bind:value={customerContact} 
-              placeholder="e.g. +63 917 123 4567 or Client Name" 
-              class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded font-mono text-xs text-[#2A2521] focus:ring-1 focus:ring-[#D9A441] focus:border-[#D9A441] outline-none"
-              required 
-            />
+        {#if portalLoginStep === 'email'}
+          <!-- Step 1: Entry email -->
+          <form onsubmit={checkIdentifier} class="space-y-4">
+            <div>
+              <label for="contact-input" class="block text-[10px] uppercase font-bold tracking-wider text-[#767068] mb-1.5">Registered Customer Email</label>
+              <input 
+                id="contact-input" 
+                type="email" 
+                bind:value={customerContact} 
+                placeholder="e.g. customer@example.com" 
+                class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded font-mono text-xs text-[#2A2521] focus:ring-1 focus:ring-[#D9A441] focus:border-[#D9A441] outline-none"
+                required 
+              />
+            </div>
+
+            {#if errorMessage}
+              <div class="px-3 py-2 bg-red-50 text-[#AC3B2A] border border-[#AC3B2A]/20 rounded text-xs leading-relaxed">
+                {errorMessage}
+              </div>
+            {/if}
+
+            <button 
+              type="submit" 
+              disabled={isChecking}
+              class="w-full py-2.5 bg-[#2A2521] text-white hover:bg-[#2A2521]/90 rounded transition-all font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+            >
+              {#if isChecking}
+                Checking Database...
+              {:else}
+                Continue <ArrowRight size={14} />
+              {/if}
+            </button>
+
+            <!-- Claim Profile Register -->
+            <button 
+              type="button"
+              onclick={sendOtpRequest}
+              class="w-full text-center text-xs text-[#3E6650] hover:underline font-bold mt-2"
+            >
+              First time here? Claim & Activate Account
+            </button>
+          </form>
+
+        {:else if portalLoginStep === 'otp'}
+          <!-- Step 2: OTP Verification -->
+          <form onsubmit={verifyOtpCode} class="space-y-4">
+            <div class="flex items-center gap-1.5 border-b border-[#767068]/15 pb-2 mb-2">
+              <button 
+                type="button" 
+                onclick={() => { portalLoginStep = 'email'; errorMessage = ''; }}
+                class="text-[#767068] hover:text-[#2A2521]"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <span class="text-xs font-bold text-[#767068]">Verifying: <span class="text-[#2A2521]">{customerContact}</span></span>
+            </div>
+
+            <div>
+              <label for="otp-input" class="block text-[10px] uppercase font-bold tracking-wider text-[#767068] mb-1.5">6-Digit Verification Code</label>
+              <input 
+                id="otp-input" 
+                type="text" 
+                bind:value={otpCode} 
+                maxlength="6"
+                placeholder="e.g. 123456" 
+                class="w-full text-center text-lg tracking-[0.5em] px-3 py-2 bg-slate-50 border border-slate-300 rounded font-mono text-[#2A2521] focus:ring-1 focus:ring-[#D9A441] focus:border-[#D9A441] outline-none"
+                required 
+              />
+            </div>
+
+            {#if errorMessage}
+              <div class="px-3 py-2 bg-red-50 text-[#AC3B2A] border border-[#AC3B2A]/20 rounded text-xs leading-relaxed">
+                {errorMessage}
+              </div>
+            {/if}
+
+            {#if successMessage}
+              <div class="px-3 py-2 bg-emerald-50 text-[#3E6650] border border-[#3E6650]/20 rounded text-xs leading-relaxed">
+                {successMessage}
+              </div>
+            {/if}
+
+            <button 
+              type="submit" 
+              disabled={isChecking}
+              class="w-full py-2.5 bg-[#2A2521] text-white hover:bg-[#2A2521]/90 rounded transition-all font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+            >
+              {#if isChecking}
+                Verifying Code...
+              {:else}
+                Confirm Verification <CheckCircle size={14} />
+              {/if}
+            </button>
+
+            <button 
+              type="button" 
+              onclick={sendOtpRequest} 
+              class="w-full text-center text-[10px] text-slate-500 hover:underline uppercase font-bold mt-2"
+            >
+              Resend Code
+            </button>
+          </form>
+
+        {:else if portalLoginStep === 'pin'}
+          <!-- Step 3: PIN Access Lock -->
+          <div class="space-y-4">
+            <div class="flex items-center gap-1.5 border-b border-[#767068]/15 pb-2 mb-2">
+              <button 
+                type="button" 
+                onclick={() => { portalLoginStep = 'email'; errorMessage = ''; }}
+                class="text-[#767068] hover:text-[#2A2521]"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <span class="text-xs font-bold text-[#767068]">Unlock Device Session</span>
+            </div>
+
+            <div>
+              <label for="pin-input" class="block text-[10px] uppercase font-bold tracking-wider text-[#767068] mb-1.5">Enter 4-Digit Device PIN</label>
+              <input 
+                id="pin-input" 
+                type="password" 
+                pattern="[0-9]*" 
+                inputmode="numeric" 
+                maxlength="4" 
+                bind:value={inputPIN} 
+                oninput={() => { if (inputPIN.length === 4) unlockWithPin(); }}
+                placeholder="••••" 
+                class="w-full text-center text-xl tracking-[1.2em] pl-6 py-2.5 bg-slate-50 border border-slate-300 rounded font-mono text-[#2A2521] focus:ring-1 focus:ring-[#D9A441] outline-none"
+                required 
+              />
+            </div>
+
+            {#if errorMessage}
+              <div class="px-3 py-2 bg-red-50 text-[#AC3B2A] border border-[#AC3B2A]/20 rounded text-xs leading-relaxed text-center">
+                {errorMessage}
+              </div>
+            {/if}
+
+            <p class="text-[9px] text-[#767068] font-mono text-center leading-relaxed">
+              Auto-verifies upon entering 4th digit. If you forgot your device PIN, request a login OTP.
+            </p>
+
+            <button 
+              type="button" 
+              onclick={() => { portalLoginStep = 'email'; sendOtpRequest(); }}
+              class="w-full text-center text-xs text-[#3E6650] hover:underline font-bold mt-1"
+            >
+              Sign In Using OTP Code
+            </button>
           </div>
 
-          {#if errorMessage}
-            <div class="px-3 py-2 bg-red-50 text-[#AC3B2A] border border-[#AC3B2A]/20 rounded text-xs leading-relaxed">
-              {errorMessage}
+        {:else if portalLoginStep === 'setup_pin'}
+          <!-- Step 4: Setup Quick Device PIN -->
+          <form onsubmit={handleSetupPin} class="space-y-4">
+            <div class="bg-emerald-50 border border-emerald-200 text-[#3E6650] p-4 rounded text-xs flex gap-2">
+              <CheckCircle size={16} class="shrink-0 mt-0.5" />
+              <div>
+                <p class="font-bold">Verification Successful!</p>
+                <p class="text-slate-600 mt-0.5">Please configure a 4-digit PIN for future quick logins on this device without needing email OTP codes.</p>
+              </div>
             </div>
-          {/if}
 
-          <button 
-            type="submit" 
-            disabled={isChecking}
-            class="w-full py-2.5 bg-[#2A2521] text-white hover:bg-[#2A2521]/90 rounded transition-all font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2"
-          >
-            {#if isChecking}
-              Checking Database...
-            {:else}
-              Load Booking Console
+            <div>
+              <label for="setup-pin-input" class="block text-[10px] uppercase font-bold tracking-wider text-[#767068] mb-1.5">Choose 4-Digit Device PIN</label>
+              <input 
+                id="setup-pin-input" 
+                type="text" 
+                pattern="[0-9]{4}" 
+                maxlength="4" 
+                bind:value={setupPIN} 
+                placeholder="e.g. 1234" 
+                class="w-full text-center text-lg tracking-[0.5em] px-3 py-2 bg-slate-50 border border-slate-300 rounded font-mono text-[#2A2521] focus:ring-1 focus:ring-[#D9A441] outline-none"
+                required 
+              />
+            </div>
+
+            {#if errorMessage}
+              <div class="px-3 py-2 bg-red-50 text-[#AC3B2A] border border-[#AC3B2A]/20 rounded text-xs">
+                {errorMessage}
+              </div>
             {/if}
-          </button>
-        </form>
+
+            <button 
+              type="submit" 
+              class="w-full py-2.5 bg-[#3E6650] text-white hover:bg-[#3E6650]/90 rounded transition-all font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+            >
+              Configure Device PIN & Open Dashboard
+            </button>
+
+            <button 
+              type="button" 
+              onclick={() => isAuthenticated = true}
+              class="w-full text-center text-xs text-slate-500 hover:underline pt-1"
+            >
+              Skip and Enter Dashboard
+            </button>
+          </form>
+        {/if}
       </div>
     {:else}
       <!-- CLIENT DASHBOARD -->
@@ -428,7 +738,6 @@
         
         <!-- EVENT OVERVIEW & COUNTDOWN -->
         <div class="lg:col-span-1 space-y-6">
-          <!-- Receipt Overview Sheet -->
           <div class="ticket-card bg-white text-[#2A2521] p-6 border border-[#767068]/30 shadow-xl rounded relative">
             <div class="border-b-2 border-dashed border-[#767068]/30 pb-4 mb-4">
               <div class="flex justify-between items-center">
@@ -448,7 +757,7 @@
                   <div>
                     <p class="text-[9px] uppercase tracking-wider text-[#767068]">Scheduled Date</p>
                     <p class="font-bold text-[#2A2521]">
-                      {new Date(event.event_date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                       {new Date(event.event_date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                     </p>
                   </div>
                 </div>
@@ -473,7 +782,7 @@
                   <Info size={14} class="text-[#767068]" />
                   <div>
                     <p class="text-[9px] uppercase tracking-wider text-[#767068]">Expected Guest Count</p>
-                    <p class="font-bold text-[#2A2521]">{event.guest_count} Servings</p>
+                    <p class="font-bold text-[#2A2521]"> {event.guest_count} Servings</p>
                   </div>
                 </div>
               </div>
@@ -511,7 +820,6 @@
 
         <!-- PORTAL INTERACTIONS & BILLING -->
         <div class="lg:col-span-2 space-y-6">
-          <!-- NAVIGATION TABS -->
           <nav class="flex border-b border-[#767068]/30 font-mono text-xs">
             <button 
               onclick={() => { activeTab = 'billing'; errorMessage = ''; successMessage = ''; }}
@@ -530,7 +838,6 @@
                 activeTab = 'contract'; 
                 errorMessage = ''; 
                 successMessage = '';
-                // Wait for Svelte render before targeting signature canvas
                 setTimeout(() => {
                   signaturePad = document.getElementById('signature-pad');
                 }, 50);
@@ -547,7 +854,6 @@
             </button>
           </nav>
 
-          <!-- TAB CONTENTS -->
           <div class="bg-[#2A2521] border border-[#767068]/30 rounded p-6 shadow-md min-h-[300px]">
             
             {#if errorMessage}
@@ -607,7 +913,6 @@
                     </tbody>
                   </table>
 
-                  <!-- Payments Roster -->
                   <div class="mt-6 pt-6 border-t border-[#767068]/30">
                     <h4 class="text-xs font-bold uppercase tracking-wider text-white mb-3">Recorded Client Deposits</h4>
                     {#if portalData.payments.length === 0}
@@ -755,7 +1060,6 @@
                       </button>
                     </div>
                   {:else}
-                    <!-- SIGNATURE METADATA DISPLAY -->
                     <div class="p-4 bg-[#1F1B18] border border-[#767068]/30 rounded text-xs space-y-2">
                       <p class="text-emerald-400 font-bold">✓ This catering agreement has been legally signed and registered</p>
                       {#if portalData.signature}
@@ -767,7 +1071,6 @@
                           </div>
                           {#if portalData.signature.signature_svg}
                             <div class="h-20 bg-white border border-[#767068]/20 rounded p-2 flex items-center justify-center">
-                              <!-- Render signature path preview -->
                               {@html portalData.signature.signature_svg}
                             </div>
                           {/if}
@@ -852,9 +1155,8 @@
     {/if}
   </div>
 
-  <!-- FOOTER -->
   <footer class="border-t border-[#767068]/30 bg-[#2A2521] px-6 py-3 text-center text-[9px] text-[#767068] tracking-widest uppercase">
-    CaterSync Operations Inc. · Version 1.3.7 · Built Offline & Secure
+    CaterSync Operations Inc. · Version 1.3.9 · Built Offline & Secure
   </footer>
 </div>
 
@@ -879,7 +1181,6 @@
     font-family: monospace;
   }
 
-  /* Keyframe animations */
   @keyframes scaleUp {
     from { transform: scale(0.96); opacity: 0; }
     to { transform: scale(1); opacity: 1; }

@@ -330,3 +330,14 @@ SELECT
 FROM events e
 WHERE e.status IN ('Confirmed', 'Draft') AND e.event_date > CURRENT_TIMESTAMP
 LIMIT 8;
+
+-- =========================================================================
+-- 14. SEED OPERATOR & SUBSCRIBER USERS
+-- =========================================================================
+INSERT INTO users (username, password_hash, role)
+VALUES ('admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'Admin')
+ON CONFLICT (username) DO NOTHING;
+
+INSERT INTO subscriber_accounts (customer_id, email, status)
+VALUES (1, 'customer@example.com', 'active')
+ON CONFLICT (email) DO NOTHING;

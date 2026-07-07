@@ -28,7 +28,6 @@
     const link = `${window.location.origin}/portal?contact=${encodeURIComponent(ident)}`;
     
     navigator.clipboard.writeText(link);
-    appState.showToast("📋 Client Portal link copied to clipboard!");
     appState.playStampSound();
 
     const btn = e.currentTarget;
@@ -49,13 +48,11 @@
 
   async function handleSendPortalEmail(row) {
     if (!row.email) {
-      appState.showToast("❌ Customer has no email address registered!", "error");
       appState.playBuzzerSound();
       return;
     }
 
     appState.playClickSound();
-    appState.showToast(`✉️ Dispatched link to ${row.email}...`);
 
     try {
       const response = await fetch('/api/portal/send-email', {
@@ -74,15 +71,10 @@
       const res = await response.json();
       if (res.success) {
         if (res.usingFallback) {
-          appState.showToast(`✉️ Sandbox Email Dispatched! Link copied.`, 'success');
           if (typeof window !== 'undefined' && window.navigator && window.navigator.clipboard) {
-            window.navigator.clipboard.writeText(res.previewUrl).then(() => {
-              appState.showToast(`📋 Sandbox email preview link copied!`, 'info');
-            }).catch(() => {});
+            window.navigator.clipboard.writeText(res.previewUrl).catch(() => {});
           }
           console.log(`✉️ CaterSync Sandbox Email Preview URL: ${res.previewUrl}`);
-        } else {
-          appState.showToast(`✅ Email successfully sent to ${row.email}!`, 'success');
         }
         appState.playStampSound();
       } else {
@@ -91,7 +83,6 @@
     } catch (err) {
       console.warn("Mail server simulation fallback active:", err.message);
       setTimeout(() => {
-        appState.showToast(`✅ [MOCK SEND] Email successfully dispatched to ${row.email}`);
         appState.playStampSound();
       }, 1000);
     }

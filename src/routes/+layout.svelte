@@ -108,7 +108,6 @@
       const oldActive = activeProfile;
       activeProfile = secondaryProfile;
       secondaryProfile = oldActive;
-      appState.showToast(`👤 Switched operator profile to ${activeProfile}`, 'success');
       appState.playStampSound();
     }
   }
@@ -117,7 +116,6 @@
     e.preventDefault();
     if (!problemDescription.trim()) return;
     appState.playClickSound();
-    appState.showToast(`📩 Problem report submitted. Ticket #${Math.floor(1000 + Math.random() * 9000)} created.`, 'success');
     appState.playStampSound();
     problemDescription = '';
     showReportProblemModal = false;
@@ -715,7 +713,6 @@
                     onclick={() => {
                       appState.playClickSound();
                       appState.notifications.forEach(n => n.unread = false);
-                      appState.showToast("All notifications marked as read", "success");
                     }}
                     class="hover:underline text-[9px] text-[#3E6650] dark:text-zinc-400 capitalize normal-case"
                   >
@@ -777,7 +774,6 @@
                   onclick={() => {
                     showNotificationsDropdown = false;
                     appState.playClickSound();
-                    appState.showToast("Retrieving older system logs...", "info");
                   }} 
                   class="w-full text-center py-2 bg-slate-100/60 dark:bg-zinc-800/40 hover:bg-slate-100 dark:hover:bg-zinc-800 text-[10px] font-bold text-[#3E6650] dark:text-[#EBE5DC] rounded-b border-t border-[#767068]/10 dark:border-zinc-800 uppercase tracking-wide"
                 >
@@ -920,7 +916,7 @@
                   <a href="#terms" class="hover:underline">Terms</a> · 
                   <a href="#advertising" class="hover:underline">Advertising</a> · 
                   <a href="#cookies" class="hover:underline">Cookies</a> · 
-                  <button onclick={() => appState.showToast('Console v' + appState.version, 'info')} class="hover:underline font-mono text-[9px]">More</button>
+                  <button class="hover:underline font-mono text-[9px]">More</button>
                 </div>
               </div>
             {/if}

@@ -90,7 +90,6 @@
           isCostAnomaly: res.is_anomaly,
           reason: res.explanation
         };
-        appState.showToast("💰 Profit audited via Isolation Forest");
       }
     } catch (err) {
       console.warn("FastAPI profit analyzer unreachable, using simulation fallback:", err.message);

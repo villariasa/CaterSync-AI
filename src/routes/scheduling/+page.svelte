@@ -29,7 +29,6 @@
       if (res.success && res.timeline) {
         kitchenTimeline = res.timeline;
         scheduleSolved = true;
-        appState.showToast("⏱️ Prep schedule solved via OR-Tools CP-SAT");
         appState.playStampSound();
       }
     } catch (err) {
@@ -65,7 +64,6 @@
       if (res.success && res.assignments) {
         staffAssignmentsList = res.assignments;
         staffSolved = true;
-        appState.showToast("🧑‍🤝‍🧑 Staff matching completed via Hungarian solver");
         appState.playStampSound();
       }
     } catch (err) {

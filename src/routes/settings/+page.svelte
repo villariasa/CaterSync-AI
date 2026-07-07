@@ -1,6 +1,7 @@
 <script>
   import { getCateringContext } from '$lib/states.svelte.js';
   import DataTable from '$lib/components/DataTable.svelte';
+  import BiometricScanner from '$lib/components/BiometricScanner.svelte';
   import { 
     Settings, 
     Building2, 
@@ -29,6 +30,8 @@
   let soundDefault = $state(appState.settings.sound_enabled_default);
 
   let bizMessage = $state('');
+  let biometricUsername = $state('admin');
+  let showBiometricSetup = $state(false);
 
   // Email App configuration states
   let gmailAddress = $state(appState.settings.emailConfig?.gmailAddress || '');
@@ -120,7 +123,6 @@
 
   function testBackgroundNotification() {
     appState.playClickSound();
-    appState.showToast("⏱️ Notification scheduled. Close this tab now!");
     
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage({
@@ -341,6 +343,31 @@
             <p class="text-[10px] text-[#767068] mt-2 font-mono leading-relaxed">
               ⚠️ Note: Requires enabling "App Passwords" in your Google Account security settings. This SMTP configuration will be used to automatically dispatch direct portal logins via Gmail.
             </p>
+          </div>
+
+          <!-- Biometric & Passkey Registration Card -->
+          <div class="border-t-2 border-dashed border-[#767068]/20 my-6 pt-6 animate-fade-in text-[#2A2521]">
+            <span class="ticket-stamp">OPERATOR SECURITY</span>
+            <h3 class="text-sm font-bold mt-2 mb-3">Operator Biometric / Passkey Setup</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+              <div>
+                <p class="text-[10px] text-[#767068] font-mono leading-relaxed">
+                  Enrolling your device biometrics (Fingerprint, Face ID, Windows Hello) allows instant password-free and PIN-free access next time.
+                </p>
+                <div class="mt-3 flex items-center gap-3">
+                  <input type="text" bind:value={biometricUsername} class="px-3 py-2 rounded border border-[#767068]/30 focus:outline-none text-xs w-full bg-slate-50 font-mono" placeholder="Operator username (e.g. admin)" />
+                  <button type="button" onclick={() => { appState.playClickSound(); showBiometricSetup = true; }} class="bg-[#2A2521] text-white hover:bg-slate-800 px-3.5 py-2 text-xs font-mono font-bold rounded uppercase tracking-wider transition-all whitespace-nowrap">
+                    Enroll Device
+                  </button>
+                </div>
+              </div>
+              
+              {#if showBiometricSetup}
+                <div class="border border-[#767068]/20 rounded p-4 bg-white shadow-inner">
+                  <BiometricScanner action="register" username={biometricUsername} accountType="operator" onsuccess={() => { showBiometricSetup = false; appState.showToast("Biometrics registered successfully!"); }} oncancel={() => showBiometricSetup = false} />
+                </div>
+              {/if}
+            </div>
           </div>
 
           <div class="pt-4 border-t border-[#767068]/20 flex items-center justify-between">

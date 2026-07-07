@@ -175,7 +175,7 @@
       appState.suppliers = [...appState.suppliers, mockSupplier];
       supplierMessage = '';
       name = '';
-      appState.showToast("🚚 Supplier account verified");
+      appState.showToast("🚚 Supplier profile registered successfully");
       appState.playStampSound();
       showSupplierModal = false;
       return;
@@ -192,7 +192,7 @@
         appState.suppliers = [...appState.suppliers, res.supplier];
         supplierMessage = '';
         name = '';
-        appState.showToast("🚚 Supplier account verified");
+        appState.showToast("🚚 Supplier profile registered successfully");
         appState.playStampSound();
         showSupplierModal = false;
       }

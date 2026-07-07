@@ -1,0 +1,2024 @@
+2026-07-07T07:13:12.941968Z	Cloning repository...
+2026-07-07T07:13:13.809579Z	From https://github.com/villariasa/CaterSync-AI
+2026-07-07T07:13:13.809912Z	 * branch            a1a773590e0d398ee7e79179f995c403d9e3e0d2 -> FETCH_HEAD
+2026-07-07T07:13:13.810017Z	
+2026-07-07T07:13:13.839119Z	HEAD is now at a1a7735 fix: add name to wrangler.toml
+2026-07-07T07:13:13.83952Z	
+2026-07-07T07:13:13.901417Z	
+2026-07-07T07:13:13.901996Z	Using v2 root directory strategy
+2026-07-07T07:13:13.925738Z	Success: Finished cloning repository files
+2026-07-07T07:13:14.640707Z	Restoring from dependencies cache
+2026-07-07T07:13:14.665222Z	Restoring from build output cache
+2026-07-07T07:13:15.762312Z	Checking for configuration in a Wrangler configuration file (BETA)
+2026-07-07T07:13:15.762743Z	
+2026-07-07T07:13:15.762913Z	Found wrangler.toml file. Reading build configuration...
+2026-07-07T07:13:15.768624Z	pages_build_output_dir: .svelte-kit/cloudflare
+2026-07-07T07:13:15.768956Z	Build environment variables: (none found)
+2026-07-07T07:13:15.964617Z	Successfully read the Wrangler configuration file.
+2026-07-07T07:13:16.115421Z	Detected the following tools from environment: npm@10.9.2, nodejs@22.16.0
+2026-07-07T07:13:16.115986Z	Installing project dependencies: npm clean-install --progress=false
+2026-07-07T07:13:24.542576Z	
+2026-07-07T07:13:24.54295Z	> catersync-ai@1.3.8 prepare
+2026-07-07T07:13:24.543038Z	> svelte-kit sync || echo ''
+2026-07-07T07:13:24.543088Z	
+2026-07-07T07:13:26.574722Z	
+2026-07-07T07:13:26.575169Z	added 149 packages, and audited 150 packages in 10s
+2026-07-07T07:13:26.575302Z	
+2026-07-07T07:13:26.57536Z	30 packages are looking for funding
+2026-07-07T07:13:26.575399Z	  run `npm fund` for details
+2026-07-07T07:13:26.59415Z	
+2026-07-07T07:13:26.594565Z	5 low severity vulnerabilities
+2026-07-07T07:13:26.594758Z	
+2026-07-07T07:13:26.594812Z	To address all issues (including breaking changes), run:
+2026-07-07T07:13:26.594843Z	  npm audit fix --force
+2026-07-07T07:13:26.594867Z	
+2026-07-07T07:13:26.594896Z	Run `npm audit` for details.
+2026-07-07T07:13:26.689469Z	Executing user command: npm run build
+2026-07-07T07:13:27.065156Z	
+2026-07-07T07:13:27.065586Z	> catersync-ai@1.3.8 build
+2026-07-07T07:13:27.065799Z	> vite build
+2026-07-07T07:13:27.065832Z	
+2026-07-07T07:13:29.207112Z	[36mvite v8.1.3 [32mbuilding ssr environment for production...[36m[39m
+2026-07-07T07:13:29.582022Z	[2Ktransforming...7:13:29 AM [vite-plugin-svelte] src/routes/+layout.svelte:40:37 This reference only captures the initial value of `data`. Did you mean to reference it inside a closure instead?
+2026-07-07T07:13:29.582357Z	https://svelte.dev/e/state_referenced_locally
+2026-07-07T07:13:29.582401Z	38: 
+2026-07-07T07:13:29.582429Z	39:   // Create the shared Svelte 5 context state
+2026-07-07T07:13:29.582453Z	40:   const appState = new CateringState(data);
+2026-07-07T07:13:29.582476Z	                                             ^
+2026-07-07T07:13:29.582506Z	41:   setCateringContext(appState);
+2026-07-07T07:13:29.58253Z	42: 
+2026-07-07T07:13:29.582562Z	7:13:29 AM [vite-plugin-svelte] src/routes/+layout.svelte:734:22 Visible, non-interactive element `<div>` with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+2026-07-07T07:13:29.582611Z	https://svelte.dev/e/a11y_click_events_have_key_events
+2026-07-07T07:13:29.582635Z	732:                   <div class="max-h-80 overflow-y-auto divide-y divide-[#767068]/5 dark:divide-zinc-850">
+2026-07-07T07:13:29.58266Z	733:                     {#each filteredNotifications as notif}
+2026-07-07T07:13:29.582683Z	734:                       <div 
+2026-07-07T07:13:29.582706Z	                                ^
+2026-07-07T07:13:29.582729Z	735:                         onclick={() => {
+2026-07-07T07:13:29.582755Z	736:                           notif.unread = false;
+2026-07-07T07:13:29.582778Z	7:13:29 AM [vite-plugin-svelte] src/routes/+layout.svelte:734:22 `<div>` with a click handler must have an ARIA role
+2026-07-07T07:13:29.582804Z	https://svelte.dev/e/a11y_no_static_element_interactions
+2026-07-07T07:13:29.582829Z	732:                   <div class="max-h-80 overflow-y-auto divide-y divide-[#767068]/5 dark:divide-zinc-850">
+2026-07-07T07:13:29.582851Z	733:                     {#each filteredNotifications as notif}
+2026-07-07T07:13:29.582873Z	734:                       <div 
+2026-07-07T07:13:29.582925Z	                                ^
+2026-07-07T07:13:29.582948Z	735:                         onclick={() => {
+2026-07-07T07:13:29.58297Z	736:                           notif.unread = false;
+2026-07-07T07:13:29.582996Z	7:13:29 AM [vite-plugin-svelte] src/routes/+layout.svelte:824:18 Visible, non-interactive element `<div>` with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+2026-07-07T07:13:29.583019Z	https://svelte.dev/e/a11y_click_events_have_key_events
+2026-07-07T07:13:29.583043Z	822: 
+2026-07-07T07:13:29.583076Z	823:                   <!-- Secondary profile switcher -->
+2026-07-07T07:13:29.583102Z	824:                   <div 
+2026-07-07T07:13:29.583127Z	                            ^
+2026-07-07T07:13:29.583149Z	825:                     onclick={() => initiateProfileSwitch(secondaryProfile)}
+2026-07-07T07:13:29.583174Z	826:                     class="flex items-center justify-between py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded px-2 cursor-pointer transition-all mt-1"
+2026-07-07T07:13:29.583204Z	7:13:29 AM [vite-plugin-svelte] src/routes/+layout.svelte:824:18 `<div>` with a click handler must have an ARIA role
+2026-07-07T07:13:29.583232Z	https://svelte.dev/e/a11y_no_static_element_interactions
+2026-07-07T07:13:29.583257Z	822: 
+2026-07-07T07:13:29.583284Z	823:                   <!-- Secondary profile switcher -->
+2026-07-07T07:13:29.583312Z	824:                   <div 
+2026-07-07T07:13:29.583341Z	                            ^
+2026-07-07T07:13:29.583369Z	825:                     onclick={() => initiateProfileSwitch(secondaryProfile)}
+2026-07-07T07:13:29.583399Z	826:                     class="flex items-center justify-between py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded px-2 cursor-pointer transition-all mt-1"
+2026-07-07T07:13:29.583429Z	7:13:29 AM [vite-plugin-svelte] src/routes/+layout.svelte:1129:10 A form label must be associated with a control
+2026-07-07T07:13:29.583458Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:29.58348Z	1127:       <form onsubmit={handleReportSubmit} class="space-y-4">
+2026-07-07T07:13:29.583502Z	1128:         <div>
+2026-07-07T07:13:29.583525Z	1129:           <label class="block text-[10px] font-mono text-[#767068] dark:text-zinc-400 uppercase font-bold mb-1">Issue Description</label>
+2026-07-07T07:13:29.583549Z	                                                                                                                                               ^
+2026-07-07T07:13:29.583571Z	1130:           <textarea 
+2026-07-07T07:13:29.583593Z	1131:             bind:value={problemDescription}
+2026-07-07T07:13:29.689791Z	7:13:29 AM [vite-plugin-svelte] src/routes/portal/+page.svelte:711:26 A form label must be associated with a control
+2026-07-07T07:13:29.690514Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:29.690783Z	709: 
+2026-07-07T07:13:29.690912Z	710:                         <div>
+2026-07-07T07:13:29.691007Z	711:                           <label class="block text-[10px] uppercase font-bold tracking-wider text-[#767068] mb-1.5">Draw Signature</label>
+2026-07-07T07:13:29.691113Z	                                                                                                                                               ^
+2026-07-07T07:13:29.691186Z	712:                           <div class="relative bg-white rounded border border-slate-300 overflow-hidden">
+2026-07-07T07:13:29.691254Z	713:                             <canvas 
+2026-07-07T07:13:29.898085Z	7:13:29 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:263:14 A form label must be associated with a control
+2026-07-07T07:13:29.898559Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:29.898826Z	261:           <div class="grid grid-cols-2 gap-4">
+2026-07-07T07:13:29.898918Z	262:             <div>
+2026-07-07T07:13:29.898965Z	263:               <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">Company Name</label>
+2026-07-07T07:13:29.899009Z	                                                                                                                      ^
+2026-07-07T07:13:29.899075Z	264:               <input type="text" bind:value={bizName} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" required />
+2026-07-07T07:13:29.89912Z	265:             </div>
+2026-07-07T07:13:29.899191Z	7:13:29 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:267:14 A form label must be associated with a control
+2026-07-07T07:13:29.899246Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:29.899301Z	265:             </div>
+2026-07-07T07:13:29.899367Z	266:             <div>
+2026-07-07T07:13:29.899411Z	267:               <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">Currency Symbol</label>
+2026-07-07T07:13:29.89949Z	                                                                                                                         ^
+2026-07-07T07:13:29.899534Z	268:               <input type="text" bind:value={currency} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" required />
+2026-07-07T07:13:29.899577Z	269:             </div>
+2026-07-07T07:13:29.899671Z	7:13:29 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:274:14 A form label must be associated with a control
+2026-07-07T07:13:29.899727Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:29.899765Z	272:           <div class="grid grid-cols-2 gap-4">
+2026-07-07T07:13:29.899801Z	273:             <div>
+2026-07-07T07:13:29.899844Z	274:               <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">Overhead Rate multiplier (0.00 to 1.00)</label>
+2026-07-07T07:13:29.899887Z	                                                                                                                                                 ^
+2026-07-07T07:13:29.899939Z	275:               <input type="number" step="0.01" bind:value={overhead} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" required />
+2026-07-07T07:13:29.899985Z	276:             </div>
+2026-07-07T07:13:29.900022Z	7:13:29 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:278:14 A form label must be associated with a control
+2026-07-07T07:13:29.900166Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:29.900197Z	276:             </div>
+2026-07-07T07:13:29.900222Z	277:             <div>
+2026-07-07T07:13:29.900254Z	278:               <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">Minimum Budget/Head (₱)</label>
+2026-07-07T07:13:29.900285Z	                                                                                                                                 ^
+2026-07-07T07:13:29.900313Z	279:               <input type="number" bind:value={minBudget} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" required />
+2026-07-07T07:13:29.900349Z	280:             </div>
+2026-07-07T07:13:29.900378Z	7:13:29 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:285:14 A form label must be associated with a control
+2026-07-07T07:13:29.900409Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:29.900434Z	283:           <div class="grid grid-cols-2 gap-4">
+2026-07-07T07:13:29.900463Z	284:             <div>
+2026-07-07T07:13:29.900493Z	285:               <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">Medium Risk Threshold (0.00 to 1.00)</label>
+2026-07-07T07:13:29.900525Z	                                                                                                                                              ^
+2026-07-07T07:13:29.900553Z	286:               <input type="number" step="0.05" bind:value={riskMed} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" required />
+2026-07-07T07:13:29.900584Z	287:             </div>
+2026-07-07T07:13:29.900627Z	7:13:29 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:289:14 A form label must be associated with a control
+2026-07-07T07:13:29.900662Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:29.900696Z	287:             </div>
+2026-07-07T07:13:29.900726Z	288:             <div>
+2026-07-07T07:13:29.900752Z	289:               <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">High Risk Threshold (0.00 to 1.00)</label>
+2026-07-07T07:13:29.900782Z	                                                                                                                                            ^
+2026-07-07T07:13:29.900825Z	290:               <input type="number" step="0.05" bind:value={riskHigh} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" required />
+2026-07-07T07:13:29.900854Z	291:             </div>
+2026-07-07T07:13:29.900883Z	7:13:29 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:323:16 A form label must be associated with a control
+2026-07-07T07:13:29.900912Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:29.90097Z	321:             <div class="grid grid-cols-2 gap-4">
+2026-07-07T07:13:29.900999Z	322:               <div>
+2026-07-07T07:13:29.901031Z	323:                 <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">Gmail Account Address</label>
+2026-07-07T07:13:29.901091Z	                                                                                                                                 ^
+2026-07-07T07:13:29.901132Z	324:                 <input type="email" bind:value={gmailAddress} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" placeholder="example@gmail.com" />
+2026-07-07T07:13:29.901162Z	325:               </div>
+2026-07-07T07:13:29.901191Z	7:13:29 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:327:16 A form label must be associated with a control
+2026-07-07T07:13:29.901222Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:29.901253Z	325:               </div>
+2026-07-07T07:13:29.902871Z	326:               <div>
+2026-07-07T07:13:29.903117Z	327:                 <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">App-Specific Password</label>
+2026-07-07T07:13:29.903212Z	                                                                                                                                 ^
+2026-07-07T07:13:29.903302Z	328:                 <input type="password" bind:value={gmailAppPassword} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" placeholder="•••• •••• •••• ••••" />
+2026-07-07T07:13:29.903367Z	329:               </div>
+2026-07-07T07:13:29.90341Z	7:13:29 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:333:16 A form label must be associated with a control
+2026-07-07T07:13:29.903469Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:29.903522Z	331:             <div class="grid grid-cols-2 gap-4 mt-4">
+2026-07-07T07:13:29.903562Z	332:               <div>
+2026-07-07T07:13:29.90363Z	333:                 <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">SMTP Host</label>
+2026-07-07T07:13:29.903672Z	                                                                                                                     ^
+2026-07-07T07:13:29.903771Z	334:                 <input type="text" bind:value={smtpHost} class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" />
+2026-07-07T07:13:29.903822Z	335:               </div>
+2026-07-07T07:13:29.903869Z	7:13:29 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:337:16 A form label must be associated with a control
+2026-07-07T07:13:29.903914Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:29.903977Z	335:               </div>
+2026-07-07T07:13:29.904013Z	336:               <div>
+2026-07-07T07:13:29.904076Z	337:                 <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">SMTP Port</label>
+2026-07-07T07:13:29.904126Z	                                                                                                                     ^
+2026-07-07T07:13:29.90416Z	338:                 <input type="number" bind:value={smtpPort} class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" />
+2026-07-07T07:13:29.904189Z	339:               </div>
+2026-07-07T07:13:33.13497Z	Found 2 warnings while optimizing generated CSS:
+2026-07-07T07:13:33.135321Z	
+2026-07-07T07:13:33.135837Z	Issue #1:
+2026-07-07T07:13:33.13593Z	[2m│   color: #ECE7DF;[22m
+2026-07-07T07:13:33.136005Z	[2m│ }[22m
+2026-07-07T07:13:33.136069Z	[2m│[22m :root.dark .bg-[#F6F2EA] {
+2026-07-07T07:13:33.136125Z	[2m┆[22m                 [33m[2m^--[22m No qualified name in attribute selector: IDHash("F6F2EA").[39m
+2026-07-07T07:13:33.136187Z	[2m┆[22m
+2026-07-07T07:13:33.136255Z	[2m│   background-color: #1A1715 !important;[22m
+2026-07-07T07:13:33.136321Z	[2m│ }[22m
+2026-07-07T07:13:33.136411Z	
+2026-07-07T07:13:33.136482Z	Issue #2:
+2026-07-07T07:13:33.136543Z	[2m│   border-color: var(--color-basil) !important;[22m
+2026-07-07T07:13:33.136598Z	[2m│ }[22m
+2026-07-07T07:13:33.136698Z	[2m│[22m :root.dark .bg-[#F6F2EA]\/60 {
+2026-07-07T07:13:33.136775Z	[2m┆[22m                 [33m[2m^--[22m No qualified name in attribute selector: IDHash("F6F2EA").[39m
+2026-07-07T07:13:33.136834Z	[2m┆[22m
+2026-07-07T07:13:33.13689Z	[2m│   background-color: rgba(26, 23, 21, 0.6) !important;[22m
+2026-07-07T07:13:33.136948Z	[2m│ }[22m
+2026-07-07T07:13:33.136995Z	
+2026-07-07T07:13:34.798808Z	✓ 3946 modules transformed.
+2026-07-07T07:13:34.930024Z	rendering chunks...
+2026-07-07T07:13:37.24129Z	[36mvite v8.1.3 [32mbuilding client environment for production...[36m[39m
+2026-07-07T07:13:37.391238Z	[2Ktransforming...7:13:37 AM [vite-plugin-svelte] src/routes/portal/+page.svelte:711:26 A form label must be associated with a control
+2026-07-07T07:13:37.391604Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:37.391767Z	709: 
+2026-07-07T07:13:37.391841Z	710:                         <div>
+2026-07-07T07:13:37.391894Z	711:                           <label class="block text-[10px] uppercase font-bold tracking-wider text-[#767068] mb-1.5">Draw Signature</label>
+2026-07-07T07:13:37.391935Z	                                                                                                                                               ^
+2026-07-07T07:13:37.392039Z	712:                           <div class="relative bg-white rounded border border-slate-300 overflow-hidden">
+2026-07-07T07:13:37.392079Z	713:                             <canvas 
+2026-07-07T07:13:37.4282Z	7:13:37 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:263:14 A form label must be associated with a control
+2026-07-07T07:13:37.428815Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:37.430138Z	261:           <div class="grid grid-cols-2 gap-4">
+2026-07-07T07:13:37.430261Z	262:             <div>
+2026-07-07T07:13:37.430296Z	263:               <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">Company Name</label>
+2026-07-07T07:13:37.430325Z	                                                                                                                      ^
+2026-07-07T07:13:37.430352Z	264:               <input type="text" bind:value={bizName} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" required />
+2026-07-07T07:13:37.430457Z	265:             </div>
+2026-07-07T07:13:37.430521Z	7:13:37 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:267:14 A form label must be associated with a control
+2026-07-07T07:13:37.430565Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:37.4306Z	265:             </div>
+2026-07-07T07:13:37.430664Z	266:             <div>
+2026-07-07T07:13:37.430691Z	267:               <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">Currency Symbol</label>
+2026-07-07T07:13:37.43072Z	                                                                                                                         ^
+2026-07-07T07:13:37.430791Z	268:               <input type="text" bind:value={currency} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" required />
+2026-07-07T07:13:37.430872Z	269:             </div>
+2026-07-07T07:13:37.430922Z	7:13:37 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:274:14 A form label must be associated with a control
+2026-07-07T07:13:37.430952Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:37.430984Z	272:           <div class="grid grid-cols-2 gap-4">
+2026-07-07T07:13:37.431019Z	273:             <div>
+2026-07-07T07:13:37.431067Z	274:               <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">Overhead Rate multiplier (0.00 to 1.00)</label>
+2026-07-07T07:13:37.431097Z	                                                                                                                                                 ^
+2026-07-07T07:13:37.431123Z	275:               <input type="number" step="0.01" bind:value={overhead} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" required />
+2026-07-07T07:13:37.431149Z	276:             </div>
+2026-07-07T07:13:37.431175Z	7:13:37 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:278:14 A form label must be associated with a control
+2026-07-07T07:13:37.431202Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:37.431245Z	276:             </div>
+2026-07-07T07:13:37.431283Z	277:             <div>
+2026-07-07T07:13:37.431326Z	278:               <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">Minimum Budget/Head (₱)</label>
+2026-07-07T07:13:37.431367Z	                                                                                                                                 ^
+2026-07-07T07:13:37.431408Z	279:               <input type="number" bind:value={minBudget} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" required />
+2026-07-07T07:13:37.431463Z	280:             </div>
+2026-07-07T07:13:37.4315Z	7:13:37 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:285:14 A form label must be associated with a control
+2026-07-07T07:13:37.43154Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:37.431576Z	283:           <div class="grid grid-cols-2 gap-4">
+2026-07-07T07:13:37.431612Z	284:             <div>
+2026-07-07T07:13:37.431649Z	285:               <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">Medium Risk Threshold (0.00 to 1.00)</label>
+2026-07-07T07:13:37.431687Z	                                                                                                                                              ^
+2026-07-07T07:13:37.431728Z	286:               <input type="number" step="0.05" bind:value={riskMed} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" required />
+2026-07-07T07:13:37.431768Z	287:             </div>
+2026-07-07T07:13:37.431814Z	7:13:37 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:289:14 A form label must be associated with a control
+2026-07-07T07:13:37.431856Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:37.431915Z	287:             </div>
+2026-07-07T07:13:37.431949Z	288:             <div>
+2026-07-07T07:13:37.431989Z	289:               <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">High Risk Threshold (0.00 to 1.00)</label>
+2026-07-07T07:13:37.432146Z	                                                                                                                                            ^
+2026-07-07T07:13:37.432199Z	290:               <input type="number" step="0.05" bind:value={riskHigh} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" required />
+2026-07-07T07:13:37.432237Z	291:             </div>
+2026-07-07T07:13:37.432271Z	7:13:37 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:323:16 A form label must be associated with a control
+2026-07-07T07:13:37.432307Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:37.432342Z	321:             <div class="grid grid-cols-2 gap-4">
+2026-07-07T07:13:37.43238Z	322:               <div>
+2026-07-07T07:13:37.432419Z	323:                 <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">Gmail Account Address</label>
+2026-07-07T07:13:37.432459Z	                                                                                                                                 ^
+2026-07-07T07:13:37.432499Z	324:                 <input type="email" bind:value={gmailAddress} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" placeholder="example@gmail.com" />
+2026-07-07T07:13:37.432536Z	325:               </div>
+2026-07-07T07:13:37.432578Z	7:13:37 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:327:16 A form label must be associated with a control
+2026-07-07T07:13:37.432605Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:37.432629Z	325:               </div>
+2026-07-07T07:13:37.432653Z	326:               <div>
+2026-07-07T07:13:37.432685Z	327:                 <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">App-Specific Password</label>
+2026-07-07T07:13:37.432738Z	                                                                                                                                 ^
+2026-07-07T07:13:37.432811Z	328:                 <input type="password" bind:value={gmailAppPassword} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" placeholder="•••• •••• •••• ••••" />
+2026-07-07T07:13:37.432886Z	329:               </div>
+2026-07-07T07:13:37.432941Z	7:13:37 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:333:16 A form label must be associated with a control
+2026-07-07T07:13:37.432975Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:37.43301Z	331:             <div class="grid grid-cols-2 gap-4 mt-4">
+2026-07-07T07:13:37.433047Z	332:               <div>
+2026-07-07T07:13:37.433086Z	333:                 <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">SMTP Host</label>
+2026-07-07T07:13:37.433124Z	                                                                                                                     ^
+2026-07-07T07:13:37.433159Z	334:                 <input type="text" bind:value={smtpHost} class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" />
+2026-07-07T07:13:37.433194Z	335:               </div>
+2026-07-07T07:13:37.433229Z	7:13:37 AM [vite-plugin-svelte] src/routes/settings/+page.svelte:337:16 A form label must be associated with a control
+2026-07-07T07:13:37.433262Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:37.43329Z	335:               </div>
+2026-07-07T07:13:37.437103Z	336:               <div>
+2026-07-07T07:13:37.437432Z	337:                 <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">SMTP Port</label>
+2026-07-07T07:13:37.437544Z	                                                                                                                     ^
+2026-07-07T07:13:37.437595Z	338:                 <input type="number" bind:value={smtpPort} class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" />
+2026-07-07T07:13:37.437634Z	339:               </div>
+2026-07-07T07:13:37.63717Z	7:13:37 AM [vite-plugin-svelte] src/routes/+layout.svelte:40:37 This reference only captures the initial value of `data`. Did you mean to reference it inside a closure instead?
+2026-07-07T07:13:37.637692Z	https://svelte.dev/e/state_referenced_locally
+2026-07-07T07:13:37.637808Z	38: 
+2026-07-07T07:13:37.637841Z	39:   // Create the shared Svelte 5 context state
+2026-07-07T07:13:37.637868Z	40:   const appState = new CateringState(data);
+2026-07-07T07:13:37.637906Z	                                             ^
+2026-07-07T07:13:37.637932Z	41:   setCateringContext(appState);
+2026-07-07T07:13:37.637959Z	42: 
+2026-07-07T07:13:37.637991Z	7:13:37 AM [vite-plugin-svelte] src/routes/+layout.svelte:734:22 Visible, non-interactive element `<div>` with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+2026-07-07T07:13:37.638022Z	https://svelte.dev/e/a11y_click_events_have_key_events
+2026-07-07T07:13:37.638046Z	732:                   <div class="max-h-80 overflow-y-auto divide-y divide-[#767068]/5 dark:divide-zinc-850">
+2026-07-07T07:13:37.638092Z	733:                     {#each filteredNotifications as notif}
+2026-07-07T07:13:37.638115Z	734:                       <div 
+2026-07-07T07:13:37.638137Z	                                ^
+2026-07-07T07:13:37.63816Z	735:                         onclick={() => {
+2026-07-07T07:13:37.638182Z	736:                           notif.unread = false;
+2026-07-07T07:13:37.638205Z	7:13:37 AM [vite-plugin-svelte] src/routes/+layout.svelte:734:22 `<div>` with a click handler must have an ARIA role
+2026-07-07T07:13:37.638229Z	https://svelte.dev/e/a11y_no_static_element_interactions
+2026-07-07T07:13:37.638253Z	732:                   <div class="max-h-80 overflow-y-auto divide-y divide-[#767068]/5 dark:divide-zinc-850">
+2026-07-07T07:13:37.638282Z	733:                     {#each filteredNotifications as notif}
+2026-07-07T07:13:37.638326Z	734:                       <div 
+2026-07-07T07:13:37.638352Z	                                ^
+2026-07-07T07:13:37.638382Z	735:                         onclick={() => {
+2026-07-07T07:13:37.638405Z	736:                           notif.unread = false;
+2026-07-07T07:13:37.638436Z	7:13:37 AM [vite-plugin-svelte] src/routes/+layout.svelte:824:18 Visible, non-interactive element `<div>` with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+2026-07-07T07:13:37.638475Z	https://svelte.dev/e/a11y_click_events_have_key_events
+2026-07-07T07:13:37.638506Z	822: 
+2026-07-07T07:13:37.638538Z	823:                   <!-- Secondary profile switcher -->
+2026-07-07T07:13:37.63857Z	824:                   <div 
+2026-07-07T07:13:37.638609Z	                            ^
+2026-07-07T07:13:37.638645Z	825:                     onclick={() => initiateProfileSwitch(secondaryProfile)}
+2026-07-07T07:13:37.638679Z	826:                     class="flex items-center justify-between py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded px-2 cursor-pointer transition-all mt-1"
+2026-07-07T07:13:37.638713Z	7:13:37 AM [vite-plugin-svelte] src/routes/+layout.svelte:824:18 `<div>` with a click handler must have an ARIA role
+2026-07-07T07:13:37.638746Z	https://svelte.dev/e/a11y_no_static_element_interactions
+2026-07-07T07:13:37.638776Z	822: 
+2026-07-07T07:13:37.638809Z	823:                   <!-- Secondary profile switcher -->
+2026-07-07T07:13:37.638844Z	824:                   <div 
+2026-07-07T07:13:37.638885Z	                            ^
+2026-07-07T07:13:37.638919Z	825:                     onclick={() => initiateProfileSwitch(secondaryProfile)}
+2026-07-07T07:13:37.638954Z	826:                     class="flex items-center justify-between py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded px-2 cursor-pointer transition-all mt-1"
+2026-07-07T07:13:37.638998Z	7:13:37 AM [vite-plugin-svelte] src/routes/+layout.svelte:1129:10 A form label must be associated with a control
+2026-07-07T07:13:37.639037Z	https://svelte.dev/e/a11y_label_has_associated_control
+2026-07-07T07:13:37.639061Z	1127:       <form onsubmit={handleReportSubmit} class="space-y-4">
+2026-07-07T07:13:37.639085Z	1128:         <div>
+2026-07-07T07:13:37.639109Z	1129:           <label class="block text-[10px] font-mono text-[#767068] dark:text-zinc-400 uppercase font-bold mb-1">Issue Description</label>
+2026-07-07T07:13:37.639151Z	                                                                                                                                               ^
+2026-07-07T07:13:37.639174Z	1130:           <textarea 
+2026-07-07T07:13:37.639197Z	1131:             bind:value={problemDescription}
+2026-07-07T07:13:38.011992Z	Found 2 warnings while optimizing generated CSS:
+2026-07-07T07:13:38.013876Z	
+2026-07-07T07:13:38.014368Z	Issue #1:
+2026-07-07T07:13:38.014869Z	[2m│   color: #ECE7DF;[22m
+2026-07-07T07:13:38.015157Z	[2m│ }[22m
+2026-07-07T07:13:38.015465Z	[2m│[22m :root.dark .bg-[#F6F2EA] {
+2026-07-07T07:13:38.015992Z	[2m┆[22m                 [33m[2m^--[22m No qualified name in attribute selector: IDHash("F6F2EA").[39m
+2026-07-07T07:13:38.016326Z	[2m┆[22m
+2026-07-07T07:13:38.01651Z	[2m│   background-color: #1A1715 !important;[22m
+2026-07-07T07:13:38.01667Z	[2m│ }[22m
+2026-07-07T07:13:38.016813Z	
+2026-07-07T07:13:38.016942Z	Issue #2:
+2026-07-07T07:13:38.017155Z	[2m│   border-color: var(--color-basil) !important;[22m
+2026-07-07T07:13:38.017259Z	[2m│ }[22m
+2026-07-07T07:13:38.017484Z	[2m│[22m :root.dark .bg-[#F6F2EA]\/60 {
+2026-07-07T07:13:38.01764Z	[2m┆[22m                 [33m[2m^--[22m No qualified name in attribute selector: IDHash("F6F2EA").[39m
+2026-07-07T07:13:38.017861Z	[2m┆[22m
+2026-07-07T07:13:38.017995Z	[2m│   background-color: rgba(26, 23, 21, 0.6) !important;[22m
+2026-07-07T07:13:38.018136Z	[2m│ }[22m
+2026-07-07T07:13:38.018281Z	
+2026-07-07T07:13:41.739659Z	✓ 3939 modules transformed.
+2026-07-07T07:13:41.876759Z	rendering chunks...
+2026-07-07T07:13:41.939324Z	computing gzip size...
+2026-07-07T07:13:41.944808Z	.svelte-kit/output/client/_app/version.json                        0.02 kB │ gzip:  0.04 kB
+2026-07-07T07:13:41.945252Z	.svelte-kit/output/client/.vite/manifest.json                     11.90 kB │ gzip:  1.48 kB
+2026-07-07T07:13:41.946322Z	.svelte-kit/output/client/_app/immutable/assets/8.Ckl3huA5.css     0.72 kB │ gzip:  0.34 kB
+2026-07-07T07:13:41.946459Z	.svelte-kit/output/client/_app/immutable/assets/0.CrcXSP3q.css    61.79 kB │ gzip: 11.54 kB
+2026-07-07T07:13:41.94661Z	.svelte-kit/output/client/_app/immutable/chunks/xihTtKlq.js        0.06 kB │ gzip:  0.08 kB
+2026-07-07T07:13:41.946683Z	.svelte-kit/output/client/_app/immutable/entry/start.BSWioPp7.js   0.08 kB │ gzip:  0.09 kB
+2026-07-07T07:13:41.946727Z	.svelte-kit/output/client/_app/immutable/chunks/PmcH4KX-.js        0.28 kB │ gzip:  0.24 kB
+2026-07-07T07:13:41.946786Z	.svelte-kit/output/client/_app/immutable/chunks/Bp_wOkhR.js        0.29 kB │ gzip:  0.24 kB
+2026-07-07T07:13:41.946831Z	.svelte-kit/output/client/_app/immutable/chunks/BB_hjopX.js        0.29 kB │ gzip:  0.24 kB
+2026-07-07T07:13:41.946873Z	.svelte-kit/output/client/_app/immutable/chunks/D5sdrOA4.js        0.31 kB │ gzip:  0.26 kB
+2026-07-07T07:13:41.946918Z	.svelte-kit/output/client/_app/immutable/chunks/CUBF07Xv.js        0.32 kB │ gzip:  0.26 kB
+2026-07-07T07:13:41.947022Z	.svelte-kit/output/client/_app/immutable/chunks/dDLxdFwC.js        0.33 kB │ gzip:  0.18 kB
+2026-07-07T07:13:41.94711Z	.svelte-kit/output/client/_app/immutable/chunks/D_u2BQc8.js        0.33 kB │ gzip:  0.26 kB
+2026-07-07T07:13:41.947148Z	.svelte-kit/output/client/_app/immutable/chunks/CSLDiMoL.js        0.36 kB │ gzip:  0.27 kB
+2026-07-07T07:13:41.947176Z	.svelte-kit/output/client/_app/immutable/nodes/1.BZaKC_xW.js       0.37 kB │ gzip:  0.26 kB
+2026-07-07T07:13:41.947207Z	.svelte-kit/output/client/_app/immutable/chunks/Cnilqy-a.js        0.42 kB │ gzip:  0.30 kB
+2026-07-07T07:13:41.947232Z	.svelte-kit/output/client/_app/immutable/chunks/3ucNLFj0.js        0.43 kB │ gzip:  0.29 kB
+2026-07-07T07:13:41.947257Z	.svelte-kit/output/client/_app/immutable/chunks/DSeh_qil.js        0.45 kB │ gzip:  0.33 kB
+2026-07-07T07:13:41.947282Z	.svelte-kit/output/client/_app/immutable/chunks/CNUS9O21.js        0.49 kB │ gzip:  0.32 kB
+2026-07-07T07:13:41.947307Z	.svelte-kit/output/client/_app/immutable/chunks/Z36mt68Y.js        0.49 kB │ gzip:  0.33 kB
+2026-07-07T07:13:41.947331Z	.svelte-kit/output/client/_app/immutable/chunks/BGpkN2aR.js        0.51 kB │ gzip:  0.34 kB
+2026-07-07T07:13:41.947354Z	.svelte-kit/output/client/_app/immutable/chunks/EivtdvJd.js        0.60 kB │ gzip:  0.35 kB
+2026-07-07T07:13:41.947377Z	.svelte-kit/output/client/_app/immutable/chunks/Bp73pP46.js        0.63 kB │ gzip:  0.35 kB
+2026-07-07T07:13:41.947399Z	.svelte-kit/output/client/_app/immutable/chunks/BWQKDKdJ.js        0.68 kB │ gzip:  0.41 kB
+2026-07-07T07:13:41.94742Z	.svelte-kit/output/client/_app/immutable/chunks/DYl5dUZ5.js        1.27 kB │ gzip:  0.70 kB
+2026-07-07T07:13:41.947442Z	.svelte-kit/output/client/_app/immutable/chunks/Bjy-W4x2.js        1.36 kB │ gzip:  0.65 kB
+2026-07-07T07:13:41.947485Z	.svelte-kit/output/client/_app/immutable/chunks/L-3jWWZE.js        1.37 kB │ gzip:  0.79 kB
+2026-07-07T07:13:41.947509Z	.svelte-kit/output/client/_app/immutable/chunks/Io_fshWR.js        1.42 kB │ gzip:  0.71 kB
+2026-07-07T07:13:41.947539Z	.svelte-kit/output/client/_app/immutable/entry/app.B1-QdWuZ.js     4.90 kB │ gzip:  1.90 kB
+2026-07-07T07:13:41.947566Z	.svelte-kit/output/client/_app/immutable/nodes/6.HMkN2zZ4.js       6.89 kB │ gzip:  2.62 kB
+2026-07-07T07:13:41.947594Z	.svelte-kit/output/client/_app/immutable/chunks/BF8krRLj.js        7.29 kB │ gzip:  2.85 kB
+2026-07-07T07:13:41.947616Z	.svelte-kit/output/client/_app/immutable/nodes/9.BJ3aagv9.js       7.42 kB │ gzip:  2.87 kB
+2026-07-07T07:13:41.947639Z	.svelte-kit/output/client/_app/immutable/nodes/2.CxWuvPaJ.js      10.57 kB │ gzip:  4.29 kB
+2026-07-07T07:13:41.947661Z	.svelte-kit/output/client/_app/immutable/chunks/BZ-IG7HE.js       12.28 kB │ gzip:  4.13 kB
+2026-07-07T07:13:41.947683Z	.svelte-kit/output/client/_app/immutable/nodes/4.C9AdFhuR.js      14.74 kB │ gzip:  4.78 kB
+2026-07-07T07:13:41.947705Z	.svelte-kit/output/client/_app/immutable/nodes/10.C9q-w6nu.js     15.29 kB │ gzip:  4.59 kB
+2026-07-07T07:13:41.947727Z	.svelte-kit/output/client/_app/immutable/nodes/11.CbN0QU4T.js     16.10 kB │ gzip:  4.62 kB
+2026-07-07T07:13:41.94775Z	.svelte-kit/output/client/_app/immutable/nodes/3.Cew9mIYv.js      17.85 kB │ gzip:  5.90 kB
+2026-07-07T07:13:41.947774Z	.svelte-kit/output/client/_app/immutable/nodes/12.C_OVuYuY.js     18.10 kB │ gzip:  5.52 kB
+2026-07-07T07:13:41.947813Z	.svelte-kit/output/client/_app/immutable/nodes/5.C9W-g1W_.js      19.38 kB │ gzip:  6.13 kB
+2026-07-07T07:13:41.947836Z	.svelte-kit/output/client/_app/immutable/nodes/7.Db2bH90R.js      23.87 kB │ gzip:  7.85 kB
+2026-07-07T07:13:41.947858Z	.svelte-kit/output/client/_app/immutable/chunks/yTPHzmov.js       28.54 kB │ gzip: 11.03 kB
+2026-07-07T07:13:41.947883Z	.svelte-kit/output/client/_app/immutable/nodes/8.QdjJxgo9.js      29.69 kB │ gzip:  9.28 kB
+2026-07-07T07:13:41.947913Z	.svelte-kit/output/client/_app/immutable/chunks/TGc1X_XF2.js      35.94 kB │ gzip:  9.58 kB
+2026-07-07T07:13:41.947936Z	.svelte-kit/output/client/_app/immutable/chunks/CuBikkS0.js       56.71 kB │ gzip: 21.68 kB
+2026-07-07T07:13:41.947958Z	.svelte-kit/output/client/_app/immutable/nodes/0.R37nEzSq.js      71.31 kB │ gzip: 20.05 kB
+2026-07-07T07:13:41.947979Z	
+2026-07-07T07:13:41.948012Z	[32m✓ built in 4.71s[39m
+2026-07-07T07:13:43.927979Z	[36mvite v8.1.3 [32mbuilding client environment for production...[36m[39m
+2026-07-07T07:13:43.946154Z	[2Ktransforming...✓ 3 modules transformed.
+2026-07-07T07:13:43.949823Z	rendering chunks...
+2026-07-07T07:13:43.952882Z	computing gzip size...
+2026-07-07T07:13:43.953481Z	.svelte-kit/output/client/service-worker.js  4.17 kB │ gzip: 1.52 kB
+2026-07-07T07:13:43.953734Z	
+2026-07-07T07:13:43.953884Z	[32m✓ built in 25ms[39m
+2026-07-07T07:13:43.954218Z	computing gzip size...
+2026-07-07T07:13:43.960377Z	.svelte-kit/output/server/.vite/manifest.json                                         16.81 kB │ gzip:  1.76 kB
+2026-07-07T07:13:43.960657Z	.svelte-kit/output/server/_app/immutable/assets/_page.Ckl3huA5.css                     0.72 kB │ gzip:  0.34 kB
+2026-07-07T07:13:43.960706Z	.svelte-kit/output/server/_app/immutable/assets/_layout.5w2fRtoV.css                  61.07 kB │ gzip: 11.51 kB
+2026-07-07T07:13:43.960746Z	.svelte-kit/output/server/env.js                                                       0.22 kB │ gzip:  0.14 kB
+2026-07-07T07:13:43.960769Z	.svelte-kit/output/server/entries/endpoints/api/auth/logout/_server.js                 0.23 kB │ gzip:  0.19 kB
+2026-07-07T07:13:43.960792Z	.svelte-kit/output/server/chunks/env.js                                                0.28 kB │ gzip:  0.17 kB
+2026-07-07T07:13:43.960814Z	.svelte-kit/output/server/entries/endpoints/api/ai/sales-forecast/_server.js           0.41 kB │ gzip:  0.27 kB
+2026-07-07T07:13:43.96084Z	.svelte-kit/output/server/chunks/plus.js                                               0.42 kB │ gzip:  0.28 kB
+2026-07-07T07:13:43.960862Z	.svelte-kit/output/server/entries/fallbacks/error.svelte.js                            0.42 kB │ gzip:  0.27 kB
+2026-07-07T07:13:43.960884Z	.svelte-kit/output/server/chunks/chevron-right.js                                      0.43 kB │ gzip:  0.28 kB
+2026-07-07T07:13:43.960907Z	.svelte-kit/output/server/internal.js                                                  0.45 kB │ gzip:  0.20 kB
+2026-07-07T07:13:43.96093Z	.svelte-kit/output/server/chunks/clock.js                                              0.46 kB │ gzip:  0.30 kB
+2026-07-07T07:13:43.960951Z	.svelte-kit/output/server/entries/endpoints/api/ai/event-risk/_server.js               0.46 kB │ gzip:  0.30 kB
+2026-07-07T07:13:43.961061Z	.svelte-kit/output/server/entries/endpoints/api/ai/profit-analysis/_server.js          0.47 kB │ gzip:  0.30 kB
+2026-07-07T07:13:43.961349Z	.svelte-kit/output/server/entries/endpoints/api/ai/kitchen-schedule/_server.js         0.48 kB │ gzip:  0.31 kB
+2026-07-07T07:13:43.961477Z	.svelte-kit/output/server/entries/endpoints/api/ai/staff-assignment/_server.js         0.48 kB │ gzip:  0.30 kB
+2026-07-07T07:13:43.961515Z	.svelte-kit/output/server/entries/endpoints/api/ai/ingredient-purchasing/_server.js    0.49 kB │ gzip:  0.30 kB
+2026-07-07T07:13:43.961545Z	.svelte-kit/output/server/entries/endpoints/api/ai/menu-generation/_server.js          0.50 kB │ gzip:  0.31 kB
+2026-07-07T07:13:43.961575Z	.svelte-kit/output/server/entries/endpoints/api/ai/customer-preferences/_server.js     0.50 kB │ gzip:  0.31 kB
+2026-07-07T07:13:43.961605Z	.svelte-kit/output/server/entries/endpoints/api/ai/food-quantity/_server.js            0.51 kB │ gzip:  0.31 kB
+2026-07-07T07:13:43.961636Z	.svelte-kit/output/server/chunks/log-out.js                                            0.51 kB │ gzip:  0.32 kB
+2026-07-07T07:13:43.96166Z	.svelte-kit/output/server/chunks/wallet.js                                             0.56 kB │ gzip:  0.34 kB
+2026-07-07T07:13:43.961686Z	.svelte-kit/output/server/chunks/chef-hat.js                                           0.59 kB │ gzip:  0.38 kB
+2026-07-07T07:13:43.961724Z	.svelte-kit/output/server/chunks/shared-server.js                                      0.60 kB │ gzip:  0.26 kB
+2026-07-07T07:13:43.961747Z	.svelte-kit/output/server/chunks/users.js                                              0.60 kB │ gzip:  0.35 kB
+2026-07-07T07:13:43.961769Z	.svelte-kit/output/server/chunks/package.js                                            0.65 kB │ gzip:  0.38 kB
+2026-07-07T07:13:43.961793Z	.svelte-kit/output/server/chunks/file-text.js                                          0.67 kB │ gzip:  0.37 kB
+2026-07-07T07:13:43.961815Z	.svelte-kit/output/server/entries/hooks.server.js                                      0.71 kB │ gzip:  0.42 kB
+2026-07-07T07:13:43.961839Z	.svelte-kit/output/server/chunks/truck.js                                              0.72 kB │ gzip:  0.39 kB
+2026-07-07T07:13:43.961862Z	.svelte-kit/output/server/chunks/settings.js                                           0.78 kB │ gzip:  0.40 kB
+2026-07-07T07:13:43.961915Z	.svelte-kit/output/server/chunks/AlertBadge.js                                         0.83 kB │ gzip:  0.46 kB
+2026-07-07T07:13:43.96194Z	.svelte-kit/output/server/chunks/internal.js                                           0.87 kB │ gzip:  0.38 kB
+2026-07-07T07:13:43.961964Z	.svelte-kit/output/server/entries/endpoints/api/auth/register/_server.js               1.03 kB │ gzip:  0.57 kB
+2026-07-07T07:13:43.961986Z	.svelte-kit/output/server/entries/endpoints/api/purchase-orders/_server.js             1.29 kB │ gzip:  0.63 kB
+2026-07-07T07:13:43.962008Z	.svelte-kit/output/server/entries/endpoints/api/auth/login/_server.js                  1.47 kB │ gzip:  0.72 kB
+2026-07-07T07:13:43.962045Z	.svelte-kit/output/server/entries/endpoints/api/events/_server.js                      1.57 kB │ gzip:  0.73 kB
+2026-07-07T07:13:43.96208Z	.svelte-kit/output/server/chunks/TicketCard.js                                         1.89 kB │ gzip:  0.68 kB
+2026-07-07T07:13:43.962105Z	.svelte-kit/output/server/entries/endpoints/api/auth/portal-login/_server.js           1.90 kB │ gzip:  0.90 kB
+2026-07-07T07:13:43.962172Z	.svelte-kit/output/server/entries/endpoints/api/suppliers/_server.js                   1.95 kB │ gzip:  0.66 kB
+2026-07-07T07:13:43.962229Z	.svelte-kit/output/server/entries/endpoints/api/staff/_server.js                       2.07 kB │ gzip:  0.70 kB
+2026-07-07T07:13:43.962265Z	.svelte-kit/output/server/entries/endpoints/api/menus/_server.js                       2.08 kB │ gzip:  0.70 kB
+2026-07-07T07:13:43.9623Z	.svelte-kit/output/server/entries/endpoints/api/ingredients/_server.js                 2.09 kB │ gzip:  0.70 kB
+2026-07-07T07:13:43.962336Z	.svelte-kit/output/server/entries/pages/customers/_page.svelte.js                      2.16 kB │ gzip:  0.96 kB
+2026-07-07T07:13:43.962371Z	.svelte-kit/output/server/entries/endpoints/api/customers/_server.js                   2.76 kB │ gzip:  0.95 kB
+2026-07-07T07:13:43.962412Z	.svelte-kit/output/server/chunks/Icon.js                                               2.94 kB │ gzip:  1.13 kB
+2026-07-07T07:13:43.962448Z	.svelte-kit/output/server/entries/pages/portal/_page.svelte.js                         2.99 kB │ gzip:  1.24 kB
+2026-07-07T07:13:43.962478Z	.svelte-kit/output/server/entries/pages/menus/_page.svelte.js                          3.01 kB │ gzip:  1.23 kB
+2026-07-07T07:13:43.962507Z	.svelte-kit/output/server/entries/endpoints/api/settings/_server.js                    3.25 kB │ gzip:  1.03 kB
+2026-07-07T07:13:43.962658Z	.svelte-kit/output/server/chunks/mlClient.js                                           3.59 kB │ gzip:  1.30 kB
+2026-07-07T07:13:43.962741Z	.svelte-kit/output/server/entries/endpoints/api/portal/_server.js                      4.96 kB │ gzip:  1.77 kB
+2026-07-07T07:13:43.962931Z	.svelte-kit/output/server/entries/pages/scheduling/_page.svelte.js                     5.65 kB │ gzip:  1.68 kB
+2026-07-07T07:13:43.963029Z	.svelte-kit/output/server/entries/pages/suppliers/_page.svelte.js                      5.67 kB │ gzip:  1.99 kB
+2026-07-07T07:13:43.963105Z	.svelte-kit/output/server/entries/pages/audits/_page.svelte.js                         6.08 kB │ gzip:  2.12 kB
+2026-07-07T07:13:43.963186Z	.svelte-kit/output/server/entries/pages/staff/_page.svelte.js                          6.10 kB │ gzip:  1.89 kB
+2026-07-07T07:13:43.963305Z	.svelte-kit/output/server/entries/endpoints/api/portal/send-email/_server.js           6.59 kB │ gzip:  2.34 kB
+2026-07-07T07:13:43.963411Z	.svelte-kit/output/server/entries/pages/_layout.js                                     7.74 kB │ gzip:  2.85 kB
+2026-07-07T07:13:43.9635Z	.svelte-kit/output/server/chunks/DataTable.js                                          8.78 kB │ gzip:  2.36 kB
+2026-07-07T07:13:43.963587Z	.svelte-kit/output/server/entries/pages/inventory/_page.svelte.js                      9.26 kB │ gzip:  2.65 kB
+2026-07-07T07:13:43.963666Z	.svelte-kit/output/server/entries/pages/settings/_page.svelte.js                       9.82 kB │ gzip:  2.46 kB
+2026-07-07T07:13:43.963717Z	.svelte-kit/output/server/chunks/shared.js                                            10.59 kB │ gzip:  3.39 kB
+2026-07-07T07:13:43.963758Z	.svelte-kit/output/server/chunks/exports.js                                           11.35 kB │ gzip:  3.54 kB
+2026-07-07T07:13:43.963794Z	.svelte-kit/output/server/entries/pages/_page.svelte.js                               13.16 kB │ gzip:  3.98 kB
+2026-07-07T07:13:43.9639Z	.svelte-kit/output/server/chunks/states.svelte.js                                     14.35 kB │ gzip:  4.26 kB
+2026-07-07T07:13:43.964087Z	.svelte-kit/output/server/entries/pages/planner/_page.svelte.js                       17.52 kB │ gzip:  4.51 kB
+2026-07-07T07:13:43.964161Z	.svelte-kit/output/server/chunks/internal2.js                                         23.28 kB │ gzip:  7.37 kB
+2026-07-07T07:13:43.964187Z	.svelte-kit/output/server/entries/pages/_layout.svelte.js                             25.99 kB │ gzip:  6.77 kB
+2026-07-07T07:13:43.96423Z	.svelte-kit/output/server/chunks/db.js                                                27.32 kB │ gzip:  4.70 kB
+2026-07-07T07:13:43.964253Z	.svelte-kit/output/server/chunks/utils.js                                             31.86 kB │ gzip:  9.37 kB
+2026-07-07T07:13:43.964279Z	.svelte-kit/output/server/chunks/state.js                                             52.09 kB │ gzip: 15.35 kB
+2026-07-07T07:13:43.964304Z	.svelte-kit/output/server/remote-entry.js                                             54.47 kB │ gzip: 12.01 kB
+2026-07-07T07:13:43.964334Z	.svelte-kit/output/server/index.js                                                   123.82 kB │ gzip: 31.43 kB
+2026-07-07T07:13:43.96438Z	.svelte-kit/output/server/chunks/index-server.js                                     132.56 kB │ gzip: 34.50 kB
+2026-07-07T07:13:43.964419Z	
+2026-07-07T07:13:43.964455Z	[33m[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
+2026-07-07T07:13:43.964485Z	  - vite-plugin-sveltekit-guard (79%)
+2026-07-07T07:13:43.964517Z	  - vite-plugin-sveltekit-virtual-modules (10%)
+2026-07-07T07:13:43.964552Z	  - vite-plugin-svelte:compile (8%)
+2026-07-07T07:13:43.964593Z	See https://rolldown.rs/reference/InputOptions.checks#plugintimings for more details.
+2026-07-07T07:13:43.964625Z	[39m
+2026-07-07T07:13:43.965341Z	[32m✓ built in 14.76s[39m
+2026-07-07T07:13:43.976556Z	
+2026-07-07T07:13:43.976921Z	Run npm run preview to preview your production build locally.
+2026-07-07T07:13:43.983003Z	
+2026-07-07T07:13:43.983372Z	> Using @sveltejs/adapter-cloudflare
+2026-07-07T07:13:44.003812Z	  ✔ done
+2026-07-07T07:13:44.302348Z	Finished
+2026-07-07T07:13:45.015168Z	Checking for configuration in a Wrangler configuration file (BETA)
+2026-07-07T07:13:45.016624Z	
+2026-07-07T07:13:45.016831Z	Found wrangler.toml file. Reading build configuration...
+2026-07-07T07:13:45.022247Z	pages_build_output_dir: .svelte-kit/cloudflare
+2026-07-07T07:13:45.022618Z	Build environment variables: (none found)
+2026-07-07T07:13:45.187356Z	Successfully read the Wrangler configuration file.
+2026-07-07T07:13:45.188431Z	Found _worker.js in output directory. Uploading.
+2026-07-07T07:13:45.195516Z	 ⛅️ wrangler 3.114.17
+2026-07-07T07:13:45.195769Z	-------------------
+2026-07-07T07:13:46.073909Z	[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mBuild failed with 75 errors:[0m
+2026-07-07T07:13:46.074449Z	
+2026-07-07T07:13:46.07473Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.074867Z	  
+2026-07-07T07:13:46.074936Z	      ../../node_modules/nodemailer/lib/base64/index.js:3:30:
+2026-07-07T07:13:46.074966Z	  [37m      3 │ const { Transform } = require([32m'stream'[37m);
+2026-07-07T07:13:46.074994Z	          ╵                               [32m~~~~~~~~[0m
+2026-07-07T07:13:46.075028Z	  
+2026-07-07T07:13:46.075058Z	    The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.075546Z	  
+2026-07-07T07:13:46.075699Z	  
+2026-07-07T07:13:46.075763Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.075809Z	  
+2026-07-07T07:13:46.075849Z	      ../../node_modules/nodemailer/lib/dkim/index.js:9:32:
+2026-07-07T07:13:46.07783Z	  [37m      9 │ const { PassThrough } = require([32m'stream'[37m);
+2026-07-07T07:13:46.078064Z	          ╵                                 [32m~~~~~~~~[0m
+2026-07-07T07:13:46.078171Z	  
+2026-07-07T07:13:46.078271Z	    The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.078338Z	  
+2026-07-07T07:13:46.078391Z	  
+2026-07-07T07:13:46.078488Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "fs"[0m
+2026-07-07T07:13:46.07855Z	  
+2026-07-07T07:13:46.078604Z	      ../../node_modules/nodemailer/lib/dkim/index.js:10:19:
+2026-07-07T07:13:46.078664Z	  [37m      10 │ const fs = require([32m'fs'[37m);
+2026-07-07T07:13:46.078722Z	           ╵                    [32m~~~~[0m
+2026-07-07T07:13:46.078778Z	  
+2026-07-07T07:13:46.07883Z	    The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.07889Z	  
+2026-07-07T07:13:46.078949Z	  
+2026-07-07T07:13:46.078996Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "path"[0m
+2026-07-07T07:13:46.079052Z	  
+2026-07-07T07:13:46.0791Z	      ../../node_modules/nodemailer/lib/dkim/index.js:11:21:
+2026-07-07T07:13:46.07915Z	  [37m      11 │ const path = require([32m'path'[37m);
+2026-07-07T07:13:46.079196Z	           ╵                      [32m~~~~~~[0m
+2026-07-07T07:13:46.079251Z	  
+2026-07-07T07:13:46.079315Z	    The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.079384Z	  
+2026-07-07T07:13:46.079446Z	  
+2026-07-07T07:13:46.079506Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.079568Z	  
+2026-07-07T07:13:46.079618Z	      ../../node_modules/nodemailer/lib/dkim/index.js:12:23:
+2026-07-07T07:13:46.079678Z	  [37m      12 │ const crypto = require([32m'crypto'[37m);
+2026-07-07T07:13:46.079804Z	           ╵                        [32m~~~~~~~~[0m
+2026-07-07T07:13:46.07989Z	  
+2026-07-07T07:13:46.079974Z	    The package "crypto" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.080069Z	  
+2026-07-07T07:13:46.080139Z	  
+2026-07-07T07:13:46.080215Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.080281Z	  
+2026-07-07T07:13:46.080341Z	      ../../node_modules/nodemailer/lib/dkim/message-parser.js:3:30:
+2026-07-07T07:13:46.080401Z	  [37m      3 │ const { Transform } = require([32m'stream'[37m);
+2026-07-07T07:13:46.080453Z	          ╵                               [32m~~~~~~~~[0m
+2026-07-07T07:13:46.080519Z	  
+2026-07-07T07:13:46.080596Z	    The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.08067Z	  
+2026-07-07T07:13:46.08073Z	  
+2026-07-07T07:13:46.081728Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.081977Z	  
+2026-07-07T07:13:46.08282Z	      ../../node_modules/nodemailer/lib/dkim/relaxed-body.js:5:30:
+2026-07-07T07:13:46.083248Z	  [37m      5 │ const { Transform } = require([32m'stream'[37m);
+2026-07-07T07:13:46.083474Z	          ╵                               [32m~~~~~~~~[0m
+2026-07-07T07:13:46.083772Z	  
+2026-07-07T07:13:46.084031Z	    The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.084122Z	  
+2026-07-07T07:13:46.084579Z	  
+2026-07-07T07:13:46.084749Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.084843Z	  
+2026-07-07T07:13:46.084948Z	      ../../node_modules/nodemailer/lib/dkim/relaxed-body.js:6:23:
+2026-07-07T07:13:46.084987Z	  [37m      6 │ const crypto = require([32m'crypto'[37m);
+2026-07-07T07:13:46.085021Z	          ╵                        [32m~~~~~~~~[0m
+2026-07-07T07:13:46.085051Z	  
+2026-07-07T07:13:46.085081Z	    The package "crypto" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.085113Z	  
+2026-07-07T07:13:46.085144Z	  
+2026-07-07T07:13:46.085183Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.085216Z	  
+2026-07-07T07:13:46.085247Z	      ../../node_modules/nodemailer/lib/dkim/sign.js:5:23:
+2026-07-07T07:13:46.085288Z	  [37m      5 │ const crypto = require([32m'crypto'[37m);
+2026-07-07T07:13:46.085358Z	          ╵                        [32m~~~~~~~~[0m
+2026-07-07T07:13:46.085411Z	  
+2026-07-07T07:13:46.085455Z	    The package "crypto" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.08549Z	  
+2026-07-07T07:13:46.085522Z	  
+2026-07-07T07:13:46.085584Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "http"[0m
+2026-07-07T07:13:46.085613Z	  
+2026-07-07T07:13:46.08564Z	      ../../node_modules/nodemailer/lib/fetch/index.js:3:21:
+2026-07-07T07:13:46.085665Z	  [37m      3 │ const http = require([32m'http'[37m);
+2026-07-07T07:13:46.085711Z	          ╵                      [32m~~~~~~[0m
+2026-07-07T07:13:46.085738Z	  
+2026-07-07T07:13:46.085778Z	    The package "http" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.086531Z	  
+2026-07-07T07:13:46.086594Z	  
+2026-07-07T07:13:46.086638Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "https"[0m
+2026-07-07T07:13:46.086674Z	  
+2026-07-07T07:13:46.086928Z	      ../../node_modules/nodemailer/lib/fetch/index.js:4:22:
+2026-07-07T07:13:46.087115Z	  [37m      4 │ const https = require([32m'https'[37m);
+2026-07-07T07:13:46.087197Z	          ╵                       [32m~~~~~~~[0m
+2026-07-07T07:13:46.087238Z	  
+2026-07-07T07:13:46.087457Z	    The package "https" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.087567Z	  
+2026-07-07T07:13:46.08764Z	  
+2026-07-07T07:13:46.087682Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "zlib"[0m
+2026-07-07T07:13:46.087735Z	  
+2026-07-07T07:13:46.08777Z	      ../../node_modules/nodemailer/lib/fetch/index.js:6:21:
+2026-07-07T07:13:46.087805Z	  [37m      6 │ const zlib = require([32m'zlib'[37m);
+2026-07-07T07:13:46.08784Z	          ╵                      [32m~~~~~~[0m
+2026-07-07T07:13:46.087874Z	  
+2026-07-07T07:13:46.08791Z	    The package "zlib" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.087943Z	  
+2026-07-07T07:13:46.087974Z	  
+2026-07-07T07:13:46.08801Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.088052Z	  
+2026-07-07T07:13:46.088086Z	      ../../node_modules/nodemailer/lib/fetch/index.js:7:32:
+2026-07-07T07:13:46.088117Z	  [37m      7 │ const { PassThrough } = require([32m'stream'[37m);
+2026-07-07T07:13:46.08815Z	          ╵                                 [32m~~~~~~~~[0m
+2026-07-07T07:13:46.088182Z	  
+2026-07-07T07:13:46.088209Z	    The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.088251Z	  
+2026-07-07T07:13:46.088278Z	  
+2026-07-07T07:13:46.08831Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "net"[0m
+2026-07-07T07:13:46.088343Z	  
+2026-07-07T07:13:46.088368Z	      ../../node_modules/nodemailer/lib/fetch/index.js:10:20:
+2026-07-07T07:13:46.088399Z	  [37m      10 │ const net = require([32m'net'[37m);
+2026-07-07T07:13:46.088427Z	           ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.088453Z	  
+2026-07-07T07:13:46.088486Z	    The package "net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.088519Z	  
+2026-07-07T07:13:46.088556Z	  
+2026-07-07T07:13:46.088589Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.088625Z	  
+2026-07-07T07:13:46.088659Z	      ../../node_modules/nodemailer/lib/mailer/index.js:3:29:
+2026-07-07T07:13:46.088691Z	  [37m      3 │ const EventEmitter = require([32m'events'[37m);
+2026-07-07T07:13:46.088746Z	          ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.08878Z	  
+2026-07-07T07:13:46.088815Z	    The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.088847Z	  
+2026-07-07T07:13:46.088878Z	  
+2026-07-07T07:13:46.088912Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "util"[0m
+2026-07-07T07:13:46.088945Z	  
+2026-07-07T07:13:46.088973Z	      ../../node_modules/nodemailer/lib/mailer/index.js:10:21:
+2026-07-07T07:13:46.089007Z	  [37m      10 │ const util = require([32m'util'[37m);
+2026-07-07T07:13:46.089039Z	           ╵                      [32m~~~~~~[0m
+2026-07-07T07:13:46.091094Z	  
+2026-07-07T07:13:46.091436Z	    The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.091751Z	  
+2026-07-07T07:13:46.091895Z	  
+2026-07-07T07:13:46.092432Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "net"[0m
+2026-07-07T07:13:46.092607Z	  
+2026-07-07T07:13:46.092692Z	      ../../node_modules/nodemailer/lib/mailer/index.js:14:20:
+2026-07-07T07:13:46.092784Z	  [37m      14 │ const net = require([32m'net'[37m);
+2026-07-07T07:13:46.092818Z	           ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.09285Z	  
+2026-07-07T07:13:46.092886Z	    The package "net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.09295Z	  
+2026-07-07T07:13:46.092982Z	  
+2026-07-07T07:13:46.093024Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "dns"[0m
+2026-07-07T07:13:46.09311Z	  
+2026-07-07T07:13:46.093747Z	      ../../node_modules/nodemailer/lib/mailer/index.js:15:20:
+2026-07-07T07:13:46.093869Z	  [37m      15 │ const dns = require([32m'dns'[37m);
+2026-07-07T07:13:46.09417Z	           ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.094428Z	  
+2026-07-07T07:13:46.094528Z	    The package "dns" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.094811Z	  
+2026-07-07T07:13:46.095006Z	  
+2026-07-07T07:13:46.095086Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.095218Z	  
+2026-07-07T07:13:46.095532Z	      ../../node_modules/nodemailer/lib/mailer/index.js:16:23:
+2026-07-07T07:13:46.096876Z	  [37m      16 │ const crypto = require([32m'crypto'[37m);
+2026-07-07T07:13:46.097281Z	           ╵                        [32m~~~~~~~~[0m
+2026-07-07T07:13:46.09748Z	  
+2026-07-07T07:13:46.09761Z	    The package "crypto" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.097707Z	  
+2026-07-07T07:13:46.097941Z	  
+2026-07-07T07:13:46.098213Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "path"[0m
+2026-07-07T07:13:46.098574Z	  
+2026-07-07T07:13:46.09873Z	      ../../node_modules/nodemailer/lib/mime-funcs/mime-types.js:5:21:
+2026-07-07T07:13:46.098916Z	  [37m      5 │ const path = require([32m'path'[37m);
+2026-07-07T07:13:46.099076Z	          ╵                      [32m~~~~~~[0m
+2026-07-07T07:13:46.099344Z	  
+2026-07-07T07:13:46.099486Z	    The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.100163Z	  
+2026-07-07T07:13:46.100294Z	  
+2026-07-07T07:13:46.100384Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.100446Z	  
+2026-07-07T07:13:46.100508Z	      ../../node_modules/nodemailer/lib/mime-node/index.js:5:23:
+2026-07-07T07:13:46.10063Z	  [37m      5 │ const crypto = require([32m'crypto'[37m);
+2026-07-07T07:13:46.100697Z	          ╵                        [32m~~~~~~~~[0m
+2026-07-07T07:13:46.100769Z	  
+2026-07-07T07:13:46.10083Z	    The package "crypto" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.100891Z	  
+2026-07-07T07:13:46.10101Z	  
+2026-07-07T07:13:46.101097Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "fs"[0m
+2026-07-07T07:13:46.101174Z	  
+2026-07-07T07:13:46.10127Z	      ../../node_modules/nodemailer/lib/mime-node/index.js:6:19:
+2026-07-07T07:13:46.101365Z	  [37m      6 │ const fs = require([32m'fs'[37m);
+2026-07-07T07:13:46.101429Z	          ╵                    [32m~~~~[0m
+2026-07-07T07:13:46.10201Z	  
+2026-07-07T07:13:46.102151Z	    The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.10226Z	  
+2026-07-07T07:13:46.102358Z	  
+2026-07-07T07:13:46.102455Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.102546Z	  
+2026-07-07T07:13:46.102691Z	      ../../node_modules/nodemailer/lib/mime-node/index.js:8:32:
+2026-07-07T07:13:46.102804Z	  [37m      8 │ const { PassThrough } = require([32m'stream'[37m);
+2026-07-07T07:13:46.102901Z	          ╵                                 [32m~~~~~~~~[0m
+2026-07-07T07:13:46.103313Z	  
+2026-07-07T07:13:46.103455Z	    The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.103551Z	  
+2026-07-07T07:13:46.10392Z	  
+2026-07-07T07:13:46.104013Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.104144Z	  
+2026-07-07T07:13:46.104243Z	      ../../node_modules/nodemailer/lib/mime-node/last-newline.js:3:30:
+2026-07-07T07:13:46.104314Z	  [37m      3 │ const { Transform } = require([32m'stream'[37m);
+2026-07-07T07:13:46.104382Z	          ╵                               [32m~~~~~~~~[0m
+2026-07-07T07:13:46.104444Z	  
+2026-07-07T07:13:46.104511Z	    The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.10493Z	  
+2026-07-07T07:13:46.10545Z	  
+2026-07-07T07:13:46.105585Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.105976Z	  
+2026-07-07T07:13:46.106068Z	      ../../node_modules/nodemailer/lib/mime-node/le-unix.js:3:30:
+2026-07-07T07:13:46.106357Z	  [37m      3 │ const { Transform } = require([32m'stream'[37m);
+2026-07-07T07:13:46.106433Z	          ╵                               [32m~~~~~~~~[0m
+2026-07-07T07:13:46.106731Z	  
+2026-07-07T07:13:46.106859Z	    The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.107109Z	  
+2026-07-07T07:13:46.107204Z	  
+2026-07-07T07:13:46.107473Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.107652Z	  
+2026-07-07T07:13:46.107918Z	      ../../node_modules/nodemailer/lib/mime-node/le-windows.js:3:30:
+2026-07-07T07:13:46.108139Z	  [37m      3 │ const { Transform } = require([32m'stream'[37m);
+2026-07-07T07:13:46.108362Z	          ╵                               [32m~~~~~~~~[0m
+2026-07-07T07:13:46.108581Z	  
+2026-07-07T07:13:46.108788Z	    The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.109004Z	  
+2026-07-07T07:13:46.109262Z	  
+2026-07-07T07:13:46.109557Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.109663Z	  
+2026-07-07T07:13:46.109989Z	      ../../node_modules/nodemailer/lib/qp/index.js:3:30:
+2026-07-07T07:13:46.110142Z	  [37m      3 │ const { Transform } = require([32m'stream'[37m);
+2026-07-07T07:13:46.110387Z	          ╵                               [32m~~~~~~~~[0m
+2026-07-07T07:13:46.110492Z	  
+2026-07-07T07:13:46.110814Z	    The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.110894Z	  
+2026-07-07T07:13:46.111243Z	  
+2026-07-07T07:13:46.111353Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "child_process"[0m
+2026-07-07T07:13:46.111431Z	  
+2026-07-07T07:13:46.111479Z	      ../../node_modules/nodemailer/lib/sendmail-transport/index.js:3:26:
+2026-07-07T07:13:46.111523Z	  [37m      3 │ const { spawn } = require([32m'child_process'[37m);
+2026-07-07T07:13:46.111795Z	          ╵                           [32m~~~~~~~~~~~~~~~[0m
+2026-07-07T07:13:46.111902Z	  
+2026-07-07T07:13:46.111945Z	    The package "child_process" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.112252Z	  
+2026-07-07T07:13:46.11232Z	  
+2026-07-07T07:13:46.112584Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.112921Z	  
+2026-07-07T07:13:46.113117Z	      ../../node_modules/nodemailer/lib/ses-transport/index.js:3:29:
+2026-07-07T07:13:46.1132Z	  [37m      3 │ const EventEmitter = require([32m'events'[37m);
+2026-07-07T07:13:46.113239Z	          ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.113266Z	  
+2026-07-07T07:13:46.113295Z	    The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.113355Z	  
+2026-07-07T07:13:46.113405Z	  
+2026-07-07T07:13:46.113437Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "util"[0m
+2026-07-07T07:13:46.113479Z	  
+2026-07-07T07:13:46.113512Z	      ../../node_modules/nodemailer/lib/shared/index.js:6:21:
+2026-07-07T07:13:46.113544Z	  [37m      6 │ const util = require([32m'util'[37m);
+2026-07-07T07:13:46.113774Z	          ╵                      [32m~~~~~~[0m
+2026-07-07T07:13:46.113864Z	  
+2026-07-07T07:13:46.113917Z	    The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.113949Z	  
+2026-07-07T07:13:46.113979Z	  
+2026-07-07T07:13:46.114007Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "fs"[0m
+2026-07-07T07:13:46.114051Z	  
+2026-07-07T07:13:46.11408Z	      ../../node_modules/nodemailer/lib/shared/index.js:7:19:
+2026-07-07T07:13:46.114111Z	  [37m      7 │ const fs = require([32m'fs'[37m);
+2026-07-07T07:13:46.114716Z	          ╵                    [32m~~~~[0m
+2026-07-07T07:13:46.114846Z	  
+2026-07-07T07:13:46.114887Z	    The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.115076Z	  
+2026-07-07T07:13:46.115177Z	  
+2026-07-07T07:13:46.115223Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "dns"[0m
+2026-07-07T07:13:46.115249Z	  
+2026-07-07T07:13:46.115573Z	      ../../node_modules/nodemailer/lib/shared/index.js:10:20:
+2026-07-07T07:13:46.115623Z	  [37m      10 │ const dns = require([32m'dns'[37m);
+2026-07-07T07:13:46.115752Z	           ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.116038Z	  
+2026-07-07T07:13:46.116167Z	    The package "dns" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.116444Z	  
+2026-07-07T07:13:46.116508Z	  
+2026-07-07T07:13:46.116541Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "net"[0m
+2026-07-07T07:13:46.116573Z	  
+2026-07-07T07:13:46.116597Z	      ../../node_modules/nodemailer/lib/shared/index.js:11:20:
+2026-07-07T07:13:46.116823Z	  [37m      11 │ const net = require([32m'net'[37m);
+2026-07-07T07:13:46.116949Z	           ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.116991Z	  
+2026-07-07T07:13:46.117023Z	    The package "net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.117052Z	  
+2026-07-07T07:13:46.117078Z	  
+2026-07-07T07:13:46.117883Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "os"[0m
+2026-07-07T07:13:46.118045Z	  
+2026-07-07T07:13:46.118128Z	      ../../node_modules/nodemailer/lib/shared/index.js:12:19:
+2026-07-07T07:13:46.118225Z	  [37m      12 │ const os = require([32m'os'[37m);
+2026-07-07T07:13:46.118644Z	           ╵                    [32m~~~~[0m
+2026-07-07T07:13:46.11907Z	  
+2026-07-07T07:13:46.119522Z	    The package "os" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.119661Z	  
+2026-07-07T07:13:46.119787Z	  
+2026-07-07T07:13:46.119858Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "url"[0m
+2026-07-07T07:13:46.119918Z	  
+2026-07-07T07:13:46.119974Z	      ../../node_modules/nodemailer/lib/shared/url.js:20:23:
+2026-07-07T07:13:46.12003Z	  [37m      20 │ const urllib = require([32m'url'[37m);
+2026-07-07T07:13:46.120092Z	           │                        [32m~~~~~[37m
+2026-07-07T07:13:46.120481Z	           ╵                        [32m"./url"[0m
+2026-07-07T07:13:46.120588Z	  
+2026-07-07T07:13:46.120678Z	    The package "url" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.120762Z	  
+2026-07-07T07:13:46.120836Z	  
+2026-07-07T07:13:46.120902Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.120956Z	  
+2026-07-07T07:13:46.121007Z	      ../../node_modules/nodemailer/lib/smtp-connection/data-stream.js:3:30:
+2026-07-07T07:13:46.121059Z	  [37m      3 │ const { Transform } = require([32m'stream'[37m);
+2026-07-07T07:13:46.121134Z	          ╵                               [32m~~~~~~~~[0m
+2026-07-07T07:13:46.121227Z	  
+2026-07-07T07:13:46.121281Z	    The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.12137Z	  
+2026-07-07T07:13:46.121439Z	  
+2026-07-07T07:13:46.121523Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "net"[0m
+2026-07-07T07:13:46.121645Z	  
+2026-07-07T07:13:46.121732Z	      ../../node_modules/nodemailer/lib/smtp-connection/http-proxy-client.js:7:20:
+2026-07-07T07:13:46.122039Z	  [37m      7 │ const net = require([32m'net'[37m);
+2026-07-07T07:13:46.122113Z	          ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.12217Z	  
+2026-07-07T07:13:46.122226Z	    The package "net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.122322Z	  
+2026-07-07T07:13:46.122383Z	  
+2026-07-07T07:13:46.122443Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "tls"[0m
+2026-07-07T07:13:46.122616Z	  
+2026-07-07T07:13:46.122749Z	      ../../node_modules/nodemailer/lib/smtp-connection/http-proxy-client.js:8:20:
+2026-07-07T07:13:46.122894Z	  [37m      8 │ const tls = require([32m'tls'[37m);
+2026-07-07T07:13:46.12298Z	          ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.12304Z	  
+2026-07-07T07:13:46.123094Z	    The package "tls" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.123168Z	  
+2026-07-07T07:13:46.123233Z	  
+2026-07-07T07:13:46.123294Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.123351Z	  
+2026-07-07T07:13:46.123419Z	      ../../node_modules/nodemailer/lib/smtp-connection/index.js:4:33:
+2026-07-07T07:13:46.123479Z	  [37m      4 │ const { EventEmitter } = require([32m'events'[37m);
+2026-07-07T07:13:46.123533Z	          ╵                                  [32m~~~~~~~~[0m
+2026-07-07T07:13:46.123594Z	  
+2026-07-07T07:13:46.12367Z	    The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.12371Z	  
+2026-07-07T07:13:46.123758Z	  
+2026-07-07T07:13:46.123781Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "net"[0m
+2026-07-07T07:13:46.123806Z	  
+2026-07-07T07:13:46.123834Z	      ../../node_modules/nodemailer/lib/smtp-connection/index.js:5:20:
+2026-07-07T07:13:46.123862Z	  [37m      5 │ const net = require([32m'net'[37m);
+2026-07-07T07:13:46.123885Z	          ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.123934Z	  
+2026-07-07T07:13:46.123958Z	    The package "net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.123986Z	  
+2026-07-07T07:13:46.124014Z	  
+2026-07-07T07:13:46.12405Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "tls"[0m
+2026-07-07T07:13:46.124083Z	  
+2026-07-07T07:13:46.124124Z	      ../../node_modules/nodemailer/lib/smtp-connection/index.js:6:20:
+2026-07-07T07:13:46.124154Z	  [37m      6 │ const tls = require([32m'tls'[37m);
+2026-07-07T07:13:46.12419Z	          ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.124226Z	  
+2026-07-07T07:13:46.124265Z	    The package "tls" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.124315Z	  
+2026-07-07T07:13:46.124349Z	  
+2026-07-07T07:13:46.124382Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "os"[0m
+2026-07-07T07:13:46.124416Z	  
+2026-07-07T07:13:46.124449Z	      ../../node_modules/nodemailer/lib/smtp-connection/index.js:7:19:
+2026-07-07T07:13:46.124478Z	  [37m      7 │ const os = require([32m'os'[37m);
+2026-07-07T07:13:46.124513Z	          ╵                    [32m~~~~[0m
+2026-07-07T07:13:46.124553Z	  
+2026-07-07T07:13:46.124588Z	    The package "os" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.124709Z	  
+2026-07-07T07:13:46.124808Z	  
+2026-07-07T07:13:46.124853Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.12489Z	  
+2026-07-07T07:13:46.124925Z	      ../../node_modules/nodemailer/lib/smtp-connection/index.js:8:23:
+2026-07-07T07:13:46.124961Z	  [37m      8 │ const crypto = require([32m'crypto'[37m);
+2026-07-07T07:13:46.124996Z	          ╵                        [32m~~~~~~~~[0m
+2026-07-07T07:13:46.125023Z	  
+2026-07-07T07:13:46.12505Z	    The package "crypto" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.125076Z	  
+2026-07-07T07:13:46.125101Z	  
+2026-07-07T07:13:46.125153Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.125189Z	  
+2026-07-07T07:13:46.125218Z	      ../../node_modules/nodemailer/lib/smtp-connection/index.js:10:32:
+2026-07-07T07:13:46.125246Z	  [37m      10 │ const { PassThrough } = require([32m'stream'[37m);
+2026-07-07T07:13:46.125276Z	           ╵                                 [32m~~~~~~~~[0m
+2026-07-07T07:13:46.125299Z	  
+2026-07-07T07:13:46.125394Z	    The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.125418Z	  
+2026-07-07T07:13:46.125441Z	  
+2026-07-07T07:13:46.12547Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.125496Z	  
+2026-07-07T07:13:46.125521Z	      ../../node_modules/nodemailer/lib/smtp-pool/index.js:3:29:
+2026-07-07T07:13:46.125543Z	  [37m      3 │ const EventEmitter = require([32m'events'[37m);
+2026-07-07T07:13:46.12557Z	          ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.125613Z	  
+2026-07-07T07:13:46.125637Z	    The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.12566Z	  
+2026-07-07T07:13:46.125681Z	  
+2026-07-07T07:13:46.125704Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.125728Z	  
+2026-07-07T07:13:46.125782Z	      ../../node_modules/nodemailer/lib/smtp-pool/pool-resource.js:7:29:
+2026-07-07T07:13:46.125812Z	  [37m      7 │ const EventEmitter = require([32m'events'[37m);
+2026-07-07T07:13:46.126356Z	          ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.126418Z	  
+2026-07-07T07:13:46.126458Z	    The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.1265Z	  
+2026-07-07T07:13:46.126532Z	  
+2026-07-07T07:13:46.126579Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.126615Z	  
+2026-07-07T07:13:46.126646Z	      ../../node_modules/nodemailer/lib/smtp-transport/index.js:3:29:
+2026-07-07T07:13:46.126677Z	  [37m      3 │ const EventEmitter = require([32m'events'[37m);
+2026-07-07T07:13:46.126707Z	          ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.126732Z	  
+2026-07-07T07:13:46.126782Z	    The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.126849Z	  
+2026-07-07T07:13:46.126874Z	  
+2026-07-07T07:13:46.126898Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.126939Z	  
+2026-07-07T07:13:46.126965Z	      ../../node_modules/nodemailer/lib/xoauth2/index.js:3:27:
+2026-07-07T07:13:46.126987Z	  [37m      3 │ const { Stream } = require([32m'stream'[37m);
+2026-07-07T07:13:46.127016Z	          ╵                            [32m~~~~~~~~[0m
+2026-07-07T07:13:46.127042Z	  
+2026-07-07T07:13:46.127073Z	    The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.127096Z	  
+2026-07-07T07:13:46.127119Z	  
+2026-07-07T07:13:46.127148Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.127172Z	  
+2026-07-07T07:13:46.127194Z	      ../../node_modules/nodemailer/lib/xoauth2/index.js:5:23:
+2026-07-07T07:13:46.127219Z	  [37m      5 │ const crypto = require([32m'crypto'[37m);
+2026-07-07T07:13:46.127724Z	          ╵                        [32m~~~~~~~~[0m
+2026-07-07T07:13:46.127875Z	  
+2026-07-07T07:13:46.127914Z	    The package "crypto" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.127941Z	  
+2026-07-07T07:13:46.127971Z	  
+2026-07-07T07:13:46.128014Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.128046Z	  
+2026-07-07T07:13:46.128078Z	      ../../node_modules/pg-cloudflare/dist/index.js:4:25:
+2026-07-07T07:13:46.128112Z	  [37m      4 │ const events_1 = require([32m"events"[37m);
+2026-07-07T07:13:46.1282Z	          ╵                          [32m~~~~~~~~[0m
+2026-07-07T07:13:46.128371Z	  
+2026-07-07T07:13:46.129927Z	    The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.13013Z	  
+2026-07-07T07:13:46.130253Z	  
+2026-07-07T07:13:46.130307Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "fs"[0m
+2026-07-07T07:13:46.130395Z	  
+2026-07-07T07:13:46.130431Z	      ../../node_modules/pg-connection-string/index.js:88:77:
+2026-07-07T07:13:46.130466Z	  [37m      88 │ ...cert || config.sslkey || config.sslrootcert ? require([32m'fs'[37m) : null
+2026-07-07T07:13:46.130497Z	           ╵                                                          [32m~~~~[0m
+2026-07-07T07:13:46.130859Z	  
+2026-07-07T07:13:46.13098Z	    The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.13101Z	  
+2026-07-07T07:13:46.131042Z	  
+2026-07-07T07:13:46.131065Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.131089Z	  
+2026-07-07T07:13:46.131113Z	      ../../node_modules/pg-pool/index.js:2:29:
+2026-07-07T07:13:46.131136Z	  [37m      2 │ const EventEmitter = require([32m'events'[37m).EventEmitter
+2026-07-07T07:13:46.131162Z	          ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.131185Z	  
+2026-07-07T07:13:46.131228Z	    The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.131255Z	  
+2026-07-07T07:13:46.131278Z	  
+2026-07-07T07:13:46.131307Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.131338Z	  
+2026-07-07T07:13:46.131384Z	      ../../node_modules/pg/lib/client.js:1:29:
+2026-07-07T07:13:46.131429Z	  [37m      1 │ const EventEmitter = require([32m'events'[37m).EventEmitter
+2026-07-07T07:13:46.131464Z	          ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.131661Z	  
+2026-07-07T07:13:46.132069Z	    The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.132148Z	  
+2026-07-07T07:13:46.132205Z	  
+2026-07-07T07:13:46.13223Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "util"[0m
+2026-07-07T07:13:46.132284Z	  
+2026-07-07T07:13:46.132312Z	      ../../node_modules/pg/lib/client.js:3:26:
+2026-07-07T07:13:46.132339Z	  [37m      3 │ const nodeUtils = require([32m'util'[37m)
+2026-07-07T07:13:46.132364Z	          ╵                           [32m~~~~~~[0m
+2026-07-07T07:13:46.13239Z	  
+2026-07-07T07:13:46.132416Z	    The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.132439Z	  
+2026-07-07T07:13:46.132466Z	  
+2026-07-07T07:13:46.132489Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "dns"[0m
+2026-07-07T07:13:46.132511Z	  
+2026-07-07T07:13:46.132536Z	      ../../node_modules/pg/lib/connection-parameters.js:3:20:
+2026-07-07T07:13:46.132574Z	  [37m      3 │ const dns = require([32m'dns'[37m)
+2026-07-07T07:13:46.132596Z	          ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.132618Z	  
+2026-07-07T07:13:46.132641Z	    The package "dns" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.132662Z	  
+2026-07-07T07:13:46.13272Z	  
+2026-07-07T07:13:46.13282Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.132844Z	  
+2026-07-07T07:13:46.132868Z	      ../../node_modules/pg/lib/connection.js:3:29:
+2026-07-07T07:13:46.132891Z	  [37m      3 │ const EventEmitter = require([32m'events'[37m).EventEmitter
+2026-07-07T07:13:46.132921Z	          ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.132947Z	  
+2026-07-07T07:13:46.133003Z	    The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.13304Z	  
+2026-07-07T07:13:46.133082Z	  
+2026-07-07T07:13:46.133115Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "net"[0m
+2026-07-07T07:13:46.13315Z	  
+2026-07-07T07:13:46.13318Z	      ../../node_modules/pg/lib/connection.js:115:24:
+2026-07-07T07:13:46.13321Z	  [37m      115 │     const net = require([32m'net'[37m)
+2026-07-07T07:13:46.133245Z	            ╵                         [32m~~~~~[0m
+2026-07-07T07:13:46.133278Z	  
+2026-07-07T07:13:46.133365Z	    The package "net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.133402Z	  
+2026-07-07T07:13:46.133437Z	  
+2026-07-07T07:13:46.133487Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.133537Z	  
+2026-07-07T07:13:46.133591Z	      ../../node_modules/pg/lib/crypto/utils.js:1:27:
+2026-07-07T07:13:46.133635Z	  [37m      1 │ const nodeCrypto = require([32m'crypto'[37m)
+2026-07-07T07:13:46.133688Z	          ╵                            [32m~~~~~~~~[0m
+2026-07-07T07:13:46.134101Z	  
+2026-07-07T07:13:46.134217Z	    The package "crypto" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.134277Z	  
+2026-07-07T07:13:46.134319Z	  
+2026-07-07T07:13:46.134362Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "util"[0m
+2026-07-07T07:13:46.134403Z	  
+2026-07-07T07:13:46.134452Z	      ../../node_modules/pg/lib/native/client.js:1:26:
+2026-07-07T07:13:46.134492Z	  [37m      1 │ const nodeUtils = require([32m'util'[37m)
+2026-07-07T07:13:46.134552Z	          ╵                           [32m~~~~~~[0m
+2026-07-07T07:13:46.134603Z	  
+2026-07-07T07:13:46.13465Z	    The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.134692Z	  
+2026-07-07T07:13:46.134827Z	  
+2026-07-07T07:13:46.134902Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.134966Z	  
+2026-07-07T07:13:46.135005Z	      ../../node_modules/pg/lib/native/client.js:12:29:
+2026-07-07T07:13:46.135041Z	  [37m      12 │ const EventEmitter = require([32m'events'[37m).EventEmitter
+2026-07-07T07:13:46.135079Z	           ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.135117Z	  
+2026-07-07T07:13:46.135161Z	    The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.135203Z	  
+2026-07-07T07:13:46.135236Z	  
+2026-07-07T07:13:46.135271Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.135309Z	  
+2026-07-07T07:13:46.135344Z	      ../../node_modules/pg/lib/native/query.js:3:29:
+2026-07-07T07:13:46.135409Z	  [37m      3 │ const EventEmitter = require([32m'events'[37m).EventEmitter
+2026-07-07T07:13:46.135451Z	          ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.135486Z	  
+2026-07-07T07:13:46.135521Z	    The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.135556Z	  
+2026-07-07T07:13:46.135592Z	  
+2026-07-07T07:13:46.13565Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "util"[0m
+2026-07-07T07:13:46.135687Z	  
+2026-07-07T07:13:46.135723Z	      ../../node_modules/pg/lib/native/query.js:4:21:
+2026-07-07T07:13:46.135771Z	  [37m      4 │ const util = require([32m'util'[37m)
+2026-07-07T07:13:46.135809Z	          ╵                      [32m~~~~~~[0m
+2026-07-07T07:13:46.135868Z	  
+2026-07-07T07:13:46.135908Z	    The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.135943Z	  
+2026-07-07T07:13:46.135989Z	  
+2026-07-07T07:13:46.136028Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.136064Z	  
+2026-07-07T07:13:46.136101Z	      ../../node_modules/pg/lib/query.js:3:33:
+2026-07-07T07:13:46.136139Z	  [37m      3 │ const { EventEmitter } = require([32m'events'[37m)
+2026-07-07T07:13:46.136174Z	          ╵                                  [32m~~~~~~~~[0m
+2026-07-07T07:13:46.136251Z	  
+2026-07-07T07:13:46.136314Z	    The package "events" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.136353Z	  
+2026-07-07T07:13:46.136388Z	  
+2026-07-07T07:13:46.136424Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "net"[0m
+2026-07-07T07:13:46.136461Z	  
+2026-07-07T07:13:46.136497Z	      ../../node_modules/pg/lib/stream.js:22:24:
+2026-07-07T07:13:46.136545Z	  [37m      22 │     const net = require([32m'net'[37m)
+2026-07-07T07:13:46.136583Z	           ╵                         [32m~~~~~[0m
+2026-07-07T07:13:46.136618Z	  
+2026-07-07T07:13:46.136654Z	    The package "net" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.136706Z	  
+2026-07-07T07:13:46.136745Z	  
+2026-07-07T07:13:46.13681Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "tls"[0m
+2026-07-07T07:13:46.136849Z	  
+2026-07-07T07:13:46.136884Z	      ../../node_modules/pg/lib/stream.js:27:24:
+2026-07-07T07:13:46.136921Z	  [37m      27 │     const tls = require([32m'tls'[37m)
+2026-07-07T07:13:46.136959Z	           ╵                         [32m~~~~~[0m
+2026-07-07T07:13:46.136996Z	  
+2026-07-07T07:13:46.137033Z	    The package "tls" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.13707Z	  
+2026-07-07T07:13:46.137104Z	  
+2026-07-07T07:13:46.137141Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "util/types"[0m
+2026-07-07T07:13:46.137178Z	  
+2026-07-07T07:13:46.13722Z	      ../../node_modules/pg/lib/utils.js:5:27:
+2026-07-07T07:13:46.137259Z	  [37m      5 │ const { isDate } = require([32m'util/types'[37m)
+2026-07-07T07:13:46.137297Z	          ╵                            [32m~~~~~~~~~~~~[0m
+2026-07-07T07:13:46.137385Z	  
+2026-07-07T07:13:46.137425Z	    The package "util/types" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.137465Z	  
+2026-07-07T07:13:46.137496Z	  
+2026-07-07T07:13:46.137529Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "path"[0m
+2026-07-07T07:13:46.137568Z	  
+2026-07-07T07:13:46.1376Z	      ../../node_modules/pgpass/lib/helper.js:3:19:
+2026-07-07T07:13:46.137632Z	  [37m      3 │ var path = require([32m'path'[37m)
+2026-07-07T07:13:46.137667Z	          ╵                    [32m~~~~~~[0m
+2026-07-07T07:13:46.137718Z	  
+2026-07-07T07:13:46.137772Z	    The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.138512Z	  
+2026-07-07T07:13:46.138703Z	  
+2026-07-07T07:13:46.138779Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.138829Z	  
+2026-07-07T07:13:46.138872Z	      ../../node_modules/pgpass/lib/helper.js:4:21:
+2026-07-07T07:13:46.138915Z	  [37m      4 │   , Stream = require([32m'stream'[37m).Stream
+2026-07-07T07:13:46.138959Z	          ╵                      [32m~~~~~~~~[0m
+2026-07-07T07:13:46.139021Z	  
+2026-07-07T07:13:46.139105Z	    The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.139177Z	  
+2026-07-07T07:13:46.139214Z	  
+2026-07-07T07:13:46.139286Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "util"[0m
+2026-07-07T07:13:46.13934Z	  
+2026-07-07T07:13:46.1394Z	      ../../node_modules/pgpass/lib/helper.js:6:19:
+2026-07-07T07:13:46.139452Z	  [37m      6 │   , util = require([32m'util'[37m)
+2026-07-07T07:13:46.1395Z	          ╵                    [32m~~~~~~[0m
+2026-07-07T07:13:46.139617Z	  
+2026-07-07T07:13:46.139691Z	    The package "util" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.139737Z	  
+2026-07-07T07:13:46.141015Z	  
+2026-07-07T07:13:46.141129Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "path"[0m
+2026-07-07T07:13:46.141587Z	  
+2026-07-07T07:13:46.141724Z	      ../../node_modules/pgpass/lib/index.js:3:19:
+2026-07-07T07:13:46.142065Z	  [37m      3 │ var path = require([32m'path'[37m)
+2026-07-07T07:13:46.142141Z	          ╵                    [32m~~~~~~[0m
+2026-07-07T07:13:46.142181Z	  
+2026-07-07T07:13:46.142219Z	    The package "path" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.142254Z	  
+2026-07-07T07:13:46.14228Z	  
+2026-07-07T07:13:46.142395Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "fs"[0m
+2026-07-07T07:13:46.142436Z	  
+2026-07-07T07:13:46.14248Z	      ../../node_modules/pgpass/lib/index.js:4:17:
+2026-07-07T07:13:46.142519Z	  [37m      4 │   , fs = require([32m'fs'[37m)
+2026-07-07T07:13:46.142546Z	          ╵                  [32m~~~~[0m
+2026-07-07T07:13:46.142569Z	  
+2026-07-07T07:13:46.142592Z	    The package "fs" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.142891Z	  
+2026-07-07T07:13:46.142975Z	  
+2026-07-07T07:13:46.143213Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.143414Z	  
+2026-07-07T07:13:46.143482Z	      ../../node_modules/split2/index.js:19:30:
+2026-07-07T07:13:46.143521Z	  [37m      19 │ const { Transform } = require([32m'stream'[37m)
+2026-07-07T07:13:46.143554Z	           ╵                               [32m~~~~~~~~[0m
+2026-07-07T07:13:46.143593Z	  
+2026-07-07T07:13:46.143635Z	    The package "stream" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.143672Z	  
+2026-07-07T07:13:46.143697Z	  
+2026-07-07T07:13:46.143721Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "string_decoder"[0m
+2026-07-07T07:13:46.143752Z	  
+2026-07-07T07:13:46.143797Z	      ../../node_modules/split2/index.js:20:34:
+2026-07-07T07:13:46.143837Z	  [37m      20 │ const { StringDecoder } = require([32m'string_decoder'[37m)
+2026-07-07T07:13:46.143862Z	           ╵                                   [32m~~~~~~~~~~~~~~~~[0m
+2026-07-07T07:13:46.143885Z	  
+2026-07-07T07:13:46.143907Z	    The package "string_decoder" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.143958Z	  
+2026-07-07T07:13:46.143995Z	  
+2026-07-07T07:13:46.144031Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.144066Z	  
+2026-07-07T07:13:46.144123Z	      ../output/server/entries/endpoints/api/auth/login/_server.js:3:19:
+2026-07-07T07:13:46.144157Z	  [37m      3 │ import crypto from [32m"crypto"[37m;
+2026-07-07T07:13:46.144189Z	          ╵                    [32m~~~~~~~~[0m
+2026-07-07T07:13:46.14422Z	  
+2026-07-07T07:13:46.144243Z	    The package "crypto" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.144268Z	  
+2026-07-07T07:13:46.14429Z	  
+2026-07-07T07:13:46.144318Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.144342Z	  
+2026-07-07T07:13:46.144367Z	      ../output/server/entries/endpoints/api/auth/register/_server.js:3:19:
+2026-07-07T07:13:46.144398Z	  [37m      3 │ import crypto from [32m"crypto"[37m;
+2026-07-07T07:13:46.14443Z	          ╵                    [32m~~~~~~~~[0m
+2026-07-07T07:13:46.144462Z	  
+2026-07-07T07:13:46.144495Z	    The package "crypto" wasn't found on the file system but is built into node. Are you trying to bundle for node? You can use "platform: 'node'" to do that, which will remove this error.
+2026-07-07T07:13:46.144521Z	  
+2026-07-07T07:13:46.14455Z	  
+2026-07-07T07:13:46.144581Z	
+2026-07-07T07:13:46.144614Z	
+2026-07-07T07:13:46.14465Z	
+2026-07-07T07:13:46.144681Z	[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mBuild failed with 75 errors:[0m
+2026-07-07T07:13:46.144725Z	
+2026-07-07T07:13:46.144753Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.144786Z	  
+2026-07-07T07:13:46.144809Z	      ../../node_modules/nodemailer/lib/base64/index.js:3:30:
+2026-07-07T07:13:46.144835Z	  [37m      3 │ const { Transform } = require([32m'stream'[37m);
+2026-07-07T07:13:46.144864Z	          ╵                               [32m~~~~~~~~[0m
+2026-07-07T07:13:46.14489Z	  
+2026-07-07T07:13:46.144915Z	    The package "stream" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.14495Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.144979Z	    
+2026-07-07T07:13:46.145003Z	  
+2026-07-07T07:13:46.14503Z	  
+2026-07-07T07:13:46.145062Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.145093Z	  
+2026-07-07T07:13:46.145125Z	      ../../node_modules/nodemailer/lib/dkim/index.js:9:32:
+2026-07-07T07:13:46.145196Z	  [37m      9 │ const { PassThrough } = require([32m'stream'[37m);
+2026-07-07T07:13:46.145235Z	          ╵                                 [32m~~~~~~~~[0m
+2026-07-07T07:13:46.145268Z	  
+2026-07-07T07:13:46.145378Z	    The package "stream" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.145437Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.145478Z	    
+2026-07-07T07:13:46.145502Z	  
+2026-07-07T07:13:46.145534Z	  
+2026-07-07T07:13:46.145562Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "fs"[0m
+2026-07-07T07:13:46.145586Z	  
+2026-07-07T07:13:46.145608Z	      ../../node_modules/nodemailer/lib/dkim/index.js:10:19:
+2026-07-07T07:13:46.145633Z	  [37m      10 │ const fs = require([32m'fs'[37m);
+2026-07-07T07:13:46.145655Z	           ╵                    [32m~~~~[0m
+2026-07-07T07:13:46.14578Z	  
+2026-07-07T07:13:46.145856Z	    The package "fs" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.145915Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.145943Z	    
+2026-07-07T07:13:46.145964Z	  
+2026-07-07T07:13:46.145986Z	  
+2026-07-07T07:13:46.146024Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "path"[0m
+2026-07-07T07:13:46.14605Z	  
+2026-07-07T07:13:46.146137Z	      ../../node_modules/nodemailer/lib/dkim/index.js:11:21:
+2026-07-07T07:13:46.146171Z	  [37m      11 │ const path = require([32m'path'[37m);
+2026-07-07T07:13:46.146195Z	           ╵                      [32m~~~~~~[0m
+2026-07-07T07:13:46.146222Z	  
+2026-07-07T07:13:46.146245Z	    The package "path" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.146289Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.146325Z	    
+2026-07-07T07:13:46.146348Z	  
+2026-07-07T07:13:46.146374Z	  
+2026-07-07T07:13:46.14641Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.146439Z	  
+2026-07-07T07:13:46.146468Z	      ../../node_modules/nodemailer/lib/dkim/index.js:12:23:
+2026-07-07T07:13:46.146502Z	  [37m      12 │ const crypto = require([32m'crypto'[37m);
+2026-07-07T07:13:46.146578Z	           ╵                        [32m~~~~~~~~[0m
+2026-07-07T07:13:46.146654Z	  
+2026-07-07T07:13:46.146689Z	    The package "crypto" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.146732Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.146775Z	    
+2026-07-07T07:13:46.147397Z	  
+2026-07-07T07:13:46.147453Z	  
+2026-07-07T07:13:46.1475Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.147558Z	  
+2026-07-07T07:13:46.147627Z	      ../../node_modules/nodemailer/lib/dkim/message-parser.js:3:30:
+2026-07-07T07:13:46.147682Z	  [37m      3 │ const { Transform } = require([32m'stream'[37m);
+2026-07-07T07:13:46.14773Z	          ╵                               [32m~~~~~~~~[0m
+2026-07-07T07:13:46.147786Z	  
+2026-07-07T07:13:46.147837Z	    The package "stream" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.147885Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.147933Z	    
+2026-07-07T07:13:46.147978Z	  
+2026-07-07T07:13:46.148021Z	  
+2026-07-07T07:13:46.148067Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.148114Z	  
+2026-07-07T07:13:46.148161Z	      ../../node_modules/nodemailer/lib/dkim/relaxed-body.js:5:30:
+2026-07-07T07:13:46.148211Z	  [37m      5 │ const { Transform } = require([32m'stream'[37m);
+2026-07-07T07:13:46.14826Z	          ╵                               [32m~~~~~~~~[0m
+2026-07-07T07:13:46.148305Z	  
+2026-07-07T07:13:46.148353Z	    The package "stream" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.148398Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.148443Z	    
+2026-07-07T07:13:46.148505Z	  
+2026-07-07T07:13:46.148554Z	  
+2026-07-07T07:13:46.148622Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.148669Z	  
+2026-07-07T07:13:46.148733Z	      ../../node_modules/nodemailer/lib/dkim/relaxed-body.js:6:23:
+2026-07-07T07:13:46.148791Z	  [37m      6 │ const crypto = require([32m'crypto'[37m);
+2026-07-07T07:13:46.148843Z	          ╵                        [32m~~~~~~~~[0m
+2026-07-07T07:13:46.148909Z	  
+2026-07-07T07:13:46.148989Z	    The package "crypto" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.14904Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.149091Z	    
+2026-07-07T07:13:46.149148Z	  
+2026-07-07T07:13:46.149197Z	  
+2026-07-07T07:13:46.149246Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.149299Z	  
+2026-07-07T07:13:46.149374Z	      ../../node_modules/nodemailer/lib/dkim/sign.js:5:23:
+2026-07-07T07:13:46.149425Z	  [37m      5 │ const crypto = require([32m'crypto'[37m);
+2026-07-07T07:13:46.149477Z	          ╵                        [32m~~~~~~~~[0m
+2026-07-07T07:13:46.14953Z	  
+2026-07-07T07:13:46.149595Z	    The package "crypto" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.14966Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.149727Z	    
+2026-07-07T07:13:46.149811Z	  
+2026-07-07T07:13:46.149881Z	  
+2026-07-07T07:13:46.149967Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "http"[0m
+2026-07-07T07:13:46.15004Z	  
+2026-07-07T07:13:46.150106Z	      ../../node_modules/nodemailer/lib/fetch/index.js:3:21:
+2026-07-07T07:13:46.150173Z	  [37m      3 │ const http = require([32m'http'[37m);
+2026-07-07T07:13:46.150247Z	          ╵                      [32m~~~~~~[0m
+2026-07-07T07:13:46.150374Z	  
+2026-07-07T07:13:46.150446Z	    The package "http" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.150521Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.150588Z	    
+2026-07-07T07:13:46.150679Z	  
+2026-07-07T07:13:46.150773Z	  
+2026-07-07T07:13:46.150847Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "https"[0m
+2026-07-07T07:13:46.150919Z	  
+2026-07-07T07:13:46.150987Z	      ../../node_modules/nodemailer/lib/fetch/index.js:4:22:
+2026-07-07T07:13:46.151054Z	  [37m      4 │ const https = require([32m'https'[37m);
+2026-07-07T07:13:46.151114Z	          ╵                       [32m~~~~~~~[0m
+2026-07-07T07:13:46.151175Z	  
+2026-07-07T07:13:46.151241Z	    The package "https" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.1513Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.151366Z	    
+2026-07-07T07:13:46.151436Z	  
+2026-07-07T07:13:46.151556Z	  
+2026-07-07T07:13:46.151634Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "zlib"[0m
+2026-07-07T07:13:46.151702Z	  
+2026-07-07T07:13:46.151762Z	      ../../node_modules/nodemailer/lib/fetch/index.js:6:21:
+2026-07-07T07:13:46.152034Z	  [37m      6 │ const zlib = require([32m'zlib'[37m);
+2026-07-07T07:13:46.152106Z	          ╵                      [32m~~~~~~[0m
+2026-07-07T07:13:46.152143Z	  
+2026-07-07T07:13:46.152177Z	    The package "zlib" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.152212Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.15225Z	    
+2026-07-07T07:13:46.15228Z	  
+2026-07-07T07:13:46.15231Z	  
+2026-07-07T07:13:46.152358Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.153073Z	  
+2026-07-07T07:13:46.154132Z	      ../../node_modules/nodemailer/lib/fetch/index.js:7:32:
+2026-07-07T07:13:46.154195Z	  [37m      7 │ const { PassThrough } = require([32m'stream'[37m);
+2026-07-07T07:13:46.154253Z	          ╵                                 [32m~~~~~~~~[0m
+2026-07-07T07:13:46.154298Z	  
+2026-07-07T07:13:46.15438Z	    The package "stream" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.15443Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.154468Z	    
+2026-07-07T07:13:46.154503Z	  
+2026-07-07T07:13:46.154542Z	  
+2026-07-07T07:13:46.154584Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "net"[0m
+2026-07-07T07:13:46.154622Z	  
+2026-07-07T07:13:46.154655Z	      ../../node_modules/nodemailer/lib/fetch/index.js:10:20:
+2026-07-07T07:13:46.154687Z	  [37m      10 │ const net = require([32m'net'[37m);
+2026-07-07T07:13:46.154715Z	           ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.154747Z	  
+2026-07-07T07:13:46.15481Z	    The package "net" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.15488Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.15491Z	    
+2026-07-07T07:13:46.154934Z	  
+2026-07-07T07:13:46.154959Z	  
+2026-07-07T07:13:46.15502Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.155053Z	  
+2026-07-07T07:13:46.155079Z	      ../../node_modules/nodemailer/lib/mailer/index.js:3:29:
+2026-07-07T07:13:46.155486Z	  [37m      3 │ const EventEmitter = require([32m'events'[37m);
+2026-07-07T07:13:46.156144Z	          ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.156282Z	  
+2026-07-07T07:13:46.156496Z	    The package "events" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.156596Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.156642Z	    
+2026-07-07T07:13:46.156671Z	  
+2026-07-07T07:13:46.156894Z	  
+2026-07-07T07:13:46.156995Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "util"[0m
+2026-07-07T07:13:46.157377Z	  
+2026-07-07T07:13:46.157431Z	      ../../node_modules/nodemailer/lib/mailer/index.js:10:21:
+2026-07-07T07:13:46.157471Z	  [37m      10 │ const util = require([32m'util'[37m);
+2026-07-07T07:13:46.157509Z	           ╵                      [32m~~~~~~[0m
+2026-07-07T07:13:46.157537Z	  
+2026-07-07T07:13:46.157566Z	    The package "util" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.157807Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.157979Z	    
+2026-07-07T07:13:46.158144Z	  
+2026-07-07T07:13:46.158194Z	  
+2026-07-07T07:13:46.158224Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "net"[0m
+2026-07-07T07:13:46.158251Z	  
+2026-07-07T07:13:46.158586Z	      ../../node_modules/nodemailer/lib/mailer/index.js:14:20:
+2026-07-07T07:13:46.158676Z	  [37m      14 │ const net = require([32m'net'[37m);
+2026-07-07T07:13:46.158721Z	           ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.158751Z	  
+2026-07-07T07:13:46.158795Z	    The package "net" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.158822Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.158847Z	    
+2026-07-07T07:13:46.158874Z	  
+2026-07-07T07:13:46.158897Z	  
+2026-07-07T07:13:46.158922Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "dns"[0m
+2026-07-07T07:13:46.158945Z	  
+2026-07-07T07:13:46.158968Z	      ../../node_modules/nodemailer/lib/mailer/index.js:15:20:
+2026-07-07T07:13:46.158992Z	  [37m      15 │ const dns = require([32m'dns'[37m);
+2026-07-07T07:13:46.159017Z	           ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.159039Z	  
+2026-07-07T07:13:46.159581Z	    The package "dns" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.159639Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.159872Z	    
+2026-07-07T07:13:46.159975Z	  
+2026-07-07T07:13:46.160142Z	  
+2026-07-07T07:13:46.160213Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.160555Z	  
+2026-07-07T07:13:46.160608Z	      ../../node_modules/nodemailer/lib/mailer/index.js:16:23:
+2026-07-07T07:13:46.160858Z	  [37m      16 │ const crypto = require([32m'crypto'[37m);
+2026-07-07T07:13:46.16109Z	           ╵                        [32m~~~~~~~~[0m
+2026-07-07T07:13:46.161151Z	  
+2026-07-07T07:13:46.161187Z	    The package "crypto" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.16157Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.161657Z	    
+2026-07-07T07:13:46.162Z	  
+2026-07-07T07:13:46.162057Z	  
+2026-07-07T07:13:46.162111Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "path"[0m
+2026-07-07T07:13:46.162417Z	  
+2026-07-07T07:13:46.162678Z	      ../../node_modules/nodemailer/lib/mime-funcs/mime-types.js:5:21:
+2026-07-07T07:13:46.162862Z	  [37m      5 │ const path = require([32m'path'[37m);
+2026-07-07T07:13:46.162917Z	          ╵                      [32m~~~~~~[0m
+2026-07-07T07:13:46.163117Z	  
+2026-07-07T07:13:46.163276Z	    The package "path" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.163322Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.163362Z	    
+2026-07-07T07:13:46.163485Z	  
+2026-07-07T07:13:46.163737Z	  
+2026-07-07T07:13:46.163809Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.163843Z	  
+2026-07-07T07:13:46.163877Z	      ../../node_modules/nodemailer/lib/mime-node/index.js:5:23:
+2026-07-07T07:13:46.163903Z	  [37m      5 │ const crypto = require([32m'crypto'[37m);
+2026-07-07T07:13:46.163928Z	          ╵                        [32m~~~~~~~~[0m
+2026-07-07T07:13:46.163953Z	  
+2026-07-07T07:13:46.164229Z	    The package "crypto" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.16428Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.16443Z	    
+2026-07-07T07:13:46.164486Z	  
+2026-07-07T07:13:46.164515Z	  
+2026-07-07T07:13:46.164542Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "fs"[0m
+2026-07-07T07:13:46.164568Z	  
+2026-07-07T07:13:46.164747Z	      ../../node_modules/nodemailer/lib/mime-node/index.js:6:19:
+2026-07-07T07:13:46.164864Z	  [37m      6 │ const fs = require([32m'fs'[37m);
+2026-07-07T07:13:46.165064Z	          ╵                    [32m~~~~[0m
+2026-07-07T07:13:46.165153Z	  
+2026-07-07T07:13:46.165188Z	    The package "fs" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.165216Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.165248Z	    
+2026-07-07T07:13:46.165566Z	  
+2026-07-07T07:13:46.165639Z	  
+2026-07-07T07:13:46.165698Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.165737Z	  
+2026-07-07T07:13:46.165951Z	      ../../node_modules/nodemailer/lib/mime-node/index.js:8:32:
+2026-07-07T07:13:46.166042Z	  [37m      8 │ const { PassThrough } = require([32m'stream'[37m);
+2026-07-07T07:13:46.166082Z	          ╵                                 [32m~~~~~~~~[0m
+2026-07-07T07:13:46.166106Z	  
+2026-07-07T07:13:46.166145Z	    The package "stream" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.166173Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.1662Z	    
+2026-07-07T07:13:46.166221Z	  
+2026-07-07T07:13:46.166243Z	  
+2026-07-07T07:13:46.166721Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.166976Z	  
+2026-07-07T07:13:46.167158Z	      ../../node_modules/nodemailer/lib/mime-node/last-newline.js:3:30:
+2026-07-07T07:13:46.167316Z	  [37m      3 │ const { Transform } = require([32m'stream'[37m);
+2026-07-07T07:13:46.167478Z	          ╵                               [32m~~~~~~~~[0m
+2026-07-07T07:13:46.167524Z	  
+2026-07-07T07:13:46.167709Z	    The package "stream" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.167935Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.168234Z	    
+2026-07-07T07:13:46.168329Z	  
+2026-07-07T07:13:46.16837Z	  
+2026-07-07T07:13:46.168581Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.168751Z	  
+2026-07-07T07:13:46.169047Z	      ../../node_modules/nodemailer/lib/mime-node/le-unix.js:3:30:
+2026-07-07T07:13:46.169149Z	  [37m      3 │ const { Transform } = require([32m'stream'[37m);
+2026-07-07T07:13:46.169187Z	          ╵                               [32m~~~~~~~~[0m
+2026-07-07T07:13:46.169236Z	  
+2026-07-07T07:13:46.169572Z	    The package "stream" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.169691Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.169739Z	    
+2026-07-07T07:13:46.169952Z	  
+2026-07-07T07:13:46.170042Z	  
+2026-07-07T07:13:46.170087Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.170117Z	  
+2026-07-07T07:13:46.170252Z	      ../../node_modules/nodemailer/lib/mime-node/le-windows.js:3:30:
+2026-07-07T07:13:46.170409Z	  [37m      3 │ const { Transform } = require([32m'stream'[37m);
+2026-07-07T07:13:46.170452Z	          ╵                               [32m~~~~~~~~[0m
+2026-07-07T07:13:46.170482Z	  
+2026-07-07T07:13:46.170508Z	    The package "stream" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.17055Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.170575Z	    
+2026-07-07T07:13:46.170599Z	  
+2026-07-07T07:13:46.170627Z	  
+2026-07-07T07:13:46.170654Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.170683Z	  
+2026-07-07T07:13:46.17071Z	      ../../node_modules/nodemailer/lib/qp/index.js:3:30:
+2026-07-07T07:13:46.170748Z	  [37m      3 │ const { Transform } = require([32m'stream'[37m);
+2026-07-07T07:13:46.170777Z	          ╵                               [32m~~~~~~~~[0m
+2026-07-07T07:13:46.170824Z	  
+2026-07-07T07:13:46.170852Z	    The package "stream" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.170878Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.170914Z	    
+2026-07-07T07:13:46.171108Z	  
+2026-07-07T07:13:46.17122Z	  
+2026-07-07T07:13:46.171279Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "child_process"[0m
+2026-07-07T07:13:46.171517Z	  
+2026-07-07T07:13:46.171746Z	      ../../node_modules/nodemailer/lib/sendmail-transport/index.js:3:26:
+2026-07-07T07:13:46.171902Z	  [37m      3 │ const { spawn } = require([32m'child_process'[37m);
+2026-07-07T07:13:46.171944Z	          ╵                           [32m~~~~~~~~~~~~~~~[0m
+2026-07-07T07:13:46.171971Z	  
+2026-07-07T07:13:46.172133Z	    The package "child_process" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.172227Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.172266Z	    
+2026-07-07T07:13:46.172494Z	  
+2026-07-07T07:13:46.172531Z	  
+2026-07-07T07:13:46.172562Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.172591Z	  
+2026-07-07T07:13:46.17262Z	      ../../node_modules/nodemailer/lib/ses-transport/index.js:3:29:
+2026-07-07T07:13:46.172887Z	  [37m      3 │ const EventEmitter = require([32m'events'[37m);
+2026-07-07T07:13:46.172969Z	          ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.173008Z	  
+2026-07-07T07:13:46.173414Z	    The package "events" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.173502Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.173547Z	    
+2026-07-07T07:13:46.173699Z	  
+2026-07-07T07:13:46.173743Z	  
+2026-07-07T07:13:46.173803Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "util"[0m
+2026-07-07T07:13:46.173846Z	  
+2026-07-07T07:13:46.174069Z	      ../../node_modules/nodemailer/lib/shared/index.js:6:21:
+2026-07-07T07:13:46.174245Z	  [37m      6 │ const util = require([32m'util'[37m);
+2026-07-07T07:13:46.174295Z	          ╵                      [32m~~~~~~[0m
+2026-07-07T07:13:46.174564Z	  
+2026-07-07T07:13:46.174874Z	    The package "util" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.175418Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.175581Z	    
+2026-07-07T07:13:46.175706Z	  
+2026-07-07T07:13:46.176536Z	  
+2026-07-07T07:13:46.176945Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "fs"[0m
+2026-07-07T07:13:46.177223Z	  
+2026-07-07T07:13:46.177934Z	      ../../node_modules/nodemailer/lib/shared/index.js:7:19:
+2026-07-07T07:13:46.178361Z	  [37m      7 │ const fs = require([32m'fs'[37m);
+2026-07-07T07:13:46.178421Z	          ╵                    [32m~~~~[0m
+2026-07-07T07:13:46.179197Z	  
+2026-07-07T07:13:46.179542Z	    The package "fs" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.179988Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.180037Z	    
+2026-07-07T07:13:46.180312Z	  
+2026-07-07T07:13:46.180386Z	  
+2026-07-07T07:13:46.180624Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "dns"[0m
+2026-07-07T07:13:46.180776Z	  
+2026-07-07T07:13:46.18098Z	      ../../node_modules/nodemailer/lib/shared/index.js:10:20:
+2026-07-07T07:13:46.18107Z	  [37m      10 │ const dns = require([32m'dns'[37m);
+2026-07-07T07:13:46.181104Z	           ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.18113Z	  
+2026-07-07T07:13:46.181155Z	    The package "dns" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.181179Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.181203Z	    
+2026-07-07T07:13:46.181226Z	  
+2026-07-07T07:13:46.181248Z	  
+2026-07-07T07:13:46.18127Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "net"[0m
+2026-07-07T07:13:46.181292Z	  
+2026-07-07T07:13:46.181356Z	      ../../node_modules/nodemailer/lib/shared/index.js:11:20:
+2026-07-07T07:13:46.181379Z	  [37m      11 │ const net = require([32m'net'[37m);
+2026-07-07T07:13:46.181403Z	           ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.181429Z	  
+2026-07-07T07:13:46.181453Z	    The package "net" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.181494Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.181517Z	    
+2026-07-07T07:13:46.18154Z	  
+2026-07-07T07:13:46.181564Z	  
+2026-07-07T07:13:46.181592Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "os"[0m
+2026-07-07T07:13:46.181617Z	  
+2026-07-07T07:13:46.182079Z	      ../../node_modules/nodemailer/lib/shared/index.js:12:19:
+2026-07-07T07:13:46.182272Z	  [37m      12 │ const os = require([32m'os'[37m);
+2026-07-07T07:13:46.182467Z	           ╵                    [32m~~~~[0m
+2026-07-07T07:13:46.182688Z	  
+2026-07-07T07:13:46.182834Z	    The package "os" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.182882Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.183207Z	    
+2026-07-07T07:13:46.18334Z	  
+2026-07-07T07:13:46.183384Z	  
+2026-07-07T07:13:46.183412Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "url"[0m
+2026-07-07T07:13:46.183677Z	  
+2026-07-07T07:13:46.183735Z	      ../../node_modules/nodemailer/lib/shared/url.js:20:23:
+2026-07-07T07:13:46.183766Z	  [37m      20 │ const urllib = require([32m'url'[37m);
+2026-07-07T07:13:46.183939Z	           │                        [32m~~~~~[37m
+2026-07-07T07:13:46.184231Z	           ╵                        [32m"./url"[0m
+2026-07-07T07:13:46.184406Z	  
+2026-07-07T07:13:46.18466Z	    The package "url" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.185025Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.18513Z	    
+2026-07-07T07:13:46.18517Z	  
+2026-07-07T07:13:46.185231Z	  
+2026-07-07T07:13:46.185281Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.185758Z	  
+2026-07-07T07:13:46.185988Z	      ../../node_modules/nodemailer/lib/smtp-connection/data-stream.js:3:30:
+2026-07-07T07:13:46.18614Z	  [37m      3 │ const { Transform } = require([32m'stream'[37m);
+2026-07-07T07:13:46.186604Z	          ╵                               [32m~~~~~~~~[0m
+2026-07-07T07:13:46.186667Z	  
+2026-07-07T07:13:46.18696Z	    The package "stream" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.18718Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.187403Z	    
+2026-07-07T07:13:46.187487Z	  
+2026-07-07T07:13:46.187752Z	  
+2026-07-07T07:13:46.18792Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "net"[0m
+2026-07-07T07:13:46.188014Z	  
+2026-07-07T07:13:46.188072Z	      ../../node_modules/nodemailer/lib/smtp-connection/http-proxy-client.js:7:20:
+2026-07-07T07:13:46.188409Z	  [37m      7 │ const net = require([32m'net'[37m);
+2026-07-07T07:13:46.188602Z	          ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.188851Z	  
+2026-07-07T07:13:46.188988Z	    The package "net" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.189302Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.189414Z	    
+2026-07-07T07:13:46.189694Z	  
+2026-07-07T07:13:46.189896Z	  
+2026-07-07T07:13:46.190145Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "tls"[0m
+2026-07-07T07:13:46.190247Z	  
+2026-07-07T07:13:46.190312Z	      ../../node_modules/nodemailer/lib/smtp-connection/http-proxy-client.js:8:20:
+2026-07-07T07:13:46.190482Z	  [37m      8 │ const tls = require([32m'tls'[37m);
+2026-07-07T07:13:46.190605Z	          ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.190971Z	  
+2026-07-07T07:13:46.191221Z	    The package "tls" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.191505Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.191743Z	    
+2026-07-07T07:13:46.192032Z	  
+2026-07-07T07:13:46.192294Z	  
+2026-07-07T07:13:46.192403Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.192879Z	  
+2026-07-07T07:13:46.193149Z	      ../../node_modules/nodemailer/lib/smtp-connection/index.js:4:33:
+2026-07-07T07:13:46.193504Z	  [37m      4 │ const { EventEmitter } = require([32m'events'[37m);
+2026-07-07T07:13:46.193648Z	          ╵                                  [32m~~~~~~~~[0m
+2026-07-07T07:13:46.193737Z	  
+2026-07-07T07:13:46.194083Z	    The package "events" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.194299Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.194531Z	    
+2026-07-07T07:13:46.194625Z	  
+2026-07-07T07:13:46.194927Z	  
+2026-07-07T07:13:46.195072Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "net"[0m
+2026-07-07T07:13:46.195257Z	  
+2026-07-07T07:13:46.195504Z	      ../../node_modules/nodemailer/lib/smtp-connection/index.js:5:20:
+2026-07-07T07:13:46.195766Z	  [37m      5 │ const net = require([32m'net'[37m);
+2026-07-07T07:13:46.195956Z	          ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.196215Z	  
+2026-07-07T07:13:46.196361Z	    The package "net" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.196866Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.196982Z	    
+2026-07-07T07:13:46.197042Z	  
+2026-07-07T07:13:46.197422Z	  
+2026-07-07T07:13:46.197493Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "tls"[0m
+2026-07-07T07:13:46.197574Z	  
+2026-07-07T07:13:46.197727Z	      ../../node_modules/nodemailer/lib/smtp-connection/index.js:6:20:
+2026-07-07T07:13:46.197878Z	  [37m      6 │ const tls = require([32m'tls'[37m);
+2026-07-07T07:13:46.197952Z	          ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.197989Z	  
+2026-07-07T07:13:46.198024Z	    The package "tls" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.19806Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.198091Z	    
+2026-07-07T07:13:46.198126Z	  
+2026-07-07T07:13:46.19815Z	  
+2026-07-07T07:13:46.198175Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "os"[0m
+2026-07-07T07:13:46.198204Z	  
+2026-07-07T07:13:46.198238Z	      ../../node_modules/nodemailer/lib/smtp-connection/index.js:7:19:
+2026-07-07T07:13:46.19829Z	  [37m      7 │ const os = require([32m'os'[37m);
+2026-07-07T07:13:46.19833Z	          ╵                    [32m~~~~[0m
+2026-07-07T07:13:46.198364Z	  
+2026-07-07T07:13:46.198396Z	    The package "os" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.198432Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.198467Z	    
+2026-07-07T07:13:46.198502Z	  
+2026-07-07T07:13:46.198544Z	  
+2026-07-07T07:13:46.198577Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.19861Z	  
+2026-07-07T07:13:46.198642Z	      ../../node_modules/nodemailer/lib/smtp-connection/index.js:8:23:
+2026-07-07T07:13:46.198681Z	  [37m      8 │ const crypto = require([32m'crypto'[37m);
+2026-07-07T07:13:46.198714Z	          ╵                        [32m~~~~~~~~[0m
+2026-07-07T07:13:46.198745Z	  
+2026-07-07T07:13:46.198776Z	    The package "crypto" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.19881Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.198863Z	    
+2026-07-07T07:13:46.198904Z	  
+2026-07-07T07:13:46.198931Z	  
+2026-07-07T07:13:46.198963Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.198992Z	  
+2026-07-07T07:13:46.199017Z	      ../../node_modules/nodemailer/lib/smtp-connection/index.js:10:32:
+2026-07-07T07:13:46.199051Z	  [37m      10 │ const { PassThrough } = require([32m'stream'[37m);
+2026-07-07T07:13:46.199076Z	           ╵                                 [32m~~~~~~~~[0m
+2026-07-07T07:13:46.199102Z	  
+2026-07-07T07:13:46.199133Z	    The package "stream" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.199171Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.199207Z	    
+2026-07-07T07:13:46.199256Z	  
+2026-07-07T07:13:46.199298Z	  
+2026-07-07T07:13:46.19934Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.199384Z	  
+2026-07-07T07:13:46.199426Z	      ../../node_modules/nodemailer/lib/smtp-pool/index.js:3:29:
+2026-07-07T07:13:46.199465Z	  [37m      3 │ const EventEmitter = require([32m'events'[37m);
+2026-07-07T07:13:46.199504Z	          ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.20028Z	  
+2026-07-07T07:13:46.200376Z	    The package "events" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.200427Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.200465Z	    
+2026-07-07T07:13:46.200719Z	  
+2026-07-07T07:13:46.20084Z	  
+2026-07-07T07:13:46.200897Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.200951Z	  
+2026-07-07T07:13:46.200996Z	      ../../node_modules/nodemailer/lib/smtp-pool/pool-resource.js:7:29:
+2026-07-07T07:13:46.201041Z	  [37m      7 │ const EventEmitter = require([32m'events'[37m);
+2026-07-07T07:13:46.201087Z	          ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.20113Z	  
+2026-07-07T07:13:46.201174Z	    The package "events" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.201225Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.201269Z	    
+2026-07-07T07:13:46.201705Z	  
+2026-07-07T07:13:46.20201Z	  
+2026-07-07T07:13:46.202297Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.202523Z	  
+2026-07-07T07:13:46.202806Z	      ../../node_modules/nodemailer/lib/smtp-transport/index.js:3:29:
+2026-07-07T07:13:46.203021Z	  [37m      3 │ const EventEmitter = require([32m'events'[37m);
+2026-07-07T07:13:46.203259Z	          ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.203494Z	  
+2026-07-07T07:13:46.203716Z	    The package "events" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.203956Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.204146Z	    
+2026-07-07T07:13:46.204407Z	  
+2026-07-07T07:13:46.204655Z	  
+2026-07-07T07:13:46.204913Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.205243Z	  
+2026-07-07T07:13:46.205572Z	      ../../node_modules/nodemailer/lib/xoauth2/index.js:3:27:
+2026-07-07T07:13:46.205762Z	  [37m      3 │ const { Stream } = require([32m'stream'[37m);
+2026-07-07T07:13:46.206071Z	          ╵                            [32m~~~~~~~~[0m
+2026-07-07T07:13:46.206223Z	  
+2026-07-07T07:13:46.206532Z	    The package "stream" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.206683Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.206883Z	    
+2026-07-07T07:13:46.20714Z	  
+2026-07-07T07:13:46.207378Z	  
+2026-07-07T07:13:46.207651Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.207899Z	  
+2026-07-07T07:13:46.208141Z	      ../../node_modules/nodemailer/lib/xoauth2/index.js:5:23:
+2026-07-07T07:13:46.208254Z	  [37m      5 │ const crypto = require([32m'crypto'[37m);
+2026-07-07T07:13:46.208571Z	          ╵                        [32m~~~~~~~~[0m
+2026-07-07T07:13:46.208843Z	  
+2026-07-07T07:13:46.209121Z	    The package "crypto" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.209393Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.209696Z	    
+2026-07-07T07:13:46.209846Z	  
+2026-07-07T07:13:46.209919Z	  
+2026-07-07T07:13:46.20998Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.210035Z	  
+2026-07-07T07:13:46.21011Z	      ../../node_modules/pg-cloudflare/dist/index.js:4:25:
+2026-07-07T07:13:46.21051Z	  [37m      4 │ const events_1 = require([32m"events"[37m);
+2026-07-07T07:13:46.210753Z	          ╵                          [32m~~~~~~~~[0m
+2026-07-07T07:13:46.210973Z	  
+2026-07-07T07:13:46.211079Z	    The package "events" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.211422Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.211525Z	    
+2026-07-07T07:13:46.211589Z	  
+2026-07-07T07:13:46.211652Z	  
+2026-07-07T07:13:46.21173Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "fs"[0m
+2026-07-07T07:13:46.211995Z	  
+2026-07-07T07:13:46.212454Z	      ../../node_modules/pg-connection-string/index.js:88:77:
+2026-07-07T07:13:46.213484Z	  [37m      88 │ ...cert || config.sslkey || config.sslrootcert ? require([32m'fs'[37m) : null
+2026-07-07T07:13:46.213651Z	           ╵                                                          [32m~~~~[0m
+2026-07-07T07:13:46.213728Z	  
+2026-07-07T07:13:46.214197Z	    The package "fs" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.214544Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.214695Z	    
+2026-07-07T07:13:46.215064Z	  
+2026-07-07T07:13:46.21523Z	  
+2026-07-07T07:13:46.215317Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.215874Z	  
+2026-07-07T07:13:46.215994Z	      ../../node_modules/pg-pool/index.js:2:29:
+2026-07-07T07:13:46.216265Z	  [37m      2 │ const EventEmitter = require([32m'events'[37m).EventEmitter
+2026-07-07T07:13:46.216403Z	          ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.216471Z	  
+2026-07-07T07:13:46.21654Z	    The package "events" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.216622Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.216665Z	    
+2026-07-07T07:13:46.216707Z	  
+2026-07-07T07:13:46.216743Z	  
+2026-07-07T07:13:46.216777Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.216983Z	  
+2026-07-07T07:13:46.217035Z	      ../../node_modules/pg/lib/client.js:1:29:
+2026-07-07T07:13:46.217076Z	  [37m      1 │ const EventEmitter = require([32m'events'[37m).EventEmitter
+2026-07-07T07:13:46.217122Z	          ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.217152Z	  
+2026-07-07T07:13:46.217175Z	    The package "events" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.217199Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.217221Z	    
+2026-07-07T07:13:46.217242Z	  
+2026-07-07T07:13:46.217263Z	  
+2026-07-07T07:13:46.217285Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "util"[0m
+2026-07-07T07:13:46.217338Z	  
+2026-07-07T07:13:46.217361Z	      ../../node_modules/pg/lib/client.js:3:26:
+2026-07-07T07:13:46.217383Z	  [37m      3 │ const nodeUtils = require([32m'util'[37m)
+2026-07-07T07:13:46.217406Z	          ╵                           [32m~~~~~~[0m
+2026-07-07T07:13:46.217428Z	  
+2026-07-07T07:13:46.217458Z	    The package "util" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.217484Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.217509Z	    
+2026-07-07T07:13:46.217548Z	  
+2026-07-07T07:13:46.217577Z	  
+2026-07-07T07:13:46.217602Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "dns"[0m
+2026-07-07T07:13:46.217679Z	  
+2026-07-07T07:13:46.217715Z	      ../../node_modules/pg/lib/connection-parameters.js:3:20:
+2026-07-07T07:13:46.21789Z	  [37m      3 │ const dns = require([32m'dns'[37m)
+2026-07-07T07:13:46.218089Z	          ╵                     [32m~~~~~[0m
+2026-07-07T07:13:46.218137Z	  
+2026-07-07T07:13:46.21817Z	    The package "dns" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.218212Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.218246Z	    
+2026-07-07T07:13:46.218276Z	  
+2026-07-07T07:13:46.218302Z	  
+2026-07-07T07:13:46.218327Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.218351Z	  
+2026-07-07T07:13:46.218387Z	      ../../node_modules/pg/lib/connection.js:3:29:
+2026-07-07T07:13:46.218418Z	  [37m      3 │ const EventEmitter = require([32m'events'[37m).EventEmitter
+2026-07-07T07:13:46.218441Z	          ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.218464Z	  
+2026-07-07T07:13:46.219047Z	    The package "events" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.219248Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.219398Z	    
+2026-07-07T07:13:46.21968Z	  
+2026-07-07T07:13:46.219769Z	  
+2026-07-07T07:13:46.219879Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "net"[0m
+2026-07-07T07:13:46.219944Z	  
+2026-07-07T07:13:46.21997Z	      ../../node_modules/pg/lib/connection.js:115:24:
+2026-07-07T07:13:46.219994Z	  [37m      115 │     const net = require([32m'net'[37m)
+2026-07-07T07:13:46.220018Z	            ╵                         [32m~~~~~[0m
+2026-07-07T07:13:46.220041Z	  
+2026-07-07T07:13:46.220064Z	    The package "net" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.220089Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.220112Z	    
+2026-07-07T07:13:46.220134Z	  
+2026-07-07T07:13:46.220157Z	  
+2026-07-07T07:13:46.220181Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.220207Z	  
+2026-07-07T07:13:46.220229Z	      ../../node_modules/pg/lib/crypto/utils.js:1:27:
+2026-07-07T07:13:46.220254Z	  [37m      1 │ const nodeCrypto = require([32m'crypto'[37m)
+2026-07-07T07:13:46.220282Z	          ╵                            [32m~~~~~~~~[0m
+2026-07-07T07:13:46.220306Z	  
+2026-07-07T07:13:46.220329Z	    The package "crypto" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.220401Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.220427Z	    
+2026-07-07T07:13:46.220457Z	  
+2026-07-07T07:13:46.220488Z	  
+2026-07-07T07:13:46.220524Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "util"[0m
+2026-07-07T07:13:46.220563Z	  
+2026-07-07T07:13:46.220598Z	      ../../node_modules/pg/lib/native/client.js:1:26:
+2026-07-07T07:13:46.220624Z	  [37m      1 │ const nodeUtils = require([32m'util'[37m)
+2026-07-07T07:13:46.220667Z	          ╵                           [32m~~~~~~[0m
+2026-07-07T07:13:46.220706Z	  
+2026-07-07T07:13:46.220741Z	    The package "util" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.220778Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.220808Z	    
+2026-07-07T07:13:46.22084Z	  
+2026-07-07T07:13:46.220882Z	  
+2026-07-07T07:13:46.220916Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.220958Z	  
+2026-07-07T07:13:46.221005Z	      ../../node_modules/pg/lib/native/client.js:12:29:
+2026-07-07T07:13:46.221041Z	  [37m      12 │ const EventEmitter = require([32m'events'[37m).EventEmitter
+2026-07-07T07:13:46.221079Z	           ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.221112Z	  
+2026-07-07T07:13:46.221137Z	    The package "events" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.221161Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.221183Z	    
+2026-07-07T07:13:46.221205Z	  
+2026-07-07T07:13:46.221273Z	  
+2026-07-07T07:13:46.221303Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.221486Z	  
+2026-07-07T07:13:46.221569Z	      ../../node_modules/pg/lib/native/query.js:3:29:
+2026-07-07T07:13:46.221648Z	  [37m      3 │ const EventEmitter = require([32m'events'[37m).EventEmitter
+2026-07-07T07:13:46.221697Z	          ╵                              [32m~~~~~~~~[0m
+2026-07-07T07:13:46.221741Z	  
+2026-07-07T07:13:46.221794Z	    The package "events" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.221857Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.22191Z	    
+2026-07-07T07:13:46.22196Z	  
+2026-07-07T07:13:46.222Z	  
+2026-07-07T07:13:46.222045Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "util"[0m
+2026-07-07T07:13:46.222969Z	  
+2026-07-07T07:13:46.223185Z	      ../../node_modules/pg/lib/native/query.js:4:21:
+2026-07-07T07:13:46.2235Z	  [37m      4 │ const util = require([32m'util'[37m)
+2026-07-07T07:13:46.223777Z	          ╵                      [32m~~~~~~[0m
+2026-07-07T07:13:46.224024Z	  
+2026-07-07T07:13:46.224287Z	    The package "util" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.224632Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.224744Z	    
+2026-07-07T07:13:46.22507Z	  
+2026-07-07T07:13:46.225345Z	  
+2026-07-07T07:13:46.225738Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "events"[0m
+2026-07-07T07:13:46.225979Z	  
+2026-07-07T07:13:46.226177Z	      ../../node_modules/pg/lib/query.js:3:33:
+2026-07-07T07:13:46.226369Z	  [37m      3 │ const { EventEmitter } = require([32m'events'[37m)
+2026-07-07T07:13:46.22655Z	          ╵                                  [32m~~~~~~~~[0m
+2026-07-07T07:13:46.226746Z	  
+2026-07-07T07:13:46.227053Z	    The package "events" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.227357Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.227774Z	    
+2026-07-07T07:13:46.227858Z	  
+2026-07-07T07:13:46.228021Z	  
+2026-07-07T07:13:46.228122Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "net"[0m
+2026-07-07T07:13:46.228157Z	  
+2026-07-07T07:13:46.228182Z	      ../../node_modules/pg/lib/stream.js:22:24:
+2026-07-07T07:13:46.22823Z	  [37m      22 │     const net = require([32m'net'[37m)
+2026-07-07T07:13:46.228259Z	           ╵                         [32m~~~~~[0m
+2026-07-07T07:13:46.228287Z	  
+2026-07-07T07:13:46.228315Z	    The package "net" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.228464Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.228772Z	    
+2026-07-07T07:13:46.228892Z	  
+2026-07-07T07:13:46.229039Z	  
+2026-07-07T07:13:46.22925Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "tls"[0m
+2026-07-07T07:13:46.229302Z	  
+2026-07-07T07:13:46.229435Z	      ../../node_modules/pg/lib/stream.js:27:24:
+2026-07-07T07:13:46.229464Z	  [37m      27 │     const tls = require([32m'tls'[37m)
+2026-07-07T07:13:46.229488Z	           ╵                         [32m~~~~~[0m
+2026-07-07T07:13:46.229513Z	  
+2026-07-07T07:13:46.229538Z	    The package "tls" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.229563Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.229588Z	    
+2026-07-07T07:13:46.229612Z	  
+2026-07-07T07:13:46.229636Z	  
+2026-07-07T07:13:46.22966Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "util/types"[0m
+2026-07-07T07:13:46.229695Z	  
+2026-07-07T07:13:46.22973Z	      ../../node_modules/pg/lib/utils.js:5:27:
+2026-07-07T07:13:46.22978Z	  [37m      5 │ const { isDate } = require([32m'util/types'[37m)
+2026-07-07T07:13:46.230098Z	          ╵                            [32m~~~~~~~~~~~~[0m
+2026-07-07T07:13:46.230175Z	  
+2026-07-07T07:13:46.23043Z	    The package "util/types" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.230488Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.230705Z	    
+2026-07-07T07:13:46.230806Z	  
+2026-07-07T07:13:46.231136Z	  
+2026-07-07T07:13:46.231385Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "path"[0m
+2026-07-07T07:13:46.231458Z	  
+2026-07-07T07:13:46.2315Z	      ../../node_modules/pgpass/lib/helper.js:3:19:
+2026-07-07T07:13:46.231664Z	  [37m      3 │ var path = require([32m'path'[37m)
+2026-07-07T07:13:46.233911Z	          ╵                    [32m~~~~~~[0m
+2026-07-07T07:13:46.234045Z	  
+2026-07-07T07:13:46.234082Z	    The package "path" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.234114Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.234145Z	    
+2026-07-07T07:13:46.234239Z	  
+2026-07-07T07:13:46.234309Z	  
+2026-07-07T07:13:46.23435Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.234381Z	  
+2026-07-07T07:13:46.234406Z	      ../../node_modules/pgpass/lib/helper.js:4:21:
+2026-07-07T07:13:46.234432Z	  [37m      4 │   , Stream = require([32m'stream'[37m).Stream
+2026-07-07T07:13:46.234462Z	          ╵                      [32m~~~~~~~~[0m
+2026-07-07T07:13:46.234501Z	  
+2026-07-07T07:13:46.234526Z	    The package "stream" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.234552Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.234576Z	    
+2026-07-07T07:13:46.2346Z	  
+2026-07-07T07:13:46.234626Z	  
+2026-07-07T07:13:46.234651Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "util"[0m
+2026-07-07T07:13:46.234676Z	  
+2026-07-07T07:13:46.2347Z	      ../../node_modules/pgpass/lib/helper.js:6:19:
+2026-07-07T07:13:46.234727Z	  [37m      6 │   , util = require([32m'util'[37m)
+2026-07-07T07:13:46.234752Z	          ╵                    [32m~~~~~~[0m
+2026-07-07T07:13:46.234776Z	  
+2026-07-07T07:13:46.234801Z	    The package "util" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.234829Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.234869Z	    
+2026-07-07T07:13:46.234891Z	  
+2026-07-07T07:13:46.234915Z	  
+2026-07-07T07:13:46.23494Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "path"[0m
+2026-07-07T07:13:46.234966Z	  
+2026-07-07T07:13:46.23499Z	      ../../node_modules/pgpass/lib/index.js:3:19:
+2026-07-07T07:13:46.235015Z	  [37m      3 │ var path = require([32m'path'[37m)
+2026-07-07T07:13:46.23504Z	          ╵                    [32m~~~~~~[0m
+2026-07-07T07:13:46.235066Z	  
+2026-07-07T07:13:46.235093Z	    The package "path" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.235118Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.235142Z	    
+2026-07-07T07:13:46.235166Z	  
+2026-07-07T07:13:46.23519Z	  
+2026-07-07T07:13:46.235219Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "fs"[0m
+2026-07-07T07:13:46.235246Z	  
+2026-07-07T07:13:46.235273Z	      ../../node_modules/pgpass/lib/index.js:4:17:
+2026-07-07T07:13:46.2353Z	  [37m      4 │   , fs = require([32m'fs'[37m)
+2026-07-07T07:13:46.235325Z	          ╵                  [32m~~~~[0m
+2026-07-07T07:13:46.23535Z	  
+2026-07-07T07:13:46.235375Z	    The package "fs" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.2354Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.235424Z	    
+2026-07-07T07:13:46.235454Z	  
+2026-07-07T07:13:46.235482Z	  
+2026-07-07T07:13:46.235506Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "stream"[0m
+2026-07-07T07:13:46.235534Z	  
+2026-07-07T07:13:46.235567Z	      ../../node_modules/split2/index.js:19:30:
+2026-07-07T07:13:46.235595Z	  [37m      19 │ const { Transform } = require([32m'stream'[37m)
+2026-07-07T07:13:46.235641Z	           ╵                               [32m~~~~~~~~[0m
+2026-07-07T07:13:46.235667Z	  
+2026-07-07T07:13:46.235696Z	    The package "stream" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.235731Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.235765Z	    
+2026-07-07T07:13:46.2358Z	  
+2026-07-07T07:13:46.235839Z	  
+2026-07-07T07:13:46.235892Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "string_decoder"[0m
+2026-07-07T07:13:46.235948Z	  
+2026-07-07T07:13:46.235993Z	      ../../node_modules/split2/index.js:20:34:
+2026-07-07T07:13:46.236031Z	  [37m      20 │ const { StringDecoder } = require([32m'string_decoder'[37m)
+2026-07-07T07:13:46.236068Z	           ╵                                   [32m~~~~~~~~~~~~~~~~[0m
+2026-07-07T07:13:46.236108Z	  
+2026-07-07T07:13:46.23615Z	    The package "string_decoder" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.236214Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.236257Z	    
+2026-07-07T07:13:46.236298Z	  
+2026-07-07T07:13:46.236334Z	  
+2026-07-07T07:13:46.236375Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.236413Z	  
+2026-07-07T07:13:46.236447Z	      ../output/server/entries/endpoints/api/auth/login/_server.js:3:19:
+2026-07-07T07:13:46.236486Z	  [37m      3 │ import crypto from [32m"crypto"[37m;
+2026-07-07T07:13:46.236523Z	          ╵                    [32m~~~~~~~~[0m
+2026-07-07T07:13:46.237401Z	  
+2026-07-07T07:13:46.237618Z	    The package "crypto" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.237712Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.237757Z	    
+2026-07-07T07:13:46.237796Z	  
+2026-07-07T07:13:46.237832Z	  
+2026-07-07T07:13:46.237895Z	  [31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "crypto"[0m
+2026-07-07T07:13:46.237942Z	  
+2026-07-07T07:13:46.237986Z	      ../output/server/entries/endpoints/api/auth/register/_server.js:3:19:
+2026-07-07T07:13:46.23802Z	  [37m      3 │ import crypto from [32m"crypto"[37m;
+2026-07-07T07:13:46.238061Z	          ╵                    [32m~~~~~~~~[0m
+2026-07-07T07:13:46.238101Z	  
+2026-07-07T07:13:46.238143Z	    The package "crypto" wasn't found on the file system but is built into node.
+2026-07-07T07:13:46.238184Z	    - Make sure to prefix the module name with "node:" or update your compatibility_date to 2024-09-23 or later.
+2026-07-07T07:13:46.238224Z	    
+2026-07-07T07:13:46.238262Z	  
+2026-07-07T07:13:46.238299Z	  
+2026-07-07T07:13:46.238335Z	
+2026-07-07T07:13:46.238376Z	
+2026-07-07T07:13:46.238441Z	🪵  Logs were written to "/root/.config/.wrangler/logs/wrangler-2026-07-07_07-13-45_665.log"
+2026-07-07T07:13:46.241252Z	Failed building Pages Functions.
+2026-07-07T07:13:47.148058Z	Failed: generating Pages Functions failed. Check the logs above for more information. If this continues for an unknown reason, contact support: https://cfl.re/3WgEyrH

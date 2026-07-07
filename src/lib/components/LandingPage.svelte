@@ -7,114 +7,84 @@
     Lock, 
     UserPlus, 
     ChevronRight, 
+    ChevronLeft,
     Volume2,
     Users,
     Download,
-    X
+    X,
+    Fingerprint,
+    KeyRound
   } from '@lucide/svelte';
 
   const appState = getCateringContext();
 
-  let activeTab = $state('password'); // password, pin, biometric, register
-  let biometricAvailable = $state(false);
-  let showInstallHelp = $state(false);
-  let installHelp = $derived(appState.getPwaInstallHelp());
-
-  // Password Login Fields
+  let step = $state(1); // 1 = Operator ID, 2 = Authentication Challenge
   let username = $state('');
   let password = $state('');
-  let loginMessage = $state('');
+  let inputPIN = $state('');
+  let isChecking = $state(false);
+  let availableMethods = $state(['password']);
+  let selectedMethod = $state('password'); // password, pin, biometric
 
-  // Register Fields
+  // Signup fields
+  let isSignupMode = $state(false);
   let regUsername = $state('');
   let regPassword = $state('');
   let regPIN = $state('1234');
   let regMessage = $state('');
+  let loginMessage = $state('');
+  let biometricAvailable = $state(false);
+  let showInstallHelp = $state(false);
+  let installHelp = $derived(appState.getPwaInstallHelp());
 
-  // PIN Access Fields
-  let inputPIN = $state('');
+  async function handleIdentifierSubmit(e) {
+    if (e) e.preventDefault();
+    if (!username.trim()) return;
 
-  function selectTab(tab) {
     appState.playClickSound();
-    activeTab = tab;
+    isChecking = true;
     loginMessage = '';
-    regMessage = '';
-    inputPIN = '';
-
-    if (tab === 'pin') {
-      setTimeout(() => {
-        const el = document.getElementById('login-pin');
-        if (el) el.focus();
-      }, 100);
-    }
-  }
-
-  async function handleInstallClick() {
-    const installedPromptOpened = await appState.executeAppInstall();
-    if (!appState.pwaInstalled) {
-      showInstallHelp = true;
-    }
-  }
-
-  async function handleRegister(e) {
-    e.preventDefault();
-    if (!regUsername || !regPassword) return;
-
-    appState.playClickSound();
 
     if (appState.usingMockData) {
-      appState.currentUser = {
-        username: regUsername,
-        password: regPassword,
-        pin: regPIN
-      };
-      appState.registeredPIN = regPIN;
-      regMessage = `✅ Profile "${regUsername}" registered successfully. You can now login.`;
-      appState.playStampSound();
-      setTimeout(() => {
-        activeTab = 'password';
-        username = regUsername;
-      }, 1200);
+      isChecking = false;
+      const isRegistered = appState.currentUser && appState.currentUser.username === username.trim();
+      availableMethods = isRegistered ? ['password', 'pin'] : ['password'];
+      selectedMethod = 'password';
+      step = 2;
     } else {
       try {
-        const response = await fetch('/api/auth/register', {
+        const response = await fetch('/api/auth/pre-auth', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: regUsername, password: regPassword, role: 'Operator' })
+          body: JSON.stringify({ username: username.trim() })
         });
         const res = await response.json();
-        if (response.ok) {
-          appState.currentUser = {
-            username: regUsername,
-            password: regPassword,
-            pin: regPIN
-          };
-          appState.registeredPIN = regPIN;
-          regMessage = `✅ Profile "${regUsername}" registered successfully. You can now login.`;
-          appState.playStampSound();
-          setTimeout(() => {
-            activeTab = 'password';
-            username = regUsername;
-          }, 1200);
+        isChecking = false;
+        if (response.ok && res.success) {
+          availableMethods = res.methods;
+          selectedMethod = res.methods[0] || 'password';
+          step = 2;
         } else {
-          regMessage = `❌ Registration failed: ${res.error}`;
+          loginMessage = `❌ ${res.error || 'User not found or inactive.'}`;
           appState.playBuzzerSound();
         }
       } catch (err) {
-        regMessage = `❌ Error: ${err.message}`;
-        appState.playBuzzerSound();
+        isChecking = false;
+        console.warn("Pre-auth check fallback to local check:", err.message);
+        availableMethods = ['password', 'pin'];
+        selectedMethod = 'password';
+        step = 2;
       }
     }
   }
 
-  // Handle password login
   async function handlePasswordLogin(e) {
     e.preventDefault();
     appState.playClickSound();
 
     if (appState.usingMockData) {
       const user = appState.currentUser || { username: 'admin', password: 'admin' };
-      if (username === user.username && password === user.password) {
+      if (username.trim() === user.username && password === user.password) {
         appState.isAuthenticated = true;
         appState.playStampSound();
         goto('/');
@@ -127,7 +97,7 @@
         const response = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
+          body: JSON.stringify({ username: username.trim(), password })
         });
         const res = await response.json();
         if (response.ok && res.success) {
@@ -136,9 +106,8 @@
           goto('/');
         } else {
           if (response.status === 503 || res.offlineFallback) {
-            console.warn("DB offline, logging in using mock database credentials fallback.");
             const user = appState.currentUser || { username: 'admin', password: 'admin' };
-            if (username === user.username && password === user.password) {
+            if (username.trim() === user.username && password === user.password) {
               appState.isAuthenticated = true;
               appState.playStampSound();
               goto('/');
@@ -158,7 +127,6 @@
     }
   }
 
-  // Native Keyboard PIN input handler
   function handlePinInput() {
     inputPIN = inputPIN.replace(/[^0-9]/g, '');
     
@@ -171,16 +139,84 @@
           goto('/');
         } else {
           appState.playBuzzerSound();
+          loginMessage = '❌ Incorrect PIN';
           inputPIN = '';
         }
       }, 350);
     }
   }
 
-  // Biometric validation
   function handleBiometricsSuccess() {
     appState.isAuthenticated = true;
     goto('/');
+  }
+
+  async function handleRegister(e) {
+    e.preventDefault();
+    if (!regUsername || !regPassword) return;
+
+    appState.playClickSound();
+
+    if (appState.usingMockData) {
+      appState.currentUser = {
+        username: regUsername,
+        password: regPassword,
+        pin: regPIN
+      };
+      appState.registeredPIN = regPIN;
+      regMessage = `✅ Profile "${regUsername}" registered successfully.`;
+      appState.playStampSound();
+      setTimeout(() => {
+        isSignupMode = false;
+        username = regUsername;
+        step = 1;
+      }, 1200);
+    } else {
+      try {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: regUsername, password: regPassword, role: 'Operator' })
+        });
+        const res = await response.json();
+        if (response.ok) {
+          appState.currentUser = {
+            username: regUsername,
+            password: regPassword,
+            pin: regPIN
+          };
+          appState.registeredPIN = regPIN;
+          regMessage = `✅ Profile "${regUsername}" registered successfully.`;
+          appState.playStampSound();
+          setTimeout(() => {
+            isSignupMode = false;
+            username = regUsername;
+            step = 1;
+          }, 1200);
+        } else {
+          regMessage = `❌ Registration failed: ${res.error}`;
+          appState.playBuzzerSound();
+        }
+      } catch (err) {
+        regMessage = `❌ Error: ${err.message}`;
+        appState.playBuzzerSound();
+      }
+    }
+  }
+
+  function goBackToIdentifier() {
+    appState.playClickSound();
+    step = 1;
+    loginMessage = '';
+    password = '';
+    inputPIN = '';
+  }
+
+  async function handleInstallClick() {
+    const installedPromptOpened = await appState.executeAppInstall();
+    if (!appState.pwaInstalled) {
+      showInstallHelp = true;
+    }
   }
 
   onMount(async () => {
@@ -197,12 +233,10 @@
 
 <div class="min-h-screen bg-[#F6F2EA] text-[#2A2521] flex flex-col items-center justify-center p-4 md:p-6 animate-fade-in relative overflow-hidden">
   
-  <!-- Sleek blueprint grids in the background -->
   <div class="absolute inset-0 bg-[radial-gradient(#767068/10_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none opacity-40"></div>
   
   <div class="max-w-md w-full text-center space-y-6 relative z-10">
     
-    <!-- Clean Header -->
     <div>
       <span class="ticket-stamp">OPERATIONAL SYSTEM</span>
       <h1 class="text-3xl font-black tracking-tighter text-[#2A2521] uppercase leading-none mt-2">
@@ -213,7 +247,6 @@
       </p>
     </div>
 
-    <!-- Centered Access Gate Ticket -->
     <div class="ticket-card bg-white p-6 md:p-8 text-left">
       
       <div class="mb-6 flex justify-between items-start">
@@ -221,117 +254,13 @@
           <span class="ticket-stamp">SECURITY CONSOLE</span>
           <h2 class="text-xl font-bold mt-1 text-[#2A2521]">Access Gate</h2>
         </div>
-        <!-- Tiny lock logo badge -->
         <div class="p-2 rounded bg-slate-50 border border-slate-200">
           <Lock size={16} class="text-[#767068]" />
         </div>
       </div>
 
-      <!-- Navigation Tabs for Login options -->
-      <div class="grid gap-1 border-b border-[#767068]/20 pb-3 mb-6 font-mono text-[9px] uppercase tracking-tighter"
-           style="grid-template-columns: repeat({biometricAvailable ? 4 : 3}, minmax(0, 1fr));">
-        <button 
-          onclick={() => selectTab('password')}
-          class="py-1 rounded text-center transition-all {activeTab === 'password' ? 'bg-[#2A2521] text-[#F6F2EA] font-bold' : 'text-[#767068] hover:bg-[#F6F2EA]'}"
-        >
-          Password
-        </button>
-        <button 
-          onclick={() => selectTab('pin')}
-          class="py-1 rounded text-center transition-all {activeTab === 'pin' ? 'bg-[#2A2521] text-[#F6F2EA] font-bold' : 'text-[#767068] hover:bg-[#F6F2EA]'}"
-        >
-          PIN
-        </button>
-        {#if biometricAvailable}
-          <button 
-            onclick={() => selectTab('biometric')}
-            class="py-1 rounded text-center transition-all {activeTab === 'biometric' ? 'bg-[#2A2521] text-[#F6F2EA] font-bold' : 'text-[#767068] hover:bg-[#F6F2EA]'}"
-          >
-            Biometric
-          </button>
-        {/if}
-        <button 
-          onclick={() => selectTab('register')}
-          class="py-1 rounded text-center transition-all {activeTab === 'register' ? 'bg-[#3E6650] text-[#F6F2EA] font-bold' : 'text-[#767068] hover:bg-[#F6F2EA]'}"
-        >
-          Sign Up
-        </button>
-      </div>
-
-      <!-- ---------------- PASSWORD TAB ---------------- -->
-      {#if activeTab === 'password'}
-        <form onsubmit={handlePasswordLogin} class="space-y-4 text-left">
-          <div>
-            <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="login-username">Operator ID</label>
-            <input 
-              id="login-username"
-              type="text" 
-              bind:value={username} 
-              autocomplete="off"
-              class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs focus:outline-none focus:border-[#3E6650]" 
-              placeholder="operator username (default: admin)"
-              required 
-            />
-          </div>
-          <div>
-            <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="login-password">Password</label>
-            <input 
-              id="login-password"
-              type="password" 
-              bind:value={password} 
-              class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs focus:outline-none focus:border-[#3E6650]" 
-              placeholder="•••••••• (default: admin)"
-              required 
-            />
-          </div>
-
-          <button 
-            type="submit" 
-            class="w-full bg-[#2A2521] hover:bg-slate-800 text-[#F6F2EA] font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1"
-          >
-            Sign In <ChevronRight size={14} />
-          </button>
-
-          {#if loginMessage}
-            <p class="text-xs font-mono text-[#AC3B2A] text-center mt-2">{loginMessage}</p>
-          {/if}
-        </form>
-      {/if}
-
-      <!-- ---------------- PIN TAB ---------------- -->
-      {#if activeTab === 'pin'}
-        <div class="space-y-4 text-left">
-          <div>
-            <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="login-pin">Enter 4-Digit Access PIN</label>
-            <input 
-              id="login-pin"
-              type="password" 
-              pattern="[0-9]*" 
-              inputmode="numeric" 
-              maxlength="4" 
-              bind:value={inputPIN} 
-              oninput={handlePinInput}
-              class="w-full text-center text-xl tracking-[1.2em] pl-6 py-2.5 rounded border border-[#767068]/30 bg-white focus:outline-none focus:border-[#3E6650] font-mono"
-              placeholder="••••"
-              required 
-            />
-          </div>
-          <p class="text-[9px] text-[#767068] font-mono text-center">
-            Verification occurs automatically upon entering the 4th digit.
-          </p>
-        </div>
-      {/if}
-
-      <!-- ---------------- BIOMETRIC TAB ---------------- -->
-      {#if activeTab === 'biometric'}
-        <BiometricScanner 
-          onsuccess={handleBiometricsSuccess} 
-          oncancel={() => selectTab('password')} 
-        />
-      {/if}
-
-      <!-- ---------------- REGISTER TAB ---------------- -->
-      {#if activeTab === 'register'}
+      {#if isSignupMode}
+        <!-- signup card -->
         <form onsubmit={handleRegister} class="space-y-4 text-left">
           <div>
             <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="reg-username">Configure Username</label>
@@ -378,10 +307,148 @@
             Register Profile
           </button>
 
+          <button 
+            type="button" 
+            onclick={() => { appState.playClickSound(); isSignupMode = false; }} 
+            class="w-full text-center text-xs font-mono text-[#767068] hover:underline pt-2 block"
+          >
+            Already have an account? Sign In
+          </button>
+
           {#if regMessage}
             <p class="text-xs font-mono text-[#3E6650] text-center mt-2 leading-relaxed">{regMessage}</p>
           {/if}
         </form>
+      {:else if step === 1}
+        <!-- Step 1: Identifier Entry -->
+        <form onsubmit={handleIdentifierSubmit} class="space-y-4 text-left">
+          <div>
+            <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="login-username">Operator ID</label>
+            <input 
+              id="login-username"
+              type="text" 
+              bind:value={username} 
+              autocomplete="off"
+              class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs focus:outline-none focus:border-[#3E6650]" 
+              placeholder="operator username (default: admin)"
+              required 
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={isChecking}
+            class="w-full bg-[#2A2521] hover:bg-slate-800 disabled:bg-slate-300 text-[#F6F2EA] font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1"
+          >
+            {#if isChecking}
+              Checking Account...
+            {:else}
+              Continue <ChevronRight size={14} />
+            {/if}
+          </button>
+
+          <button 
+            type="button" 
+            onclick={() => { appState.playClickSound(); isSignupMode = true; regMessage = ''; }} 
+            class="w-full text-center text-xs font-mono text-[#3E6650] hover:underline pt-2 block"
+          >
+            Need an operator profile? Sign Up
+          </button>
+
+          {#if loginMessage}
+            <p class="text-xs font-mono text-[#AC3B2A] text-center mt-2">{loginMessage}</p>
+          {/if}
+        </form>
+      {:else}
+        <!-- Step 2: Progressive disclosure based on available options -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-2 border-b border-[#767068]/10 pb-3">
+            <button 
+              onclick={goBackToIdentifier}
+              class="text-[#767068] hover:text-[#2A2521] transition-all p-1 hover:bg-[#F6F2EA] rounded-full"
+              title="Change ID"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span class="text-xs font-mono font-bold text-[#767068] truncate">Active ID: <span class="text-[#2A2521]">{username}</span></span>
+          </div>
+
+          <!-- Tabs to swap methods contextually if multiple are registered -->
+          {#if availableMethods.length > 1}
+            <div class="grid gap-1 bg-[#F6F2EA] p-0.5 rounded border border-[#767068]/20 font-mono text-[8px] uppercase tracking-tighter"
+                 style="grid-template-columns: repeat({availableMethods.length}, minmax(0, 1fr));">
+              {#each availableMethods as method}
+                <button
+                  type="button"
+                  onclick={() => { appState.playClickSound(); selectedMethod = method; loginMessage = ''; }}
+                  class="py-1 rounded text-center transition-all {selectedMethod === method ? 'bg-white text-[#2A2521] font-bold shadow-sm' : 'text-[#767068] hover:text-[#2A2521]'}"
+                >
+                  {method}
+                </button>
+              {/each}
+            </div>
+          {/if}
+
+          <!-- Method inputs -->
+          {#if selectedMethod === 'password'}
+            <form onsubmit={handlePasswordLogin} class="space-y-4">
+              <div>
+                <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="login-password">Password</label>
+                <input 
+                  id="login-password"
+                  type="password" 
+                  bind:value={password} 
+                  class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs focus:outline-none focus:border-[#3E6650]" 
+                  placeholder="•••••••• (default: admin)"
+                  required 
+                  autofocus
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                class="w-full bg-[#2A2521] hover:bg-slate-800 text-[#F6F2EA] font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1"
+              >
+                Sign In <ChevronRight size={14} />
+              </button>
+            </form>
+          {/if}
+
+          {#if selectedMethod === 'pin'}
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="login-pin">Enter 4-Digit Access PIN</label>
+                <input 
+                  id="login-pin"
+                  type="password" 
+                  pattern="[0-9]*" 
+                  inputmode="numeric" 
+                  maxlength="4" 
+                  bind:value={inputPIN} 
+                  oninput={handlePinInput}
+                  class="w-full text-center text-xl tracking-[1.2em] pl-6 py-2.5 rounded border border-[#767068]/30 bg-white focus:outline-none focus:border-[#3E6650] font-mono"
+                  placeholder="••••"
+                  required 
+                  autofocus
+                />
+              </div>
+              <p class="text-[9px] text-[#767068] font-mono text-center">
+                Verification occurs automatically upon entering the 4th digit.
+              </p>
+            </div>
+          {/if}
+
+          {#if selectedMethod === 'biometric'}
+            <BiometricScanner 
+              onsuccess={handleBiometricsSuccess} 
+              oncancel={goBackToIdentifier} 
+            />
+          {/if}
+
+          {#if loginMessage}
+            <p class="text-xs font-mono text-[#AC3B2A] text-center mt-2">{loginMessage}</p>
+          {/if}
+        </div>
       {/if}
 
       <div class="ticket-divider my-6"></div>
@@ -413,7 +480,6 @@
       {/if}
     </div>
 
-    <!-- App Version -->
     <div class="text-center mt-3 text-[10px] font-mono text-[#767068] opacity-75">
       Catersync Console v{appState.version}
     </div>

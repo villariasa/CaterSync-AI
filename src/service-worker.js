@@ -1,7 +1,7 @@
 import { build, files, prerendered, version } from '$service-worker';
 
 const CACHE_NAME = `catersync-offline-${version}`;
-const SW_VERSION = '1.3.7';
+const SW_VERSION = '1.3.9';
 
 const ASSETS = [
   '/',
