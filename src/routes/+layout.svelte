@@ -39,6 +39,53 @@
   let showNotificationsDropdown = $state(false);
   let shouldReloadOnControllerChange = false;
 
+  // Premium Profile Switcher and Sub-modals state
+  let activeProfile = $state('Medy Villarias');
+  let secondaryProfile = $state('itsuki');
+  let showProfileDropdown = $state(false);
+  let showAllProfilesModal = $state(false);
+  let showHelpDiagnosticsModal = $state(false);
+  let showReportProblemModal = $state(false);
+  let showAccessibilityModal = $state(false);
+  let problemDescription = $state('');
+  let darkThemeEnabled = $state(false);
+
+  function toggleDarkTheme() {
+    appState.playClickSound();
+    darkThemeEnabled = !darkThemeEnabled;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('catersync_dark_theme', darkThemeEnabled ? 'true' : 'false');
+      if (darkThemeEnabled) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  }
+
+  function switchProfile(name) {
+    appState.playClickSound();
+    if (name === secondaryProfile) {
+      const oldActive = activeProfile;
+      activeProfile = secondaryProfile;
+      secondaryProfile = oldActive;
+      appState.showToast(`👤 Switched operator profile to ${activeProfile}`, 'success');
+      appState.playStampSound();
+      showProfileDropdown = false;
+    }
+  }
+
+  function handleReportSubmit(e) {
+    e.preventDefault();
+    if (!problemDescription.trim()) return;
+    appState.playClickSound();
+    appState.showToast(`📩 Problem report submitted. Ticket #${Math.floor(1000 + Math.random() * 9000)} created.`, 'success');
+    appState.playStampSound();
+    problemDescription = '';
+    showReportProblemModal = false;
+  }
+
+
   function handleLogoutClick() {
     appState.playClickSound();
     showLogoutModal = true;
@@ -309,10 +356,31 @@
       }
     }, 45000);
 
+    // Read dark theme settings on mount
+    if (typeof window !== 'undefined') {
+      darkThemeEnabled = localStorage.getItem('catersync_dark_theme') === 'true';
+      if (darkThemeEnabled) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        appState.playClickSound();
+        showReportProblemModal = true;
+        showProfileDropdown = false;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
     return () => {
       clearInterval(interval);
       clearInterval(notificationInterval);
       window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   });
 
@@ -440,16 +508,6 @@
             {/if}
           </div>
 
-          <!-- Log Out Button -->
-          <button 
-            onclick={handleLogoutClick} 
-            class="btn-interactive p-1.5 rounded border border-transparent hover:bg-[#AC3B2A]/10 hover:text-[#AC3B2A] hover:border-[#AC3B2A]/20 flex items-center gap-1 text-[#767068]"
-            title="Log Out"
-          >
-            <LogOut size={13} class="text-[#AC3B2A]" />
-            <span class="hidden sm:inline text-[10px]">Log Out</span>
-          </button>
-
           <!-- Live Clock -->
           <div class="hidden lg:flex items-center gap-1.5 text-[#767068]">
             <span>CLOCK:</span>
@@ -457,83 +515,182 @@
           </div>
 
           {#if appState.usingMockData}
-            <span class="hidden md:inline-block px-2.5 py-0.5 text-[9px] font-bold bg-[#D9A441]/15 text-[#D9A441] border border-[#D9A441]/30 rounded">▲ OFFLINE SIMULATION</span>
+            <span class="hidden md:inline-block px-2.5 py-0.5 text-[9px] font-bold bg-[#D9A441]/15 text-[#D9A441] border border-[#D9A441]/30 rounded font-mono">▲ OFFLINE</span>
           {:else}
-            <span class="hidden md:inline-block px-2.5 py-0.5 text-[9px] font-bold bg-[#3E6650]/15 text-[#3E6650] border border-[#3E6650]/30 rounded">● POSTGRES ACTIVE</span>
+            <span class="hidden md:inline-block px-2.5 py-0.5 text-[9px] font-bold bg-[#3E6650]/15 text-[#3E6650] border border-[#3E6650]/30 rounded font-mono">● ONLINE</span>
           {/if}
+
+          <!-- User Profile Dropdown Button -->
+          <div class="relative">
+            <button 
+              onclick={() => {
+                appState.playClickSound();
+                showProfileDropdown = !showProfileDropdown;
+              }}
+              class="btn-interactive w-8 h-8 rounded-full bg-[#3E6650] hover:bg-[#3E6650]/95 text-[#F6F2EA] flex items-center justify-center font-bold relative border border-[#767068]/20 select-none shadow-sm transition-all focus:outline-none"
+              title="Profile menu"
+            >
+              <span>{activeProfile.split(' ').map(n => n[0]).join('')}</span>
+              <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-white"></span>
+            </button>
+
+            {#if showProfileDropdown}
+              <div 
+                transition:slide={{ duration: 180 }} 
+                class="absolute right-0 mt-2 w-80 bg-white dark:bg-[#24201E] border border-[#767068]/30 dark:border-zinc-800 rounded-lg shadow-2xl py-3 z-50 text-[#2A2521] dark:text-[#EBE5DC] text-left"
+              >
+                <!-- Active Profiles list -->
+                <div class="px-4 pb-3 border-b border-[#767068]/15 dark:border-zinc-800/60 font-sans">
+                  <div class="flex items-center justify-between py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded px-2 cursor-pointer transition-all">
+                    <div class="flex items-center gap-3">
+                      <div class="w-9 h-9 rounded-full bg-[#3E6650] text-[#F6F2EA] flex items-center justify-center font-bold text-sm">
+                        <span>{activeProfile.split(' ').map(n => n[0]).join('')}</span>
+                      </div>
+                      <span class="font-bold text-sm text-[#2A2521] dark:text-[#EBE5DC]">{activeProfile}</span>
+                    </div>
+                    <span class="text-[#3E6650] dark:text-[#EBE5DC] font-bold text-sm">✓</span>
+                  </div>
+
+                  <!-- Secondary profile switcher -->
+                  <div 
+                    onclick={() => switchProfile(secondaryProfile)}
+                    class="flex items-center justify-between py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded px-2 cursor-pointer transition-all mt-1"
+                  >
+                    <div class="flex items-center gap-3">
+                      <div class="w-9 h-9 rounded-full bg-[#767068]/20 dark:bg-zinc-800 text-[#767068] dark:text-[#EBE5DC] flex items-center justify-center font-bold text-xs">
+                        <span>{secondaryProfile.split(' ').map(n => n[0]).join('')}</span>
+                      </div>
+                      <span class="text-sm font-semibold text-[#767068] dark:text-zinc-400">{secondaryProfile}</span>
+                    </div>
+                  </div>
+
+                  <button 
+                    onclick={() => { showAllProfilesModal = true; showProfileDropdown = false; appState.playClickSound(); }}
+                    class="w-full mt-3 py-2 px-4 bg-[#767068]/10 hover:bg-[#767068]/15 dark:bg-zinc-800/60 dark:hover:bg-zinc-800 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 uppercase tracking-wider font-mono text-[#767068] dark:text-[#EBE5DC]"
+                  >
+                    See all profiles
+                  </button>
+                </div>
+
+                <!-- Profile Menu list -->
+                <div class="px-2 py-1.5 text-xs font-bold font-sans">
+                  <a 
+                    href="/settings"
+                    onclick={() => { showProfileDropdown = false; appState.playClickSound(); }}
+                    class="flex items-center justify-between py-2 px-3 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded-md transition-all text-[#2A2521] dark:text-[#EBE5DC] no-underline"
+                  >
+                    <div class="flex items-center gap-3">
+                      <span class="text-base select-none">⚙️</span>
+                      <span>Settings & privacy</span>
+                    </div>
+                    <span class="text-[#767068] dark:text-zinc-500 font-mono text-sm">➔</span>
+                  </a>
+
+                  <button 
+                    onclick={() => { showHelpDiagnosticsModal = true; showProfileDropdown = false; appState.playClickSound(); }}
+                    class="w-full flex items-center justify-between py-2 px-3 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded-md transition-all text-[#2A2521] dark:text-[#EBE5DC] text-left"
+                  >
+                    <div class="flex items-center gap-3">
+                      <span class="text-base select-none">❓</span>
+                      <span>Help & support</span>
+                    </div>
+                    <span class="text-[#767068] dark:text-zinc-500 font-mono text-sm">➔</span>
+                  </button>
+
+                  <button 
+                    onclick={() => { showReportProblemModal = true; showProfileDropdown = false; appState.playClickSound(); }}
+                    class="w-full flex items-center justify-between py-2 px-3 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded-md transition-all text-[#2A2521] dark:text-[#EBE5DC] text-left"
+                  >
+                    <div class="flex items-center gap-3">
+                      <span class="text-base select-none">💬</span>
+                      <div class="flex flex-col leading-none">
+                        <span>Report a problem</span>
+                        <span class="text-[8px] font-mono text-[#767068] dark:text-zinc-500 font-normal mt-0.5">CTRL + B</span>
+                      </div>
+                    </div>
+                    <span class="text-[#767068] dark:text-zinc-500 font-mono text-sm">➔</span>
+                  </button>
+
+                  <button 
+                    onclick={() => { showAccessibilityModal = true; showProfileDropdown = false; appState.playClickSound(); }}
+                    class="w-full flex items-center justify-between py-2 px-3 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded-md transition-all text-[#2A2521] dark:text-[#EBE5DC] text-left"
+                  >
+                    <div class="flex items-center gap-3">
+                      <span class="text-base select-none">🌙</span>
+                      <span>Display & accessibility</span>
+                    </div>
+                    <span class="text-[#767068] dark:text-zinc-500 font-mono text-sm">➔</span>
+                  </button>
+
+                  <div class="h-px bg-[#767068]/10 dark:bg-zinc-800/50 my-1"></div>
+
+                  <button 
+                    onclick={() => { showLogoutModal = true; showProfileDropdown = false; appState.playClickSound(); }}
+                    class="w-full flex items-center justify-between py-2 px-3 hover:bg-[#AC3B2A]/10 hover:text-[#AC3B2A] rounded-md transition-all text-[#2A2521] dark:text-[#EBE5DC] text-left"
+                  >
+                    <div class="flex items-center gap-3 text-[#AC3B2A]">
+                      <span class="text-base select-none">🚪</span>
+                      <span>Log out</span>
+                    </div>
+                  </button>
+                </div>
+
+                <!-- Policies Footer -->
+                <div class="px-4 pt-2.5 border-t border-[#767068]/10 dark:border-zinc-800/50 text-[9px] text-[#767068] dark:text-zinc-500 font-mono leading-relaxed select-none">
+                  <a href="#privacy" class="hover:underline">Privacy</a> · 
+                  <a href="#terms" class="hover:underline">Terms</a> · 
+                  <a href="#advertising" class="hover:underline">Advertising</a> · 
+                  <a href="#cookies" class="hover:underline">Cookies</a> · 
+                  <button onclick={() => appState.showToast('Console v' + appState.version, 'info')} class="hover:underline font-mono text-[9px]">More</button>
+                </div>
+              </div>
+            {/if}
+          </div>
 
         </div>
       </header>
 
-      <!-- DESKTOP NAVIGATION TABS ROW (Sleek Expanding Hover Icons) -->
-      <div class="hidden md:block bg-white/20 px-6 py-2 border-t border-[#767068]/15">
-        <nav class="navigation-bar-desktop">
-          <a href="/" onclick={() => appState.playClickSound()} class="nav-item-desktop {isRouteActive('/') ? 'active' : ''}" title="Overview">
-            <LayoutDashboard size={18} />
-            <span class="nav-text-desktop">Overview</span>
+      <!-- RESPONSIVE UNIFIED TOP NAVIGATION (Horizontally Scrollable) -->
+      <div class="bg-white/20 px-4 sm:px-6 py-2 border-t border-[#767068]/15 backdrop-blur-sm">
+        <nav class="app-nav-row">
+          <a href="/" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/') ? 'active' : ''}" title="Overview">
+            <LayoutDashboard size={16} />
+            <span class="app-nav-text">Overview</span>
           </a>
-          <a href="/planner" onclick={() => appState.playClickSound()} class="nav-item-desktop {isRouteActive('/planner') ? 'active' : ''}" title="Planner">
-            <UtensilsCrossed size={18} />
-            <span class="nav-text-desktop">Planner</span>
+          <a href="/planner" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/planner') ? 'active' : ''}" title="Planner">
+            <UtensilsCrossed size={16} />
+            <span class="app-nav-text">Planner</span>
           </a>
-          <a href="/customers" onclick={() => appState.playClickSound()} class="nav-item-desktop {isRouteActive('/customers') ? 'active' : ''}" title="Customers">
-            <Users size={18} />
-            <span class="nav-text-desktop">Customers</span>
+          <a href="/customers" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/customers') ? 'active' : ''}" title="Customers">
+            <Users size={16} />
+            <span class="app-nav-text">Customers</span>
           </a>
-          <a href="/menus" onclick={() => appState.playClickSound()} class="nav-item-desktop {isRouteActive('/menus') ? 'active' : ''}" title="Menus">
-            <FileText size={18} />
-            <span class="nav-text-desktop">Menus</span>
+          <a href="/menus" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/menus') ? 'active' : ''}" title="Menus">
+            <FileText size={16} />
+            <span class="app-nav-text">Menus</span>
           </a>
-          <a href="/inventory" onclick={() => appState.playClickSound()} class="nav-item-desktop {isRouteActive('/inventory') ? 'active' : ''}" title="Inventory">
-            <Package size={18} />
-            <span class="nav-text-desktop">Inventory</span>
+          <a href="/inventory" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/inventory') ? 'active' : ''}" title="Inventory">
+            <Package size={16} />
+            <span class="app-nav-text">Inventory</span>
           </a>
-          <a href="/scheduling" onclick={() => appState.playClickSound()} class="nav-item-desktop {isRouteActive('/scheduling') ? 'active' : ''}" title="Kitchen & Roster">
-            <ChefHat size={18} />
-            <span class="nav-text-desktop">Kitchen</span>
+          <a href="/scheduling" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/scheduling') ? 'active' : ''}" title="Kitchen & Roster">
+            <ChefHat size={16} />
+            <span class="app-nav-text">Kitchen</span>
           </a>
-          <a href="/audits" onclick={() => appState.playClickSound()} class="nav-item-desktop {isRouteActive('/audits') ? 'active' : ''}" title="Audits">
-            <Wallet size={18} />
-            <span class="nav-text-desktop">Audits</span>
+          <a href="/audits" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/audits') ? 'active' : ''}" title="Audits">
+            <Wallet size={16} />
+            <span class="app-nav-text">Audits</span>
           </a>
-          <a href="/settings" onclick={() => appState.playClickSound()} class="nav-item-desktop {isRouteActive('/settings') ? 'active' : ''}" title="Settings">
-            <Settings size={18} />
-            <span class="nav-text-desktop">Settings</span>
+          <a href="/settings" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/settings') ? 'active' : ''}" title="Settings">
+            <Settings size={16} />
+            <span class="app-nav-text">Settings</span>
           </a>
         </nav>
       </div>
     </div>
 
-    <!-- MOBILE STICKY BOTTOM TAB BAR (Always Visible Icons) -->
-    <nav class="navigation-bar-mobile md:hidden">
-      <a href="/" onclick={() => appState.playClickSound()} class="nav-item-mobile {isRouteActive('/') ? 'active' : ''}" title="Overview">
-        <LayoutDashboard size={20} />
-      </a>
-      <a href="/planner" onclick={() => appState.playClickSound()} class="nav-item-mobile {isRouteActive('/planner') ? 'active' : ''}" title="Planner">
-        <UtensilsCrossed size={20} />
-      </a>
-      <a href="/customers" onclick={() => appState.playClickSound()} class="nav-item-mobile {isRouteActive('/customers') ? 'active' : ''}" title="Customers">
-        <Users size={20} />
-      </a>
-      <a href="/menus" onclick={() => appState.playClickSound()} class="nav-item-mobile {isRouteActive('/menus') ? 'active' : ''}" title="Menus">
-        <FileText size={20} />
-      </a>
-      <a href="/inventory" onclick={() => appState.playClickSound()} class="nav-item-mobile {isRouteActive('/inventory') ? 'active' : ''}" title="Inventory">
-        <Package size={20} />
-      </a>
-      <a href="/scheduling" onclick={() => appState.playClickSound()} class="nav-item-mobile {isRouteActive('/scheduling') ? 'active' : ''}" title="Kitchen & Roster">
-        <ChefHat size={20} />
-      </a>
-      <a href="/audits" onclick={() => appState.playClickSound()} class="nav-item-mobile {isRouteActive('/audits') ? 'active' : ''}" title="Audits">
-        <Wallet size={20} />
-      </a>
-      <a href="/settings" onclick={() => appState.playClickSound()} class="nav-item-mobile {isRouteActive('/settings') ? 'active' : ''}" title="Settings">
-        <Settings size={20} />
-      </a>
-    </nav>
-
     <!-- MAIN WORKSPACE -->
-    <main class="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-8 pb-24 md:pb-8">
+    <main class="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-8 pb-12 md:pb-8">
       {@render children()}
     </main>
   </div>
@@ -542,19 +699,19 @@
 <!-- MODAL: LOG OUT CONFIRMATION -->
 {#if showLogoutModal}
   <div class="fixed inset-0 bg-[#2A2521]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-    <div class="ticket-card bg-white p-6 max-w-sm w-full border border-[#767068]/30 shadow-2xl relative animate-scale-up">
+    <div class="ticket-card bg-white dark:bg-[#24201E] p-6 max-w-sm w-full border border-[#767068]/30 dark:border-zinc-800 shadow-2xl relative animate-scale-up text-[#2A2521] dark:text-[#EBE5DC]">
       <div class="mb-4">
-        <span class="ticket-stamp bg-red-50 text-[#AC3B2A] border-[#AC3B2A]/20">LOCK SESSION</span>
-        <h3 class="text-base font-bold text-[#2A2521] mt-2">Operator Exit Request</h3>
-        <p class="text-xs text-[#767068] leading-relaxed mt-1.5">
+        <span class="ticket-stamp bg-red-50 text-[#AC3B2A] border-[#AC3B2A]/20 dark:bg-[#AC3B2A]/10 dark:text-[#AC3B2A]">LOCK SESSION</span>
+        <h3 class="text-base font-bold text-[#2A2521] dark:text-[#EBE5DC] mt-2">Operator Exit Request</h3>
+        <p class="text-xs text-[#767068] dark:text-zinc-400 leading-relaxed mt-1.5">
           Are you sure you want to end your operator session? You will need to enter your password, PIN, or biometric key to regain access to the console.
         </p>
       </div>
 
-      <div class="grid grid-cols-2 gap-3 pt-3 border-t border-[#767068]/20 font-mono text-xs">
+      <div class="grid grid-cols-2 gap-3 pt-3 border-t border-[#767068]/20 dark:border-zinc-850 font-mono text-xs">
         <button 
           onclick={() => { appState.playClickSound(); showLogoutModal = false; }} 
-          class="py-2.5 rounded border border-[#767068]/30 text-[#767068] bg-slate-50 hover:bg-slate-100 transition-all font-bold text-center"
+          class="py-2.5 rounded border border-[#767068]/30 text-[#767068] bg-slate-50 hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-[#EBE5DC] transition-all font-bold text-center"
         >
           Cancel
         </button>
@@ -572,22 +729,22 @@
 <!-- MODAL: PWA VERSION UPDATE -->
 {#if showUpdateModal}
   <div class="fixed inset-0 bg-[#2A2521]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-    <div class="ticket-card bg-white p-6 max-w-sm w-full border border-[#767068]/30 shadow-2xl relative animate-scale-up">
+    <div class="ticket-card bg-white dark:bg-[#24201E] p-6 max-w-sm w-full border border-[#767068]/30 dark:border-zinc-800 shadow-2xl relative animate-scale-up text-[#2A2521] dark:text-[#EBE5DC]">
       <div class="mb-4">
-        <span class="ticket-stamp bg-amber-50 text-[#D9A441] border-[#D9A441]/20">CORE UPGRADE</span>
-        <h3 class="text-base font-bold text-[#2A2521] mt-2">New Version Available!</h3>
-        <p class="text-xs text-[#767068] leading-relaxed mt-1.5">
+        <span class="ticket-stamp bg-amber-50 text-[#D9A441] border-[#D9A441]/20 dark:bg-[#D9A441]/10 dark:text-[#D9A441]">CORE UPGRADE</span>
+        <h3 class="text-base font-bold text-[#2A2521] dark:text-[#EBE5DC] mt-2">New Version Available!</h3>
+        <p class="text-xs text-[#767068] dark:text-zinc-400 leading-relaxed mt-1.5">
           An update is ready for your app. Upgrade now to activate the latest features, brand assets, and client interface enhancements.
         </p>
       </div>
 
       <!-- Auto-Update Toggle -->
-      <label class="flex items-center gap-2 font-mono text-[10px] text-[#767068] cursor-pointer bg-[#F6F2EA]/60 p-2 rounded border border-[#767068]/15 mb-4">
+      <label class="flex items-center gap-2 font-mono text-[10px] text-[#767068] dark:text-zinc-400 cursor-pointer bg-[#F6F2EA]/60 dark:bg-zinc-900/40 p-2 rounded border border-[#767068]/15 dark:border-zinc-800 mb-4">
         <input 
           type="checkbox" 
           bind:checked={autoUpdateEnabled} 
           onchange={toggleAutoUpdate}
-          class="rounded border-[#767068]/30 text-[#3E6650] w-4 h-4" 
+          class="rounded border-[#767068]/30 dark:border-zinc-700 text-[#3E6650] dark:bg-[#1A1715] w-4 h-4" 
         />
         <span>Enable Auto-Update in the future</span>
       </label>
@@ -595,7 +752,7 @@
       <div class="grid grid-cols-2 gap-3 pt-2 font-mono text-xs">
         <button 
           onclick={() => { appState.playClickSound(); showUpdateModal = false; }} 
-          class="py-2.5 rounded border border-[#767068]/30 text-[#767068] bg-slate-50 hover:bg-slate-100 transition-all font-bold text-center"
+          class="py-2.5 rounded border border-[#767068]/30 text-[#767068] bg-slate-50 hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-[#EBE5DC] transition-all font-bold text-center"
         >
           Later
         </button>
@@ -609,3 +766,204 @@
     </div>
   </div>
 {/if}
+
+<!-- MODAL: REPORT A PROBLEM (CTRL + B) -->
+{#if showReportProblemModal}
+  <div class="fixed inset-0 bg-[#2A2521]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="ticket-card bg-white dark:bg-[#24201E] p-6 max-w-md w-full border border-[#767068]/30 dark:border-zinc-800 shadow-2xl relative animate-scale-up text-[#2A2521] dark:text-[#EBE5DC]">
+      <div class="mb-4">
+        <span class="ticket-stamp bg-amber-50 text-[#D9A441] border-[#D9A441]/20 dark:bg-[#D9A441]/10 dark:text-[#D9A441]">FEEDBACK DESK</span>
+        <h3 class="text-base font-bold text-[#2A2521] dark:text-[#EBE5DC] mt-2">Report a System Problem</h3>
+        <p class="text-xs text-[#767068] dark:text-zinc-400 mt-1.5 leading-relaxed">
+          Describe the issue, defect, or operational blocker you encountered. System metadata will be attached automatically to aid offline troubleshooting.
+        </p>
+      </div>
+
+      <form onsubmit={handleReportSubmit} class="space-y-4">
+        <div>
+          <label class="block text-[10px] font-mono text-[#767068] dark:text-zinc-400 uppercase font-bold mb-1">Issue Description</label>
+          <textarea 
+            bind:value={problemDescription}
+            rows="4"
+            placeholder="Please specify step-by-step how to reproduce the issue..."
+            class="w-full p-2.5 text-xs rounded border border-[#767068]/20 focus:border-[#3E6650] dark:border-zinc-800 dark:bg-[#1A1715] dark:text-[#EBE5DC] focus:outline-none"
+            required
+          ></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-2 font-mono text-xs">
+          <button 
+            type="button"
+            onclick={() => { appState.playClickSound(); showReportProblemModal = false; problemDescription = ''; }} 
+            class="py-2.5 rounded border border-[#767068]/30 text-[#767068] dark:text-[#EBE5DC] dark:border-zinc-700 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 transition-all font-bold text-center"
+          >
+            Cancel
+          </button>
+          <button 
+            type="submit"
+            class="py-2.5 rounded bg-[#3E6650] text-white hover:bg-[#3E6650]/90 transition-all font-bold text-center"
+          >
+            Submit Report
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+{/if}
+
+<!-- MODAL: DISPLAY & ACCESSIBILITY -->
+{#if showAccessibilityModal}
+  <div class="fixed inset-0 bg-[#2A2521]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="ticket-card bg-white dark:bg-[#24201E] p-6 max-w-sm w-full border border-[#767068]/30 dark:border-zinc-800 shadow-2xl relative animate-scale-up text-[#2A2521] dark:text-[#EBE5DC]">
+      <div class="mb-4">
+        <span class="ticket-stamp bg-blue-50 text-blue-600 border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">PREFERENCES</span>
+        <h3 class="text-base font-bold mt-2 text-[#2A2521] dark:text-[#EBE5DC]">Display & Accessibility</h3>
+        <p class="text-xs text-[#767068] dark:text-zinc-400 mt-1.5 leading-relaxed">
+          Configure settings for high-contrast viewing, theme presets, and auditory cues.
+        </p>
+      </div>
+
+      <div class="space-y-4 py-2 text-left">
+        <!-- Dark theme toggle -->
+        <div class="flex items-center justify-between p-3 bg-[#F6F2EA]/60 dark:bg-zinc-900/40 rounded border border-[#767068]/15 dark:border-zinc-800">
+          <div class="flex flex-col">
+            <span class="text-xs font-bold text-[#2A2521] dark:text-[#EBE5DC]">Dark Theme Mode</span>
+            <span class="text-[9px] text-[#767068] dark:text-zinc-400 mt-0.5">Toggle dark slate layout</span>
+          </div>
+          <button 
+            onclick={toggleDarkTheme}
+            class="px-3 py-1 rounded text-xs font-mono font-bold {darkThemeEnabled ? 'bg-[#3E6650] text-white' : 'bg-slate-200 text-slate-800 dark:bg-zinc-800 dark:text-[#EBE5DC]'}"
+          >
+            {darkThemeEnabled ? 'ON' : 'OFF'}
+          </button>
+        </div>
+
+        <!-- Audio sound toggle -->
+        <div class="flex items-center justify-between p-3 bg-[#F6F2EA]/60 dark:bg-zinc-900/40 rounded border border-[#767068]/15 dark:border-zinc-800">
+          <div class="flex flex-col">
+            <span class="text-xs font-bold text-[#2A2521] dark:text-[#EBE5DC]">Auditory Tones</span>
+            <span class="text-[9px] text-[#767068] dark:text-zinc-400 mt-0.5">Button clicking sounds</span>
+          </div>
+          <button 
+            onclick={() => { appState.toggleAudio(); }}
+            class="px-3 py-1 rounded text-xs font-mono font-bold {appState.audioEnabled ? 'bg-[#3E6650] text-white' : 'bg-[#AC3B2A] text-white'}"
+          >
+            {appState.audioEnabled ? 'ENABLED' : 'MUTED'}
+          </button>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-[#767068]/20 dark:border-zinc-800 font-mono text-xs flex justify-end">
+        <button 
+          onclick={() => { appState.playClickSound(); showAccessibilityModal = false; }} 
+          class="px-5 py-2 rounded bg-[#2A2521] text-white dark:bg-zinc-800 hover:bg-opacity-90 transition-all font-bold text-center border-none cursor-pointer"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- MODAL: HELP & DIAGNOSTICS -->
+{#if showHelpDiagnosticsModal}
+  <div class="fixed inset-0 bg-[#2A2521]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="ticket-card bg-white dark:bg-[#24201E] p-6 max-w-md w-full border border-[#767068]/30 dark:border-zinc-800 shadow-2xl relative animate-scale-up text-[#2A2521] dark:text-[#EBE5DC]">
+      <div class="mb-4">
+        <span class="ticket-stamp bg-[#3E6650]/15 text-[#3E6650] dark:text-[#EBE5DC] border-[#3E6650]/20">DIAGNOSTICS</span>
+        <h3 class="text-base font-bold mt-2 text-[#2A2521] dark:text-[#EBE5DC]">Help & System Support</h3>
+        <p class="text-xs text-[#767068] dark:text-zinc-400 mt-1.5 leading-relaxed">
+          Technical parameters and database status check for local operator console nodes.
+        </p>
+      </div>
+
+      <div class="space-y-2.5 font-mono text-[10px] bg-slate-50 dark:bg-zinc-900/40 p-4 rounded border border-[#767068]/15 dark:border-zinc-800 leading-relaxed text-left">
+        <div class="flex justify-between">
+          <span class="text-[#767068] dark:text-zinc-400">PLATFORM VERSION:</span>
+          <span class="font-bold">v{appState.version}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-[#767068] dark:text-zinc-400">DATABASE SERVICE:</span>
+          <span class="font-bold {appState.usingMockData ? 'text-[#D9A441]' : 'text-[#3E6650]'}">
+            {appState.usingMockData ? 'OFFLINE SIMULATION' : 'ACTIVE POSTGRESQL'}
+          </span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-[#767068] dark:text-zinc-400">OFFLINE PERSISTENCE:</span>
+          <span class="font-bold text-[#3E6650]">OPFS STANDALONE CACHE</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-[#767068] dark:text-zinc-400">PUSH SERVICE STATE:</span>
+          <span class="font-bold {appState.pushSubscriptionActive ? 'text-[#3E6650]' : 'text-[#767068]'}">
+            {appState.pushSubscriptionActive ? 'SUBSCRIBED' : 'INACTIVE'}
+          </span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-[#767068] dark:text-zinc-400">USER USERNAME:</span>
+          <span class="font-bold">{activeProfile}</span>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-[#767068]/20 dark:border-zinc-800 font-mono text-xs flex justify-end">
+        <button 
+          onclick={() => { appState.playClickSound(); showHelpDiagnosticsModal = false; }} 
+          class="px-5 py-2 rounded bg-[#2A2521] text-white dark:bg-zinc-800 hover:bg-opacity-90 transition-all font-bold text-center border-none cursor-pointer"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- MODAL: SEE ALL PROFILES SWITCHER -->
+{#if showAllProfilesModal}
+  <div class="fixed inset-0 bg-[#2A2521]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="ticket-card bg-white dark:bg-[#24201E] p-6 max-w-sm w-full border border-[#767068]/30 dark:border-zinc-800 shadow-2xl relative animate-scale-up text-[#2A2521] dark:text-[#EBE5DC]">
+      <div class="mb-4">
+        <span class="ticket-stamp bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400">ACCOUNTS</span>
+        <h3 class="text-base font-bold mt-2 text-[#2A2521] dark:text-[#EBE5DC]">Switch Active Operator</h3>
+        <p class="text-xs text-[#767068] dark:text-zinc-400 mt-1.5 leading-relaxed">
+          Select one of the registered system operator profiles to switch sessions immediately.
+        </p>
+      </div>
+
+      <div class="space-y-2 py-2 text-left">
+        <button 
+          onclick={() => { switchProfile(activeProfile); showAllProfilesModal = false; }}
+          class="w-full flex items-center justify-between p-3 bg-[#F6F2EA]/60 dark:bg-zinc-900/20 rounded border-2 border-[#3E6650] hover:bg-[#767068]/5 transition-all text-left"
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-[#3E6650] text-[#F6F2EA] flex items-center justify-center font-bold text-xs">
+              <span>{activeProfile.split(' ').map(n => n[0]).join('')}</span>
+            </div>
+            <span class="text-xs font-bold text-[#2A2521] dark:text-[#EBE5DC]">{activeProfile}</span>
+          </div>
+          <span class="text-[#3E6650] dark:text-[#EBE5DC] font-bold text-xs">Active</span>
+        </button>
+
+        <button 
+          onclick={() => { switchProfile(secondaryProfile); showAllProfilesModal = false; }}
+          class="w-full flex items-center justify-between p-3 bg-slate-50 dark:bg-zinc-850 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded border border-[#767068]/15 dark:border-zinc-800 transition-all text-left"
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-[#767068]/20 dark:bg-zinc-800 text-[#767068] dark:text-[#EBE5DC] flex items-center justify-center font-bold text-xs">
+              <span>{secondaryProfile.split(' ').map(n => n[0]).join('')}</span>
+            </div>
+            <span class="text-xs font-bold text-[#767068] dark:text-zinc-400">{secondaryProfile}</span>
+          </div>
+        </button>
+      </div>
+
+      <div class="pt-4 border-t border-[#767068]/20 dark:border-zinc-800 font-mono text-xs flex justify-end">
+        <button 
+          onclick={() => { appState.playClickSound(); showAllProfilesModal = false; }} 
+          class="px-5 py-2 rounded bg-[#2A2521] text-white dark:bg-zinc-800 hover:bg-opacity-90 transition-all font-bold text-center border-none cursor-pointer"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+

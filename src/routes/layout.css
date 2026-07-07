@@ -308,20 +308,28 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* --- ULTRA-PREMIUM FACEBOOK-INSPIRED RESPONSIVE NAVIGATION --- */
-.navigation-bar-desktop {
+.app-nav-row {
   display: flex;
   align-items: center;
   gap: 0.375rem;
   width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Hide standard Firefox scrollbars */
 }
 
-.nav-item-desktop {
+.app-nav-row::-webkit-scrollbar {
+  display: none; /* Hide Chrome/Safari scrollbars */
+}
+
+.app-nav-item {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   color: var(--color-steel);
   background: transparent;
-  padding: 0.5rem 0.5rem;
+  padding: 0.5rem 0.625rem;
   border-radius: 9999px;
   border: 1px solid transparent;
   transition: max-width 300ms cubic-bezier(0.16, 1, 0.3, 1), 
@@ -329,84 +337,183 @@ input:focus, select:focus, textarea:focus {
               color 200ms ease,
               padding 300ms cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
-  max-width: 38px; /* Icon width + padding */
+  max-width: 38px; /* Default: icon-only on mobile & non-hovered desktop */
   white-space: nowrap;
   text-decoration: none;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
-.nav-item-desktop:hover {
-  background-color: rgba(62, 102, 80, 0.08);
-  color: var(--color-basil);
-  max-width: 180px; /* Expands smoothly to show name */
-  padding-right: 1rem;
-}
-
-.nav-item-desktop.active {
+.app-nav-item.active {
   background-color: var(--color-basil);
   color: var(--color-paper);
   border-color: var(--color-basil);
 }
 
-.nav-item-desktop.active:hover {
+.app-nav-item.active:hover {
   color: var(--color-paper);
 }
 
-.nav-text-desktop {
+.app-nav-text {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   opacity: 0;
   margin-left: 0rem;
-  transition: opacity 200ms ease, margin-left 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 180ms ease, margin-left 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  display: none; /* Hidden on mobile */
 }
 
-.nav-item-desktop:hover .nav-text-desktop {
-  opacity: 1;
-  margin-left: 0.625rem;
+/* Desktop Hover Interaction (Width expansion) */
+@media (min-width: 768px) {
+  .app-nav-item {
+    justify-content: flex-start;
+    padding: 0.5rem 0.5rem;
+  }
+  
+  .app-nav-item:hover {
+    background-color: rgba(62, 102, 80, 0.08);
+    color: var(--color-basil);
+    max-width: 180px; /* Expand to show label */
+    padding-right: 1.1rem;
+  }
+  
+  .app-nav-item.active:hover {
+    background-color: var(--color-basil);
+    color: var(--color-paper);
+  }
+
+  .app-nav-text {
+    display: inline-block;
+    transition: opacity 200ms ease, margin-left 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .app-nav-item:hover .app-nav-text {
+    opacity: 1;
+    margin-left: 0.625rem;
+  }
 }
 
-/* Mobile Pinned Bottom Navigation */
-.navigation-bar-mobile {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  background-color: rgba(246, 242, 234, 0.9);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(118, 112, 104, 0.25);
-  padding: 0.65rem 0.5rem calc(0.65rem + env(safe-area-inset-bottom, 0px)) 0.5rem;
-  box-shadow: 0 -4px 16px rgba(42, 37, 33, 0.06);
+/* --- SYSTEM-WIDE LIGHT/DARK MODE IMPLEMENTATION --- */
+:root.dark {
+  --color-paper: #1A1715;
+  --color-ink: #ECE7DF;
+  --color-steel: #9E978F;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
 }
 
-.nav-item-mobile {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-steel);
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 50%;
-  transition: background-color 200ms ease, color 200ms ease, transform 150ms ease;
-  position: relative;
-  text-decoration: none;
-  -webkit-tap-highlight-color: transparent;
+/* Dark mode generic tag & class overrides */
+:root.dark body {
+  background-color: #1A1715;
+  color: #ECE7DF;
 }
 
-.nav-item-mobile:active {
-  transform: scale(0.92);
+:root.dark .bg-white {
+  background-color: #24201E !important;
+  color: #ECE7DF;
 }
 
-.nav-item-mobile.active {
-  background-color: var(--color-basil);
-  color: var(--color-paper);
-  box-shadow: 0 4px 10px rgba(62, 102, 80, 0.2);
+:root.dark .bg-[#F6F2EA] {
+  background-color: #1A1715 !important;
+}
+
+:root.dark .text-[#2A2521], 
+:root.dark h1, 
+:root.dark h2, 
+:root.dark h3, 
+:root.dark h4, 
+:root.dark h5, 
+:root.dark h6 {
+  color: #ECE7DF !important;
+}
+
+:root.dark .text-[#767068] {
+  color: #9E978F !important;
+}
+
+:root.dark .border-[#767068]\/30,
+:root.dark .border-[#767068]\/20,
+:root.dark .border-[#767068]\/15,
+:root.dark .border-[#767068]\/10 {
+  border-color: rgba(158, 151, 143, 0.2) !important;
+}
+
+:root.dark .divide-[#767068]\/10 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(158, 151, 143, 0.15) !important;
+}
+
+/* Ticket Cards in Dark Mode */
+:root.dark .ticket-card,
+:root.dark .skeleton-ticket {
+  background-color: #24201E !important;
+  border-color: rgba(158, 151, 143, 0.25) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+:root.dark .ticket-card::before,
+:root.dark .skeleton-ticket::before {
+  /* Replace paper background wave with carbon background wave */
+  background-image: radial-gradient(circle, transparent 4px, #24201E 5px) !important;
+}
+
+:root.dark .ticket-divider::before,
+:root.dark .ticket-divider::after {
+  background: #1A1715 !important;
+}
+
+/* Tables, Forms and Inputs in Dark Mode */
+:root.dark tr:hover,
+:root.dark .hover\:bg-slate-50:hover,
+:root.dark .hover\:bg-slate-100:hover,
+:root.dark .bg-slate-50 {
+  background-color: rgba(158, 151, 143, 0.08) !important;
+}
+
+:root.dark th {
+  color: #ECE7DF !important;
+  border-bottom-color: #ECE7DF !important;
+}
+
+:root.dark input, 
+:root.dark select, 
+:root.dark textarea {
+  background-color: #1A1715 !important;
+  border-color: rgba(158, 151, 143, 0.35) !important;
+  color: #ECE7DF !important;
+}
+
+:root.dark input:focus, 
+:root.dark select:focus, 
+:root.dark textarea:focus {
+  border-color: var(--color-basil) !important;
+}
+
+/* Utility settings and buttons in Dark Mode */
+:root.dark .bg-[#F6F2EA]\/60 {
+  background-color: rgba(26, 23, 21, 0.6) !important;
+}
+
+:root.dark .bg-white\/50 {
+  background-color: rgba(36, 32, 30, 0.5) !important;
+}
+
+:root.dark .bg-white\/20 {
+  background-color: rgba(36, 32, 30, 0.2) !important;
+}
+
+:root.dark .hover\:bg-white\/50:hover {
+  background-color: rgba(36, 32, 30, 0.65) !important;
+}
+
+/* Sound toggler and custom notifications banner in Dark Mode */
+:root.dark .text-slate-400 {
+  color: #9E978F !important;
+}
+
+:root.dark .ticket-stamp {
+  border-color: rgba(158, 151, 143, 0.35) !important;
 }
 

@@ -193,3 +193,16 @@ This document maps out the detailed execution checklist from the system design s
 - [x] Complete the final `walkthrough.md` summarizing the project, verified benchmarks, and interface assets
 - [x] Draft final presentation slides outline
 - [x] Run dry-run walkthroughs of the demo strategy (planning an event -> viewing predictions -> reviewing auto-generated kitchen timelines)
+
+---
+
+## 📅 Phase 14: Top-Bar Navigation and Profile Dropdown System
+- [x] Implement dark-mode colors and top-bar horizontal scroll styles in `layout.css`
+- [x] Remove mobile bottom navigation bar and adjust `<main>` container padding in `+layout.svelte`
+- [x] Refactor top navigation bar to be responsive (top-only, horizontally scrollable on mobile)
+- [x] Replace logout button in top bar header with circular User Avatar dropdown launcher
+- [x] Implement premium profile dropdown content (switcher list, diagnostics modal, Dark theme toggle, sound toggle, policy footer)
+- [x] Bind document keydown listener for **Ctrl + B** keyboard shortcut to launch problem report modal
+- [x] Run Svelte build verification compiler check (`npm run build`)
+
+
