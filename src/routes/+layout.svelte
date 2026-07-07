@@ -462,134 +462,78 @@
             <span class="hidden md:inline-block px-2.5 py-0.5 text-[9px] font-bold bg-[#3E6650]/15 text-[#3E6650] border border-[#3E6650]/30 rounded">● POSTGRES ACTIVE</span>
           {/if}
 
-          <!-- Mobile Hamburger Toggle -->
-          <button 
-            onclick={() => { appState.playClickSound(); showMobileMenu = !showMobileMenu; }} 
-            class="md:hidden p-1.5 rounded hover:bg-white/50 border border-transparent hover:border-[#767068]/20 text-[#767068] transition-transform duration-300 {showMobileMenu ? 'rotate-90' : ''}"
-            aria-label="Toggle Menu"
-          >
-            {#if showMobileMenu}
-              <X size={16} />
-            {:else}
-              <Menu size={16} />
-            {/if}
-          </button>
         </div>
       </header>
 
-      <!-- MOBILE NAVIGATION TABS (Toggled) -->
-      {#if showMobileMenu}
-        <div transition:slide={{ duration: 300 }} class="md:hidden bg-white/95 border-t border-[#767068]/20 px-6 py-4 space-y-2 overflow-hidden">
-          <nav class="flex flex-col gap-2 font-sans">
-            <a 
-              href="/" 
-              onclick={() => { showMobileMenu = false; appState.playClickSound(); }}
-              class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-2 {isRouteActive('/') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521] bg-slate-50' }"
-            >
-              <LayoutDashboard size={14} />
-              Overview
-            </a>
-            <a 
-              href="/planner" 
-              onclick={() => { showMobileMenu = false; appState.playClickSound(); }}
-              class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-2 {isRouteActive('/planner') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521] bg-slate-50' }"
-            >
-              <UtensilsCrossed size={14} />
-              Planner
-            </a>
-            <a 
-              href="/customers" 
-              onclick={() => { showMobileMenu = false; appState.playClickSound(); }}
-              class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-2 {isRouteActive('/customers') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521] bg-slate-50' }"
-            >
-              <Users size={14} />
-              Customers
-            </a>
-            <a 
-              href="/menus" 
-              onclick={() => { showMobileMenu = false; appState.playClickSound(); }}
-              class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-2 {isRouteActive('/menus') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521] bg-slate-50' }"
-            >
-              <FileText size={14} />
-              Menus
-            </a>
-            <a 
-              href="/inventory" 
-              onclick={() => { showMobileMenu = false; appState.playClickSound(); }}
-              class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-2 {isRouteActive('/inventory') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521] bg-slate-50' }"
-            >
-              <Package size={14} />
-              Inventory
-            </a>
-            <a 
-              href="/scheduling" 
-              onclick={() => { showMobileMenu = false; appState.playClickSound(); }}
-              class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-2 {isRouteActive('/scheduling') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521] bg-slate-50' }"
-            >
-              <ChefHat size={14} />
-              Kitchen & Roster
-            </a>
-            <a 
-              href="/audits" 
-              onclick={() => { showMobileMenu = false; appState.playClickSound(); }}
-              class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-2 {isRouteActive('/audits') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521] bg-slate-50' }"
-            >
-              <Wallet size={14} />
-              Audits
-            </a>
-            <a 
-              href="/settings" 
-              onclick={() => { showMobileMenu = false; appState.playClickSound(); }}
-              class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-2 {isRouteActive('/settings') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521] bg-slate-50' }"
-            >
-              <Settings size={14} />
-              Settings
-            </a>
-          </nav>
-        </div>
-      {/if}
-
-      <!-- DESKTOP NAVIGATION TABS ROW -->
+      <!-- DESKTOP NAVIGATION TABS ROW (Sleek Expanding Hover Icons) -->
       <div class="hidden md:block bg-white/20 px-6 py-2 border-t border-[#767068]/15">
-        <nav class="flex flex-wrap gap-1">
-          <a href="/" class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-1.5 {isRouteActive('/') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
-            <LayoutDashboard size={13} />
-            Overview
+        <nav class="navigation-bar-desktop">
+          <a href="/" onclick={() => appState.playClickSound()} class="nav-item-desktop {isRouteActive('/') ? 'active' : ''}" title="Overview">
+            <LayoutDashboard size={18} />
+            <span class="nav-text-desktop">Overview</span>
           </a>
-          <a href="/planner" class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-1.5 {isRouteActive('/planner') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
-            <UtensilsCrossed size={13} />
-            Planner
+          <a href="/planner" onclick={() => appState.playClickSound()} class="nav-item-desktop {isRouteActive('/planner') ? 'active' : ''}" title="Planner">
+            <UtensilsCrossed size={18} />
+            <span class="nav-text-desktop">Planner</span>
           </a>
-          <a href="/customers" class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-1.5 {isRouteActive('/customers') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
-            <Users size={13} />
-            Customers
+          <a href="/customers" onclick={() => appState.playClickSound()} class="nav-item-desktop {isRouteActive('/customers') ? 'active' : ''}" title="Customers">
+            <Users size={18} />
+            <span class="nav-text-desktop">Customers</span>
           </a>
-          <a href="/menus" class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-1.5 {isRouteActive('/menus') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
-            <FileText size={13} />
-            Menus
+          <a href="/menus" onclick={() => appState.playClickSound()} class="nav-item-desktop {isRouteActive('/menus') ? 'active' : ''}" title="Menus">
+            <FileText size={18} />
+            <span class="nav-text-desktop">Menus</span>
           </a>
-          <a href="/inventory" class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-1.5 {isRouteActive('/inventory') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
-            <Package size={13} />
-            Inventory
+          <a href="/inventory" onclick={() => appState.playClickSound()} class="nav-item-desktop {isRouteActive('/inventory') ? 'active' : ''}" title="Inventory">
+            <Package size={18} />
+            <span class="nav-text-desktop">Inventory</span>
           </a>
-          <a href="/scheduling" class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-1.5 {isRouteActive('/scheduling') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
-            <ChefHat size={13} />
-            Kitchen & Roster
+          <a href="/scheduling" onclick={() => appState.playClickSound()} class="nav-item-desktop {isRouteActive('/scheduling') ? 'active' : ''}" title="Kitchen & Roster">
+            <ChefHat size={18} />
+            <span class="nav-text-desktop">Kitchen</span>
           </a>
-          <a href="/audits" class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-1.5 {isRouteActive('/audits') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
-            <Wallet size={13} />
-            Audits
+          <a href="/audits" onclick={() => appState.playClickSound()} class="nav-item-desktop {isRouteActive('/audits') ? 'active' : ''}" title="Audits">
+            <Wallet size={18} />
+            <span class="nav-text-desktop">Audits</span>
           </a>
-          <a href="/settings" class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded transition-all flex items-center gap-1.5 {isRouteActive('/settings') ? 'bg-[#2A2521] text-[#F6F2EA]' : 'text-[#767068] hover:text-[#2A2521]' }">
-            <Settings size={13} />
-            Settings
+          <a href="/settings" onclick={() => appState.playClickSound()} class="nav-item-desktop {isRouteActive('/settings') ? 'active' : ''}" title="Settings">
+            <Settings size={18} />
+            <span class="nav-text-desktop">Settings</span>
           </a>
         </nav>
       </div>
     </div>
 
+    <!-- MOBILE STICKY BOTTOM TAB BAR (Always Visible Icons) -->
+    <nav class="navigation-bar-mobile md:hidden">
+      <a href="/" onclick={() => appState.playClickSound()} class="nav-item-mobile {isRouteActive('/') ? 'active' : ''}" title="Overview">
+        <LayoutDashboard size={20} />
+      </a>
+      <a href="/planner" onclick={() => appState.playClickSound()} class="nav-item-mobile {isRouteActive('/planner') ? 'active' : ''}" title="Planner">
+        <UtensilsCrossed size={20} />
+      </a>
+      <a href="/customers" onclick={() => appState.playClickSound()} class="nav-item-mobile {isRouteActive('/customers') ? 'active' : ''}" title="Customers">
+        <Users size={20} />
+      </a>
+      <a href="/menus" onclick={() => appState.playClickSound()} class="nav-item-mobile {isRouteActive('/menus') ? 'active' : ''}" title="Menus">
+        <FileText size={20} />
+      </a>
+      <a href="/inventory" onclick={() => appState.playClickSound()} class="nav-item-mobile {isRouteActive('/inventory') ? 'active' : ''}" title="Inventory">
+        <Package size={20} />
+      </a>
+      <a href="/scheduling" onclick={() => appState.playClickSound()} class="nav-item-mobile {isRouteActive('/scheduling') ? 'active' : ''}" title="Kitchen & Roster">
+        <ChefHat size={20} />
+      </a>
+      <a href="/audits" onclick={() => appState.playClickSound()} class="nav-item-mobile {isRouteActive('/audits') ? 'active' : ''}" title="Audits">
+        <Wallet size={20} />
+      </a>
+      <a href="/settings" onclick={() => appState.playClickSound()} class="nav-item-mobile {isRouteActive('/settings') ? 'active' : ''}" title="Settings">
+        <Settings size={20} />
+      </a>
+    </nav>
+
     <!-- MAIN WORKSPACE -->
-    <main class="flex-1 p-6 max-w-7xl w-full mx-auto space-y-8">
+    <main class="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-8 pb-24 md:pb-8">
       {@render children()}
     </main>
   </div>
