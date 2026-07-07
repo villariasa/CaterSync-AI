@@ -32,6 +32,7 @@
     Truck
   } from '@lucide/svelte';
   import { page } from '$app/state';
+  import { goto } from '$app/navigation';
   import { CateringState, setCateringContext } from '$lib/states.svelte.js';
 
   let { data, children } = $props();
@@ -76,14 +77,19 @@
       const stored = localStorage.getItem('catersync_saved_profiles');
       if (stored) {
         try {
-          cachedProfiles = JSON.parse(stored);
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            cachedProfiles = parsed;
+          } else {
+            cachedProfiles = [];
+          }
         } catch (e) {
           cachedProfiles = [];
         }
       }
       
-      // Seed default profiles if empty
-      if (cachedProfiles.length === 0) {
+      // Seed default profiles if empty or invalid format
+      if (!Array.isArray(cachedProfiles) || cachedProfiles.length === 0) {
         cachedProfiles = [
           { username: 'admin', name: 'Medy Villarias' },
           { username: 'itsuki@catersync.ai', name: 'itsuki' }
@@ -100,21 +106,25 @@
       const currentName = appState.currentUser.name || currentUsername.split('@')[0];
       
       // Update or add profile to cache
-      const exists = cachedProfiles.some(p => p.username.toLowerCase() === currentUsername.toLowerCase());
-      if (!exists) {
-        cachedProfiles = [...cachedProfiles, { username: currentUsername, name: currentName }];
-        localStorage.setItem('catersync_saved_profiles', JSON.stringify(cachedProfiles));
+      if (Array.isArray(cachedProfiles)) {
+        const exists = cachedProfiles.some(p => p && p.username && p.username.toLowerCase() === currentUsername.toLowerCase());
+        if (!exists) {
+          cachedProfiles = [...cachedProfiles, { username: currentUsername, name: currentName }];
+          localStorage.setItem('catersync_saved_profiles', JSON.stringify(cachedProfiles));
+        }
       }
     }
   });
 
   const activeProfile = $derived(appState.currentUser?.username || 'admin');
   const activeProfileName = $derived(
-    cachedProfiles.find(p => p.username.toLowerCase() === activeProfile.toLowerCase())?.name || activeProfile.split('@')[0]
+    (Array.isArray(cachedProfiles) && cachedProfiles.find(p => p && p.username && p.username.toLowerCase() === activeProfile.toLowerCase())?.name) || activeProfile.split('@')[0]
   );
   
   const otherProfiles = $derived(
-    cachedProfiles.filter(p => p.username.toLowerCase() !== activeProfile.toLowerCase())
+    Array.isArray(cachedProfiles) 
+      ? cachedProfiles.filter(p => p && p.username && p.username.toLowerCase() !== activeProfile.toLowerCase())
+      : []
   );
 
   function toggleDarkTheme() {
