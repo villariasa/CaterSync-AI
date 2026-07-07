@@ -421,35 +421,27 @@
           <nav class="app-nav-row justify-center max-w-full">
             <a href="/" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/') ? 'active' : ''}" title="Overview">
               <LayoutDashboard size={16} />
-              <span class="app-nav-text">Overview</span>
             </a>
             <a href="/planner" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/planner') ? 'active' : ''}" title="Planner">
               <UtensilsCrossed size={16} />
-              <span class="app-nav-text">Planner</span>
             </a>
             <a href="/customers" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/customers') ? 'active' : ''}" title="Customers">
               <Users size={16} />
-              <span class="app-nav-text">Customers</span>
             </a>
             <a href="/menus" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/menus') ? 'active' : ''}" title="Menus">
               <FileText size={16} />
-              <span class="app-nav-text">Menus</span>
             </a>
             <a href="/inventory" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/inventory') ? 'active' : ''}" title="Inventory">
               <Package size={16} />
-              <span class="app-nav-text">Inventory</span>
             </a>
             <a href="/scheduling" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/scheduling') ? 'active' : ''}" title="Kitchen & Roster">
               <ChefHat size={16} />
-              <span class="app-nav-text">Kitchen</span>
             </a>
             <a href="/audits" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/audits') ? 'active' : ''}" title="Audits">
               <Wallet size={16} />
-              <span class="app-nav-text">Audits</span>
             </a>
             <a href="/settings" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/settings') ? 'active' : ''}" title="Settings">
               <Settings size={16} />
-              <span class="app-nav-text">Settings</span>
             </a>
           </nav>
         </div>
