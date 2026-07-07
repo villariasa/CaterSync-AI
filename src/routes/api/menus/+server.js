@@ -4,9 +4,9 @@ import { pool } from '$lib/server/db.js';
 export async function GET() {
   try {
     const res = await pool.query('SELECT * FROM menus ORDER BY id ASC');
-    return json(res.rows);
+    return json({ success: true, menus: res.rows });
   } catch (error) {
-    return json({ error: error.message }, { status: 500 });
+    return json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
