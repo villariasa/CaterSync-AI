@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { pool } from '$lib/server/db.js';
+import { generateSecret } from '$lib/server/totp.js';
 
 // Decode Google JWT Identity Token with base64url padding
 function decodeJwt(token) {
@@ -33,6 +34,7 @@ function decodeJwt(token) {
 export async function POST({ request, cookies }) {
   let email = 'admin@catersync.ai';
   let name = 'admin';
+  let payload = null;
 
   try {
     const { credential } = await request.json();
@@ -41,7 +43,7 @@ export async function POST({ request, cookies }) {
       return json({ success: false, error: 'Google credential token is missing.' }, { status: 400 });
     }
 
-    const payload = decodeJwt(credential);
+    payload = decodeJwt(credential);
     if (!payload || !payload.email) {
       return json({ success: false, error: 'Invalid Google identity token.' }, { status: 400 });
     }
@@ -51,7 +53,7 @@ export async function POST({ request, cookies }) {
 
     // 1. Check if Operator exists in users table
     const userRes = await pool.query(
-      'SELECT id, username, role FROM users WHERE LOWER(username) = $1 LIMIT 1',
+      'SELECT id, username, role, totp_secret FROM users WHERE LOWER(username) = $1 LIMIT 1',
       [email]
     );
 
@@ -64,22 +66,29 @@ export async function POST({ request, cookies }) {
       // Use a dummy password hash that cannot be matched normally
       const dummyHash = 'google-oauth-operator-account-placeholder-hash';
       const insertRes = await pool.query(
-        "INSERT INTO users (username, password_hash, role) VALUES ($1, $2, 'Operator') RETURNING username, role",
+        "INSERT INTO users (username, password_hash, role) VALUES ($1, $2, 'Operator') RETURNING id, username, role, totp_secret",
         [email, dummyHash]
       );
       user = insertRes.rows[0];
     }
 
-    // 2. Set Operator session cookie
-    cookies.set('session_user', user.username, {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 12 // 12 hours
-    });
+    const totpConfigured = !!user.totp_secret;
+    let totpSetup = null;
+
+    if (!totpConfigured) {
+      // Generate a new TOTP setup secret if not configured
+      const setupSecret = generateSecret();
+      const otpauthUrl = `otpauth://totp/CaterSync-AI:${encodeURIComponent(user.username)}?secret=${setupSecret}&issuer=CaterSync-AI`;
+      totpSetup = {
+        secret: setupSecret,
+        qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(otpauthUrl)}`
+      };
+    }
 
     return json({
       success: true,
+      totpConfigured,
+      totpSetup,
       user: {
         username: user.username,
         role: user.role,
@@ -93,20 +102,19 @@ export async function POST({ request, cookies }) {
 
     // Database connection offline fallback for local testing
     if (error.message.includes('database connection') || error.message.includes('ECONNREFUSED') || error.message.includes('connection')) {
-      cookies.set('session_user', name, {
-        path: '/',
-        httpOnly: true,
-        sameSite: 'strict',
-        maxAge: 60 * 60 * 12
-      });
       return json({
         success: true,
         offlineFallback: true,
+        totpConfigured: false,
+        totpSetup: {
+          secret: 'OFFLINETOTPSECRET',
+          qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth%3A%2F%2Ftotp%2FCaterSync-AI%3Aoffline%3Fsecret%3DOFFLINETOTPSECRET%26issuer%3DCaterSync-AI'
+        },
         user: {
           username: name,
           role: 'Operator',
           name: name,
-          picture: payload.picture || null
+          picture: payload ? payload.picture : null
         }
       });
     }

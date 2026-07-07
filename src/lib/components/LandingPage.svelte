@@ -171,7 +171,13 @@
       isChecking = false;
       if (totpToken.trim().length === 6 && !isNaN(totpToken.trim())) {
         appState.isAuthenticated = true;
-        appState.currentUser = { username: username.trim(), role: 'Operator' };
+        // Keep profile picture and name if they were pre-fetched by Google login
+        appState.currentUser = { 
+          username: username.trim(), 
+          role: 'Operator',
+          name: appState.currentUser?.name || username.trim().split('@')[0],
+          picture: appState.currentUser?.picture || null
+        };
         appState.playStampSound();
         goto('/');
       } else {
@@ -196,7 +202,12 @@
 
       if (response.ok && data.success) {
         appState.isAuthenticated = true;
-        appState.currentUser = data.user;
+        // Merge the profile picture/name from Google OAuth if we had them!
+        appState.currentUser = {
+          ...data.user,
+          name: appState.currentUser?.name || data.user.name || username.trim().split('@')[0],
+          picture: appState.currentUser?.picture || data.user.picture || null
+        };
         appState.playStampSound();
         goto('/');
       } else {
@@ -358,12 +369,29 @@
         body: JSON.stringify({ credential: response.credential })
       });
       const data = await res.json();
+      isChecking = false;
 
       if (res.ok && data.success) {
-        appState.isAuthenticated = true;
+        username = data.user.username;
+        // Temporarily store user details so once 2FA passes we can log in
         appState.currentUser = data.user;
-        appState.playStampSound();
-        goto('/');
+
+        if (data.totpConfigured) {
+          availableMethods = ['totp'];
+          totpSetupSecret = '';
+          totpSetupQrUrl = '';
+        } else {
+          availableMethods = ['totp-setup'];
+          if (data.totpSetup) {
+            totpSetupSecret = data.totpSetup.secret;
+            totpSetupQrUrl = data.totpSetup.qrCodeUrl;
+          } else {
+            totpSetupSecret = '';
+            totpSetupQrUrl = '';
+          }
+        }
+        selectedMethod = availableMethods[0];
+        step = 2;
       } else {
         const errMsg = data.error || 'Google Authentication failed.';
         if (isSignupMode) regMessage = errMsg;
@@ -371,12 +399,11 @@
         appState.playBuzzerSound();
       }
     } catch (err) {
+      isChecking = false;
       const errMsg = 'Google auth error: ' + err.message;
       if (isSignupMode) regMessage = errMsg;
       else loginMessage = errMsg;
       appState.playBuzzerSound();
-    } finally {
-      isChecking = false;
     }
   }
 
