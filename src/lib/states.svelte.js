@@ -60,6 +60,7 @@ export class CateringState {
   biometricCredentialRegistered = $state(false);
   deferredPrompt = $state(null);
   pwaInstallable = $state(false);
+  pwaInstalled = $state(false);
   pushSubscriptionActive = $state(false);
 
   settings = $state({
@@ -212,17 +213,71 @@ export class CateringState {
     }
   }
 
+  isPwaStandalone() {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  }
+
+  async syncPwaInstallState() {
+    if (typeof window === 'undefined') return;
+
+    let installedRelatedApp = false;
+    if ('getInstalledRelatedApps' in navigator) {
+      try {
+        const relatedApps = await navigator.getInstalledRelatedApps();
+        installedRelatedApp = Array.isArray(relatedApps) && relatedApps.length > 0;
+      } catch (err) {
+        console.warn("Unable to check installed related apps:", err);
+      }
+    }
+
+    this.pwaInstalled = this.isPwaStandalone() || installedRelatedApp;
+    this.pwaInstallable = !this.pwaInstalled;
+
+    if (this.pwaInstalled) {
+      this.deferredPrompt = null;
+    }
+  }
+
+  setPwaInstallPrompt(promptEvent) {
+    this.deferredPrompt = promptEvent;
+    this.pwaInstalled = false;
+    this.pwaInstallable = true;
+  }
+
+  markPwaInstalled() {
+    this.pwaInstalled = true;
+    this.pwaInstallable = false;
+    this.deferredPrompt = null;
+  }
+
   // SvelteKit PWA installer prompt execution
   async executeAppInstall() {
-    if (this.deferredPrompt) {
-      this.playClickSound();
-      this.deferredPrompt.prompt();
-      const { outcome } = await this.deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        this.pwaInstallable = false;
-        this.deferredPrompt = null;
-        this.showToast("📲 App installation accepted! Welcome to the Desktop.");
-      }
+    if (typeof window !== 'undefined') {
+      await this.syncPwaInstallState();
+    }
+
+    this.playClickSound();
+
+    if (this.pwaInstalled) {
+      this.pwaInstallable = false;
+      return;
+    }
+
+    if (!this.deferredPrompt) {
+      this.showToast("Install is available from your browser menu. Look for Install app or Add to Home screen.", "info");
+      return;
+    }
+
+    this.deferredPrompt.prompt();
+    const { outcome } = await this.deferredPrompt.userChoice;
+    this.deferredPrompt = null;
+
+    if (outcome === 'accepted') {
+      this.markPwaInstalled();
+      this.showToast("📲 App installation accepted! Welcome to the Desktop.");
+    } else {
+      this.pwaInstallable = !this.pwaInstalled;
     }
   }
 

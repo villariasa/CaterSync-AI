@@ -437,13 +437,31 @@
       });
     }
 
-    // Listen to browser PWA install availability
+    // Keep the install affordance accurate across install, uninstall, and tab focus changes.
+    appState.syncPwaInstallState();
+    const standaloneQuery = window.matchMedia('(display-mode: standalone)');
+    const syncInstallState = () => {
+      appState.syncPwaInstallState();
+    };
     const handleInstallPrompt = (e) => {
       e.preventDefault();
-      appState.deferredPrompt = e;
-      appState.pwaInstallable = true;
+      appState.setPwaInstallPrompt(e);
+    };
+    const handleAppInstalled = () => {
+      appState.markPwaInstalled();
+    };
+    const handleVisibilityChange = () => {
+      if (!document.hidden) syncInstallState();
     };
     window.addEventListener('beforeinstallprompt', handleInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener('focus', syncInstallState);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    if (standaloneQuery.addEventListener) {
+      standaloneQuery.addEventListener('change', syncInstallState);
+    } else if (standaloneQuery.addListener) {
+      standaloneQuery.addListener(syncInstallState);
+    }
 
     // Request permissions for standard local notifications
     if ('Notification' in window && Notification.permission === 'default') {
@@ -487,6 +505,14 @@
     return () => {
       clearInterval(notificationInterval);
       window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener('focus', syncInstallState);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (standaloneQuery.removeEventListener) {
+        standaloneQuery.removeEventListener('change', syncInstallState);
+      } else if (standaloneQuery.removeListener) {
+        standaloneQuery.removeListener(syncInstallState);
+      }
       window.removeEventListener('keydown', handleKeyDown);
     };
   });
@@ -1227,4 +1253,3 @@
     </div>
   </div>
 {/if}
-
