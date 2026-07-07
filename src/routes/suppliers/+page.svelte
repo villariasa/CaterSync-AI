@@ -1,12 +1,13 @@
 <script>
   import { getCateringContext } from '$lib/states.svelte.js';
   import DataTable from '$lib/components/DataTable.svelte';
-  import { Truck, Plus, FileCheck, ClipboardSignature, FileText, CheckCircle2, ShieldAlert } from '@lucide/svelte';
+  import { Truck, Plus, FileCheck, ClipboardSignature, FileText, CheckCircle2, ShieldAlert, X } from '@lucide/svelte';
   import { onMount } from 'svelte';
 
   const appState = getCateringContext();
 
   let activeTab = $state('suppliers'); // suppliers, pos, receipts
+  let showSupplierModal = $state(false);
 
   // Form states for suppliers
   let name = $state('');
@@ -172,10 +173,11 @@
         ...payload
       };
       appState.suppliers = [...appState.suppliers, mockSupplier];
-      supplierMessage = `✅ Supplier profile "${mockSupplier.name}" added successfully locally.`;
+      supplierMessage = '';
       name = '';
       appState.showToast("🚚 Supplier account verified");
       appState.playStampSound();
+      showSupplierModal = false;
       return;
     }
 
@@ -188,10 +190,11 @@
       const res = await response.json();
       if (res.success) {
         appState.suppliers = [...appState.suppliers, res.supplier];
-        supplierMessage = `✅ Supplier profile "${res.supplier.name}" added successfully.`;
+        supplierMessage = '';
         name = '';
         appState.showToast("🚚 Supplier account verified");
         appState.playStampSound();
+        showSupplierModal = false;
       }
     } catch (err) {
       supplierMessage = `❌ Creation failed: ${err.message}`;
@@ -316,40 +319,28 @@
 
   {#if activeTab === 'suppliers'}
     <!-- TAB 1: SUPPLIERS PROFILES -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-in">
-      <div class="ticket-card p-6 lg:col-span-4 bg-white">
-        <div class="mb-4">
-          <span class="ticket-stamp">LOGISTICS REGISTRY</span>
-          <h2 class="text-xl font-bold text-[#2A2521] mt-2 flex items-center gap-1.5">
-            <Plus size={18} /> Add Supplier Profile
-          </h2>
+    <div class="space-y-6 animate-fade-in">
+      
+      <!-- Action header inside the tab panel -->
+      <div class="flex justify-between items-center bg-[#F6F2EA]/40 dark:bg-[#24201E]/40 p-4 rounded-xl border border-[#767068]/15 backdrop-blur-sm">
+        <div class="flex items-center gap-3">
+          <div class="p-2.5 bg-[#3E6650] text-[#F6F2EA] rounded-lg">
+            <Truck size={20} />
+          </div>
+          <div>
+            <h3 class="text-sm font-extrabold text-[#2A2521] dark:text-[#EBE5DC] tracking-tight">Suppliers Directory</h3>
+            <p class="text-[10px] text-[#767068] dark:text-zinc-400 font-mono mt-0.5">Enroll and manage corporate supply chain partners.</p>
+          </div>
         </div>
-
-        <form onsubmit={submitSupplier} class="space-y-4 text-xs font-mono">
-          <div>
-            <label class="block font-bold text-[#767068] uppercase mb-1" for="supplier-name">Supplier Name</label>
-            <input id="supplier-name" type="text" bind:value={name} class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs focus:outline-none" required />
-          </div>
-          <div>
-            <label class="block font-bold text-[#767068] uppercase mb-1" for="supplier-reliability">Reliability Index (0.00 to 1.00)</label>
-            <input id="supplier-reliability" type="number" step="0.01" bind:value={reliabilityScore} class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs focus:outline-none" min="0" max="1" />
-          </div>
-          <div>
-            <label class="block font-bold text-[#767068] uppercase mb-1" for="supplier-lead">Avg Lead Time (days)</label>
-            <input id="supplier-lead" type="number" bind:value={avgLeadTime} class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs focus:outline-none" min="0" />
-          </div>
-
-          <button type="submit" class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-bold text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive">
-            Verify Supplier
-          </button>
-          
-          {#if supplierMessage}
-            <p class="text-xs text-[#767068] mt-2">{supplierMessage}</p>
-          {/if}
-        </form>
+        <button 
+          onclick={() => { appState.playClickSound(); showSupplierModal = true; supplierMessage = ''; }}
+          class="px-4 py-2 bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-mono font-bold text-xs rounded uppercase tracking-wider transition-all btn-interactive flex items-center gap-1.5 shadow-sm"
+        >
+          <Plus size={14} /> Add Supplier Profile
+        </button>
       </div>
 
-      <div class="ticket-card p-6 lg:col-span-8 bg-white">
+      <div class="ticket-card p-6 bg-white font-sans">
         <div class="mb-4">
           <span class="ticket-stamp">LEDGER DIRECTORY</span>
           <h2 class="text-lg font-bold text-[#2A2521] mt-2 flex items-center gap-1.5">
@@ -365,6 +356,54 @@
         />
       </div>
     </div>
+
+    <!-- Modal Dialog -->
+    {#if showSupplierModal}
+      <div class="fixed inset-0 bg-[#2A2521]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto animate-fade-in">
+        <div class="ticket-card bg-white dark:bg-[#24201E] p-6 max-w-md w-full border border-[#767068]/30 dark:border-zinc-800 shadow-2xl relative my-8 animate-scale-up text-[#2A2521] dark:text-[#EBE5DC]">
+          
+          <!-- Close button overlay -->
+          <button 
+            type="button" 
+            onclick={() => { appState.playClickSound(); showSupplierModal = false; }} 
+            class="absolute top-4 right-4 text-[#767068] hover:text-[#2A2521] dark:hover:text-[#EBE5DC] btn-interactive p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
+            title="Close form"
+          >
+            <X size={18} />
+          </button>
+
+          <div class="mb-4">
+            <span class="ticket-stamp">LOGISTICS REGISTRY</span>
+            <h2 class="text-xl font-bold text-[#2A2521] dark:text-[#EBE5DC] mt-2 flex items-center gap-1.5">
+              <Plus size={18} /> Add Supplier Profile
+            </h2>
+          </div>
+
+          <form onsubmit={submitSupplier} class="space-y-4 text-xs font-mono">
+            <div>
+              <label class="block font-bold text-[#767068] uppercase mb-1" for="supplier-name">Supplier Name</label>
+              <input id="supplier-name" type="text" bind:value={name} class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white dark:bg-[#1A1715] dark:text-[#EBE5DC] text-xs focus:outline-none" required />
+            </div>
+            <div>
+              <label class="block font-bold text-[#767068] uppercase mb-1" for="supplier-reliability">Reliability Index (0.00 to 1.00)</label>
+              <input id="supplier-reliability" type="number" step="0.01" bind:value={reliabilityScore} class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white dark:bg-[#1A1715] dark:text-[#EBE5DC] text-xs focus:outline-none" min="0" max="1" />
+            </div>
+            <div>
+              <label class="block font-bold text-[#767068] uppercase mb-1" for="supplier-lead">Avg Lead Time (days)</label>
+              <input id="supplier-lead" type="number" bind:value={avgLeadTime} class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white dark:bg-[#1A1715] dark:text-[#EBE5DC] text-xs focus:outline-none" min="0" />
+            </div>
+
+            <button type="submit" class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-bold text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive">
+              Verify Supplier
+            </button>
+            
+            {#if supplierMessage}
+              <p class="text-xs text-[#767068] mt-2">{supplierMessage}</p>
+            {/if}
+          </form>
+        </div>
+      </div>
+    {/if}
   {/if}
 
   {#if activeTab === 'pos'}

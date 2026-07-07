@@ -28,7 +28,8 @@
     AlertTriangle,
     Info,
     User,
-    Search
+    Search,
+    Truck
   } from '@lucide/svelte';
   import { page } from '$app/state';
   import { CateringState, setCateringContext } from '$lib/states.svelte.js';
@@ -38,6 +39,13 @@
   // Create the shared Svelte 5 context state
   const appState = new CateringState(data);
   setCateringContext(appState);
+
+  // Persist notifications on change
+  $effect(() => {
+    if (typeof window !== 'undefined' && appState.notifications) {
+      localStorage.setItem('catersync_notifications', JSON.stringify(appState.notifications));
+    }
+  });
 
   let showLogoutModal = $state(false);
   let showUpdateModal = $state(false);
@@ -509,7 +517,6 @@
         <div class="flex items-center gap-3 min-w-0 shrink-0">
           <a href="/" onclick={() => appState.playClickSound()} class="flex items-center gap-2 no-underline text-[#2A2521] dark:text-[#EBE5DC] select-none hover:opacity-90 active:scale-95 transition-all">
             <img src={favicon} alt="Logo" class="w-6 h-6 object-contain" />
-            <h1 class="text-xs font-black tracking-tight leading-none uppercase truncate">{appState.settings.business_name}</h1>
           </a>
           
           <!-- Global Search (Facebook style) -->
@@ -571,6 +578,9 @@
             </a>
             <a href="/inventory" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/inventory') ? 'active' : ''}" data-tooltip="Inventory">
               <Package size={16} />
+            </a>
+            <a href="/suppliers" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/suppliers') ? 'active' : ''}" data-tooltip="Purchasing">
+              <Truck size={16} />
             </a>
             <a href="/scheduling" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/scheduling') ? 'active' : ''}" data-tooltip="Kitchen">
               <ChefHat size={16} />
@@ -892,6 +902,9 @@
           </a>
           <a href="/inventory" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/inventory') ? 'active' : ''}" data-tooltip="Inventory">
             <Package size={16} />
+          </a>
+          <a href="/suppliers" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/suppliers') ? 'active' : ''}" data-tooltip="Purchasing">
+            <Truck size={16} />
           </a>
           <a href="/scheduling" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/scheduling') ? 'active' : ''}" data-tooltip="Kitchen">
             <ChefHat size={16} />

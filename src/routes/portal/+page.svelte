@@ -854,7 +854,7 @@
 
   <!-- FOOTER -->
   <footer class="border-t border-[#767068]/30 bg-[#2A2521] px-6 py-3 text-center text-[9px] text-[#767068] tracking-widest uppercase">
-    CaterSync Operations Inc. · Version 1.3.6 · Built Offline & Secure
+    CaterSync Operations Inc. · Version 1.3.7 · Built Offline & Secure
   </footer>
 </div>
 

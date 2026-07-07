@@ -19,7 +19,7 @@ export class CateringState {
   activeEventForAnalysis = $state(null);
   anomalyReport = $state(null);
   usingMockData = $state(false);
-  version = '1.3.6';
+  version = '1.3.7';
   isDataLoaded = $state(false);
 
   // Authentication & PWA variables
@@ -70,7 +70,13 @@ export class CateringState {
     risk_medium_threshold: 0.35,
     risk_high_threshold: 0.60,
     low_stock_alerts_enabled: true,
-    sound_enabled_default: false
+    sound_enabled_default: false,
+    emailConfig: {
+      gmailAddress: '',
+      gmailAppPassword: '',
+      smtpHost: 'smtp.gmail.com',
+      smtpPort: 465
+    }
   });
 
   // Web Audio Context
@@ -86,6 +92,14 @@ export class CateringState {
           this._currentUser = JSON.parse(storedUser);
         } catch (e) {
           this._currentUser = null;
+        }
+      }
+      const storedNotifs = localStorage.getItem('catersync_notifications');
+      if (storedNotifs) {
+        try {
+          this.notifications = JSON.parse(storedNotifs);
+        } catch (e) {
+          this.notifications = [];
         }
       }
     }

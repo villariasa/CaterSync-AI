@@ -35,6 +35,12 @@ pool.query(`
   ON CONFLICT (id) DO NOTHING;
   ALTER TABLE staff ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;
   
+  -- SMTP Credentials Columns
+  ALTER TABLE business_settings ADD COLUMN IF NOT EXISTS gmail_address VARCHAR(255);
+  ALTER TABLE business_settings ADD COLUMN IF NOT EXISTS gmail_app_password VARCHAR(255);
+  ALTER TABLE business_settings ADD COLUMN IF NOT EXISTS smtp_host VARCHAR(255);
+  ALTER TABLE business_settings ADD COLUMN IF NOT EXISTS smtp_port INT;
+  
   CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       username VARCHAR(255) NOT NULL UNIQUE,
