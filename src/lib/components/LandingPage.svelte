@@ -49,6 +49,9 @@
       isChecking = false;
       const isRegistered = appState.currentUser && appState.currentUser.username === username.trim();
       availableMethods = isRegistered ? ['password', 'pin'] : ['password'];
+      if (googleClientId) {
+        availableMethods.push('google');
+      }
       selectedMethod = 'password';
       step = 2;
     } else {
@@ -61,7 +64,10 @@
         const res = await response.json();
         isChecking = false;
         if (response.ok && res.success) {
-          availableMethods = res.methods;
+          availableMethods = [...res.methods];
+          if (googleClientId) {
+            availableMethods.push('google');
+          }
           selectedMethod = res.methods[0] || 'password';
           step = 2;
         } else {
@@ -72,6 +78,9 @@
         isChecking = false;
         console.warn("Pre-auth check fallback to local check:", err.message);
         availableMethods = ['password', 'pin'];
+        if (googleClientId) {
+          availableMethods.push('google');
+        }
         selectedMethod = 'password';
         step = 2;
       }
@@ -305,6 +314,12 @@
 
   $effect(() => {
     if (step === 1 && googleClientId) {
+      setTimeout(initializeGoogleButton, 80);
+    }
+  });
+
+  $effect(() => {
+    if (selectedMethod === 'google' && googleClientId) {
       setTimeout(initializeGoogleButton, 80);
     }
   });
@@ -562,6 +577,16 @@
               onsuccess={handleBiometricsSuccess} 
               oncancel={goBackToIdentifier} 
             />
+          {/if}
+
+          {#if selectedMethod === 'google'}
+            <div class="space-y-4 text-center">
+              <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1 text-left">Authenticate with Google</label>
+              <div id="google-btn-operator" class="w-full flex justify-center min-h-[40px] my-2"></div>
+              <p class="text-[9px] text-[#767068] font-mono text-center">
+                Click the button above to sign in using your verified Google workspace account.
+              </p>
+            </div>
           {/if}
 
           {#if loginMessage}
