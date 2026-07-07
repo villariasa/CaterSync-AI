@@ -11,6 +11,7 @@ export class CateringState {
   staff = $state([]);
   demandForecasts = $state([]);
   notifications = $state([]);
+  systemAuditLogs = $state([]);
   audioEnabled = $state(false);
   clickSound = null;
   stampSound = null;
@@ -222,7 +223,8 @@ export class CateringState {
         ingredients: this.ingredients,
         suppliers: this.suppliers,
         staff: this.staff,
-        settings: this.settings
+        settings: this.settings,
+        systemAuditLogs: this.systemAuditLogs
       };
       
       const serialized = JSON.stringify(dataToSave, null, 2);
@@ -277,6 +279,7 @@ export class CateringState {
           if (parsed.suppliers) this.suppliers = parsed.suppliers;
           if (parsed.staff) this.staff = parsed.staff;
           if (parsed.settings) this.settings = { ...this.settings, ...parsed.settings };
+          if (parsed.systemAuditLogs) this.systemAuditLogs = parsed.systemAuditLogs;
           console.log("🎉 Loaded active transaction data from local file cache.");
         }
       } else {
