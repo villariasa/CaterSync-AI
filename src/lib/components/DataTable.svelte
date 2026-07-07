@@ -105,16 +105,16 @@
           type="text" 
           bind:value={searchQuery} 
           placeholder="Search records..." 
-          class="w-full pl-3 pr-3 py-1.5 text-xs rounded border border-[#767068]/30 bg-white text-[#2A2521] focus:outline-none focus:border-[#3E6650]" 
+          class="w-full pl-3 pr-3 py-1.5 text-xs rounded border border-[#767068]/30 bg-white text-[#2A2521] placeholder:text-[#767068]/70 focus:outline-none focus:border-[#3E6650] dark:bg-[#1A1715] dark:text-[#ECE7DF] dark:placeholder:text-[#9E978F] dark:border-[#9E978F]/35" 
         />
       </div>
     {:else}
       <div></div>
     {/if}
 
-    <div class="flex items-center gap-2 text-xs font-mono text-[#767068]">
+    <div class="flex items-center gap-2 text-xs font-mono text-[#767068] dark:text-[#9E978F]">
       <span>Show</span>
-      <select bind:value={pageSize} class="px-2 py-1 bg-white border border-[#767068]/30 rounded text-xs text-[#2A2521] focus:outline-none focus:border-[#3E6650]">
+      <select bind:value={pageSize} class="px-2 py-1 bg-white border border-[#767068]/30 rounded text-xs text-[#2A2521] focus:outline-none focus:border-[#3E6650] dark:bg-[#1A1715] dark:text-[#ECE7DF] dark:border-[#9E978F]/35">
         <option value={5}>5</option>
         <option value={10}>10</option>
         <option value={25}>25</option>
@@ -125,20 +125,20 @@
   </div>
 
   <!-- Main Table wrapper -->
-  <div class="overflow-x-auto border border-[#767068]/20 rounded">
-    <table class="w-full text-left border-collapse ledger-table text-xs">
+  <div class="overflow-x-auto border border-[#767068]/20 rounded dark:border-[#9E978F]/25">
+    <table class="w-full text-left border-collapse ledger-table text-xs dark:text-[#ECE7DF]">
       <thead>
-        <tr class="bg-[#F6F2EA] text-[#767068]">
+        <tr class="bg-[#F6F2EA] text-[#767068] dark:bg-[#332E2A] dark:text-[#ECE7DF]">
           {#each columns as col}
-            <th class="sticky top-0 z-10 bg-[#F6F2EA] py-2.5 px-4 font-bold select-none border-b border-[#767068]/20 {col.align === 'right' ? 'text-right' : 'text-left'}">
+            <th class="sticky top-0 z-10 bg-[#F6F2EA] py-2.5 px-4 font-bold select-none border-b border-[#767068]/20 text-[#767068] dark:bg-[#332E2A] dark:text-[#ECE7DF] dark:border-[#9E978F]/35 {col.align === 'right' ? 'text-right' : 'text-left'}">
               {#if col.sortable}
                 <button 
                   type="button" 
                   onclick={() => handleSort(col.key)} 
-                  class="flex items-center gap-1.5 hover:text-[#2A2521] focus:outline-none w-full justify-start {col.align === 'right' ? 'justify-end' : ''}"
+                  class="flex items-center gap-1.5 text-inherit hover:text-[#2A2521] focus:outline-none w-full justify-start dark:hover:text-white {col.align === 'right' ? 'justify-end' : ''}"
                 >
                   <span>{col.label}</span>
-                  <ArrowUpDown size={12} class="text-[#767068]/60" />
+                  <ArrowUpDown size={12} class="text-[#767068]/60 dark:text-[#ECE7DF]/70" />
                 </button>
               {:else}
                 <span>{col.label}</span>
@@ -148,20 +148,20 @@
         </tr>
       </thead>
       
-      <tbody class="divide-y divide-[#767068]/15 font-mono text-[11px]">
+      <tbody class="divide-y divide-[#767068]/15 font-mono text-[11px] dark:divide-[#9E978F]/18">
         {#if loading}
           {#each Array(pageSize) as _}
             <tr class="skeleton-shimmer">
               {#each columns as col}
                 <td class="py-3 px-4">
-                  <div class="h-3.5 bg-[#767068]/15 rounded w-3/4"></div>
+                  <div class="h-3.5 bg-[#767068]/15 rounded w-3/4 dark:bg-[#9E978F]/20"></div>
                 </td>
               {/each}
             </tr>
           {/each}
         {:else if pagedRows.length > 0}
           {#each pagedRows as row (row[rowKey] || Math.random())}
-            <tr class="hover:bg-[#F6F2EA]/40 transition-colors">
+            <tr class="hover:bg-[#F6F2EA]/40 transition-colors dark:hover:bg-[#332E2A]/65">
               {#each columns as col}
                 <td class="py-2.5 px-4 {col.align === 'right' ? 'text-right' : 'text-left'}">
                   {#if col.render}
@@ -171,7 +171,7 @@
                       {@html col.render(row)}
                     {/if}
                   {:else}
-                    <span class={col.isSans ? 'font-sans text-[#2A2521]' : 'text-[#2A2521]'}>
+                    <span class={col.isSans ? 'font-sans text-[#2A2521] dark:text-[#ECE7DF]' : 'text-[#2A2521] dark:text-[#ECE7DF]'}>
                       {row[col.key] ?? '—'}
                     </span>
                   {/if}
@@ -181,7 +181,7 @@
           {/each}
         {:else}
           <tr>
-            <td colspan={columns.length} class="py-8 text-center text-[#767068] font-sans">
+            <td colspan={columns.length} class="py-8 text-center text-[#767068] font-sans dark:text-[#9E978F]">
               {emptyMessage}
             </td>
           </tr>
@@ -192,11 +192,11 @@
 
   <!-- Bottom pagination control panel -->
   {#if processedRows.length > 0 && !loading}
-    <div class="flex flex-wrap items-center justify-between gap-4 text-xs font-mono text-[#767068] pt-2">
+    <div class="flex flex-wrap items-center justify-between gap-4 text-xs font-mono text-[#767068] dark:text-[#9E978F] pt-2">
       <div>
-        Showing <span class="font-bold text-[#2A2521]">{startItemIndex}</span> to 
-        <span class="font-bold text-[#2A2521]">{endItemIndex}</span> of 
-        <span class="font-bold text-[#2A2521]">{processedRows.length}</span> rows
+        Showing <span class="font-bold text-[#2A2521] dark:text-[#ECE7DF]">{startItemIndex}</span> to 
+        <span class="font-bold text-[#2A2521] dark:text-[#ECE7DF]">{endItemIndex}</span> of 
+        <span class="font-bold text-[#2A2521] dark:text-[#ECE7DF]">{processedRows.length}</span> rows
       </div>
 
       <div class="flex items-center gap-1">
@@ -204,7 +204,7 @@
           type="button" 
           disabled={currentPage === 1} 
           onclick={() => currentPage = Math.max(1, currentPage - 1)}
-          class="p-1 border border-[#767068]/30 rounded hover:bg-[#2A2521]/5 hover:text-[#2A2521] disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-inherit transition-all"
+          class="p-1 border border-[#767068]/30 rounded hover:bg-[#2A2521]/5 hover:text-[#2A2521] disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-inherit transition-all dark:border-[#9E978F]/30 dark:hover:bg-[#332E2A] dark:hover:text-[#ECE7DF]"
         >
           <ChevronLeft size={14} />
         </button>
@@ -215,7 +215,7 @@
           type="button" 
           disabled={currentPage === totalPages} 
           onclick={() => currentPage = Math.min(totalPages, currentPage + 1)}
-          class="p-1 border border-[#767068]/30 rounded hover:bg-[#2A2521]/5 hover:text-[#2A2521] disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-inherit transition-all"
+          class="p-1 border border-[#767068]/30 rounded hover:bg-[#2A2521]/5 hover:text-[#2A2521] disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-inherit transition-all dark:border-[#9E978F]/30 dark:hover:bg-[#332E2A] dark:hover:text-[#ECE7DF]"
         >
           <ChevronRight size={14} />
         </button>
