@@ -5,7 +5,6 @@ const SW_VERSION = '1.3.9';
 
 const ASSETS = [
   '/',
-  '/index.html',
   '/manifest.json',
   '/favicon.svg',
   '/icon-192.png',
@@ -57,12 +56,9 @@ self.addEventListener('fetch', (event) => {
           if (cachedResponse) {
             return cachedResponse;
           }
-          // If a page request fails (offline client navigation / reload), serve cached root index.html
+          // If a page request fails (offline client navigation / reload), serve cached root '/'
           if (event.request.mode === 'navigate' || (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html'))) {
-            return caches.match('/').then((res) => {
-              if (res) return res;
-              return caches.match('/index.html');
-            });
+            return caches.match('/');
           }
         });
       })
