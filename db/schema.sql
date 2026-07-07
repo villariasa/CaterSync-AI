@@ -20,6 +20,7 @@ CREATE TABLE customers (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL CHECK (length(trim(name)) > 0),
     contact VARCHAR(255) NOT NULL CHECK (length(trim(contact)) > 0),
+    email VARCHAR(255) DEFAULT '' NOT NULL,
     allergies TEXT[] DEFAULT '{}'::TEXT[] NOT NULL,
     dietary_prefs TEXT[] DEFAULT '{}'::TEXT[] NOT NULL,
     preferred_theme VARCHAR(100),

@@ -23,6 +23,7 @@
 	"dependencies": {
 		"@lucide/svelte": "^1.23.0",
 		"howler": "^2.2.4",
+		"nodemailer": "^9.0.3",
 		"pg": "^8.22.0"
 	}
 }

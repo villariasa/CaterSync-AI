@@ -47,6 +47,9 @@ pool.query(`
   VALUES ('admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'Admin')
   ON CONFLICT (username) DO NOTHING;
 
+  -- Migration for customer email
+  ALTER TABLE customers ADD COLUMN IF NOT EXISTS email VARCHAR(255) DEFAULT '';
+
   -- Phase 12 Database Schema Extensions (Operational Modules)
   CREATE TABLE IF NOT EXISTS roles (
       id SERIAL PRIMARY KEY,

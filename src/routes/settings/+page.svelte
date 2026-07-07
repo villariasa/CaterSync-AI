@@ -30,6 +30,12 @@
 
   let bizMessage = $state('');
 
+  // Email App configuration states
+  let gmailAddress = $state(appState.settings.emailConfig?.gmailAddress || '');
+  let gmailAppPassword = $state(appState.settings.emailConfig?.gmailAppPassword || '');
+  let smtpHost = $state(appState.settings.emailConfig?.smtpHost || 'smtp.gmail.com');
+  let smtpPort = $state(appState.settings.emailConfig?.smtpPort || 465);
+
   // Workers bindings
   let workerName = $state('');
   let workerRole = $state('Chef');
@@ -75,8 +81,15 @@
       sound_enabled_default: soundDefault
     };
 
+    const emailConfig = {
+      gmailAddress,
+      gmailAppPassword,
+      smtpHost,
+      smtpPort
+    };
+
     if (appState.usingMockData) {
-      appState.settings = { ...appState.settings, ...payload };
+      appState.settings = { ...appState.settings, ...payload, emailConfig };
       bizMessage = '✅ Configuration parameters saved locally.';
       appState.showToast("⚙️ Settings updated");
       appState.playStampSound();
@@ -87,7 +100,7 @@
       const response = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ ...payload, emailConfig })
       });
 
       const res = await response.json();
@@ -299,6 +312,35 @@
             <span class="text-[9px] text-[#767068] font-mono leading-relaxed mt-0.5 block text-center">
               Click, then close this browser tab immediately. A system notification triggers in 5s.
             </span>
+          </div>
+
+          <!-- Email SMTP settings integration -->
+          <div class="border-t-2 border-dashed border-[#767068]/20 my-6 pt-6 animate-fade-in">
+            <span class="ticket-stamp">SMTP MAIL SERVER</span>
+            <h3 class="text-sm font-bold text-[#2A2521] mt-2 mb-3">Gmail Application Link Setup</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">Gmail Account Address</label>
+                <input type="email" bind:value={gmailAddress} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" placeholder="example@gmail.com" />
+              </div>
+              <div>
+                <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">App-Specific Password</label>
+                <input type="password" bind:value={gmailAppPassword} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" placeholder="•••• •••• •••• ••••" />
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mt-4">
+              <div>
+                <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">SMTP Host</label>
+                <input type="text" bind:value={smtpHost} class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">SMTP Port</label>
+                <input type="number" bind:value={smtpPort} class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none" />
+              </div>
+            </div>
+            <p class="text-[10px] text-[#767068] mt-2 font-mono leading-relaxed">
+              ⚠️ Note: Requires enabling "App Passwords" in your Google Account security settings. This SMTP configuration will be used to automatically dispatch direct portal logins via Gmail.
+            </p>
           </div>
 
           <div class="pt-4 border-t border-[#767068]/20 flex items-center justify-between">

@@ -16,7 +16,7 @@ export async function POST({ request, cookies }) {
               e.budget, e.theme, e.status, e.venue_type, e.is_outdoor 
        FROM customers c 
        LEFT JOIN events e ON e.customer_id = c.id 
-       WHERE LOWER(c.contact) = $1 OR LOWER(c.name) = $1
+       WHERE LOWER(c.contact) = $1 OR LOWER(c.name) = $1 OR LOWER(c.email) = $1
        ORDER BY e.event_date DESC LIMIT 1`,
       [contact.trim().toLowerCase()]
     );
