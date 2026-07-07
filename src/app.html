@@ -8,6 +8,20 @@
 		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 		<link rel="manifest" href="/manifest.json" />
+		<script>
+			window.__catersyncDeferredInstallPrompt = null;
+			window.__catersyncInstallPromptSeen = false;
+			window.addEventListener('beforeinstallprompt', function (event) {
+				event.preventDefault();
+				window.__catersyncDeferredInstallPrompt = event;
+				window.__catersyncInstallPromptSeen = true;
+				window.dispatchEvent(new CustomEvent('catersync-install-prompt-ready'));
+			});
+			window.addEventListener('appinstalled', function () {
+				window.__catersyncDeferredInstallPrompt = null;
+				window.__catersyncInstallPromptSeen = false;
+			});
+		</script>
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Public+Sans:ital,wght@0,100..900;1,100..900&family=IBM+Plex+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
@@ -37,5 +51,4 @@
 		</style>
 	</body>
 </html>
-
 

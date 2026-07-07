@@ -51,7 +51,7 @@
 
   async function handleInstallClick() {
     const installedPromptOpened = await appState.executeAppInstall();
-    if (!installedPromptOpened && !appState.pwaInstalled) {
+    if (!appState.pwaInstalled) {
       showInstallHelp = true;
     }
   }
@@ -448,7 +448,7 @@
             {/each}
           </ol>
 
-          {#if installHelp.platform === 'android' && appState.pwaInstallPromptAvailable}
+          {#if installHelp.platform.startsWith('android') && appState.pwaInstallPromptAvailable}
             <button
               onclick={handleInstallClick}
               class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1.5"

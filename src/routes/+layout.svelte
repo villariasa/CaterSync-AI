@@ -144,7 +144,7 @@
 
   async function handleAppInstallClick() {
     const installedPromptOpened = await appState.executeAppInstall();
-    if (!installedPromptOpened && !appState.pwaInstalled) {
+    if (!appState.pwaInstalled) {
       showInstallHelpModal = true;
     }
   }
@@ -456,6 +456,9 @@
       e.preventDefault();
       appState.setPwaInstallPrompt(e);
     };
+    const handleSavedInstallPrompt = () => {
+      appState.hydrateSavedInstallPrompt();
+    };
     const handleAppInstalled = () => {
       appState.markPwaInstalled();
     };
@@ -463,6 +466,8 @@
       if (!document.hidden) syncInstallState();
     };
     window.addEventListener('beforeinstallprompt', handleInstallPrompt);
+    window.addEventListener('catersync-install-prompt-ready', handleSavedInstallPrompt);
+    appState.hydrateSavedInstallPrompt();
     window.addEventListener('appinstalled', handleAppInstalled);
     window.addEventListener('focus', syncInstallState);
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -514,6 +519,7 @@
     return () => {
       clearInterval(notificationInterval);
       window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
+      window.removeEventListener('catersync-install-prompt-ready', handleSavedInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
       window.removeEventListener('focus', syncInstallState);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -988,7 +994,7 @@
           {/each}
         </ol>
 
-        {#if installHelp.platform === 'android' && appState.pwaInstallPromptAvailable}
+        {#if installHelp.platform.startsWith('android') && appState.pwaInstallPromptAvailable}
           <button
             onclick={handleAppInstallClick}
             class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1.5"

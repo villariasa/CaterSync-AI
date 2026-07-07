@@ -227,20 +227,30 @@ export class CateringState {
     const maxTouchPoints = navigator.maxTouchPoints || 0;
     const isIOS = /iPad|iPhone|iPod/.test(ua) || (platform === 'MacIntel' && maxTouchPoints > 1);
     const isAndroid = /Android/.test(ua);
+    const isSamsung = /SamsungBrowser/i.test(ua);
+    const isFirefox = /Firefox|FxiOS/i.test(ua);
+    const isEdge = /EdgA|EdgiOS|Edg/i.test(ua);
+    const isChrome = /Chrome|CriOS/i.test(ua) && !isEdge && !isSamsung;
 
-    if (isIOS) return 'ios';
-    if (isAndroid) return 'android';
+    if (isIOS) return isFirefox ? 'ios-firefox' : isChrome ? 'ios-chrome' : isEdge ? 'ios-edge' : 'ios-safari';
+    if (isAndroid && isSamsung) return 'android-samsung';
+    if (isAndroid && isFirefox) return 'android-firefox';
+    if (isAndroid && isEdge) return 'android-edge';
+    if (isAndroid) return 'android-chrome';
+    if (isFirefox) return 'desktop-firefox';
+    if (isEdge) return 'desktop-edge';
+    if (isChrome) return 'desktop-chrome';
     return 'desktop';
   }
 
   getPwaInstallHelp() {
     const platform = this.getPwaInstallPlatform();
 
-    if (platform === 'ios') {
+    if (platform.startsWith('ios')) {
       return {
         platform,
         title: 'Install on iPhone / iPad',
-        detail: 'Apple does not allow web apps to open an install popup. Use Safari and add CaterSync to the Home Screen.',
+        detail: 'Apple does not allow any browser button to directly install a PWA. Install from Safari using Add to Home Screen.',
         steps: [
           'Open this page in Safari.',
           'Tap the Share button in the bottom toolbar.',
@@ -250,16 +260,58 @@ export class CateringState {
       };
     }
 
-    if (platform === 'android') {
+    if (platform === 'android-firefox') {
+      return {
+        platform,
+        title: 'Install on Android Firefox',
+        detail: 'Firefox handles PWA install from the browser menu instead of a site-controlled popup.',
+        steps: [
+          'Open this page in Firefox.',
+          'Tap the three-dot browser menu.',
+          'Tap Install or Add to Home screen.',
+          'Confirm Add.'
+        ]
+      };
+    }
+
+    if (platform === 'android-samsung') {
+      return {
+        platform,
+        title: 'Install on Samsung Internet',
+        detail: 'Samsung Internet installs web apps from its browser menu when the app is available.',
+        steps: [
+          'Open this page in Samsung Internet.',
+          'Tap the menu button.',
+          'Tap Add page to, then Home screen.',
+          'Confirm Add.'
+        ]
+      };
+    }
+
+    if (platform.startsWith('android')) {
       return {
         platform,
         title: 'Install on Android',
-        detail: 'Android installs PWAs from Chrome when the site is secure and the install prompt is ready.',
+        detail: 'Android Chrome and Edge can open the install popup when the browser marks this PWA installable.',
         steps: [
-          'Open this page in Chrome.',
-          'Tap Install App. If no popup appears, tap the three-dot browser menu.',
+          'Open this page in Chrome or Edge.',
+          'Tap Install App.',
+          'If no popup appears, tap the three-dot browser menu.',
           'Tap Install app or Add to Home screen.',
           'Confirm Install.'
+        ]
+      };
+    }
+
+    if (platform === 'desktop-firefox') {
+      return {
+        platform,
+        title: 'Install in Firefox',
+        detail: 'Firefox does not support the same direct PWA install popup as Chrome and Edge.',
+        steps: [
+          'Use Chrome or Edge for one-click PWA install.',
+          'Or open the browser menu and look for Add to Home screen / Install if your Firefox version provides it.',
+          'Confirm the install from the browser prompt.'
         ]
       };
     }
@@ -267,7 +319,7 @@ export class CateringState {
     return {
       platform,
       title: 'Install CaterSync',
-      detail: 'Install is controlled by your browser. Use Chrome or Edge on a secure app URL.',
+      detail: 'Install is controlled by the browser. Chrome and Edge support the direct install popup; other browsers use their menu.',
       steps: [
         'Open this app from HTTPS, localhost, or 127.0.0.1.',
         'Click Install App when the prompt appears.',
@@ -312,9 +364,23 @@ export class CateringState {
     this.deferredPrompt = null;
   }
 
+  hydrateSavedInstallPrompt() {
+    if (typeof window === 'undefined') return false;
+    if (this.deferredPrompt) return true;
+
+    const savedPrompt = window.__catersyncDeferredInstallPrompt;
+    if (savedPrompt) {
+      this.setPwaInstallPrompt(savedPrompt);
+      return true;
+    }
+
+    return false;
+  }
+
   // SvelteKit PWA installer prompt execution
   async executeAppInstall() {
     this.playClickSound();
+    this.hydrateSavedInstallPrompt();
 
     if (this.pwaInstalled) {
       this.pwaInstallable = false;
@@ -337,8 +403,10 @@ export class CateringState {
         this.showToast("Install on phones needs HTTPS. Open CaterSync from a secure link, then install again.", "error");
       } else if (!hasServiceWorker) {
         this.showToast("This browser does not support the service worker needed for app install.", "error");
+      } else if (help.platform.startsWith('android')) {
+        this.showToast("Chrome has not marked this PWA installable yet. Use HTTPS, reload once, then tap Install App again.", "error");
       } else {
-        this.showToast(help.platform === 'ios' ? "On iPhone, use Safari Share > Add to Home Screen." : "Use the browser menu: Install app / Add to Home screen.", "info");
+        this.showToast(help.platform.startsWith('ios') ? "On iPhone, use Safari Share > Add to Home Screen." : "Use the browser menu: Install app / Add to Home screen.", "info");
       }
       return false;
     }
