@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS business_settings (
     gmail_address TEXT,
     gmail_app_password TEXT,
     smtp_host TEXT,
-    smtp_port INTEGER
+    smtp_port INTEGER,
+    google_client_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS users (
@@ -833,4 +834,42 @@ CREATE TABLE IF NOT EXISTS prediction_accuracy_logs (
     actual_val REAL NOT NULL,
     error_rate REAL NOT NULL,
     logged_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+-- =========================================================================
+-- S. SUBSCRIBER REGISTRATION & SECURE AUTHENTICATION (Phase 13)
+-- =========================================================================
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'Operator',
+    is_active INTEGER DEFAULT 1 NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS subscriber_accounts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id INTEGER REFERENCES customers(id) ON DELETE SET NULL,
+    email TEXT UNIQUE,
+    phone TEXT UNIQUE,
+    password_hash TEXT,
+    email_verified_at DATETIME,
+    phone_verified_at DATETIME,
+    otp_code TEXT,
+    otp_expires_at DATETIME,
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    last_login_at DATETIME
+);
+
+CREATE TABLE IF NOT EXISTS webauthn_credentials (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id INTEGER NOT NULL,
+    account_type TEXT NOT NULL,
+    credential_id TEXT UNIQUE NOT NULL,
+    public_key TEXT NOT NULL,
+    sign_count BIGINT NOT NULL DEFAULT 0,
+    device_label TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

@@ -30,6 +30,7 @@
   let soundDefault = $state(appState.settings.sound_enabled_default);
 
   let bizMessage = $state('');
+  let googleClientId = $state(appState.settings.googleClientId || '');
   let biometricUsername = $state('admin');
   let showBiometricSetup = $state(false);
 
@@ -81,7 +82,8 @@
       risk_medium_threshold: parseFloat(riskMed),
       risk_high_threshold: parseFloat(riskHigh),
       low_stock_alerts_enabled: alertsEnabled,
-      sound_enabled_default: soundDefault
+      sound_enabled_default: soundDefault,
+      googleClientId: googleClientId
     };
 
     const emailConfig = {
@@ -92,7 +94,7 @@
     };
 
     if (appState.usingMockData) {
-      appState.settings = { ...appState.settings, ...payload, emailConfig };
+      appState.settings = { ...appState.settings, ...payload, emailConfig, googleClientId };
       bizMessage = '✅ Configuration parameters saved locally.';
       appState.showToast("⚙️ Settings updated");
       appState.playStampSound();
@@ -103,7 +105,7 @@
       const response = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, emailConfig })
+        body: JSON.stringify({ ...payload, emailConfig, googleClientId })
       });
 
       const res = await response.json();
@@ -343,6 +345,19 @@
             <p class="text-[10px] text-[#767068] mt-2 font-mono leading-relaxed">
               ⚠️ Note: Requires enabling "App Passwords" in your Google Account security settings. This SMTP configuration will be used to automatically dispatch direct portal logins via Gmail.
             </p>
+          </div>
+
+          <!-- Google Sign-In Configuration Card -->
+          <div class="border-t-2 border-dashed border-[#767068]/20 my-6 pt-6 animate-fade-in text-[#2A2521]">
+            <span class="ticket-stamp">GOOGLE OAUTH IDENTITY</span>
+            <h3 class="text-sm font-bold mt-2 mb-3">Google Sign-In API Credentials</h3>
+            <div>
+              <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">Google OAuth Client ID</label>
+              <input type="text" bind:value={googleClientId} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#767068]/30 focus:outline-none text-xs bg-slate-50 font-mono" placeholder="e.g. 1234567890-abcdef.apps.googleusercontent.com" />
+              <p class="text-[9px] text-[#767068] mt-1.5 font-mono leading-relaxed">
+                Provide the Client ID generated in your Google Developer Console. If populated, clients will see a "Continue with Google" button to instantly sign up or log in.
+              </p>
+            </div>
           </div>
 
           <!-- Biometric & Passkey Registration Card -->

@@ -16,7 +16,8 @@ export async function GET() {
       gmail_address: null,
       gmail_app_password: null,
       smtp_host: 'smtp.gmail.com',
-      smtp_port: 465
+      smtp_port: 465,
+      google_client_id: null
     };
 
     // Format for frontend
@@ -26,6 +27,7 @@ export async function GET() {
       smtpHost: settings.smtp_host || 'smtp.gmail.com',
       smtpPort: settings.smtp_port || 465
     };
+    settings.googleClientId = settings.google_client_id || '';
 
     return json({ success: true, settings });
   } catch (error) {
@@ -46,15 +48,16 @@ export async function POST({ request }) {
       risk_high_threshold,
       low_stock_alerts_enabled,
       sound_enabled_default,
-      emailConfig
+      emailConfig,
+      googleClientId
     } = body;
 
     const query = `
       INSERT INTO business_settings (
         id, business_name, currency_symbol, overhead_rate, min_budget_per_guest,
         risk_medium_threshold, risk_high_threshold, low_stock_alerts_enabled, sound_enabled_default,
-        gmail_address, gmail_app_password, smtp_host, smtp_port
-      ) VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        gmail_address, gmail_app_password, smtp_host, smtp_port, google_client_id
+      ) VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       ON CONFLICT (id) DO UPDATE SET
         business_name = EXCLUDED.business_name,
         currency_symbol = EXCLUDED.currency_symbol,
@@ -68,6 +71,7 @@ export async function POST({ request }) {
         gmail_app_password = EXCLUDED.gmail_app_password,
         smtp_host = EXCLUDED.smtp_host,
         smtp_port = EXCLUDED.smtp_port,
+        google_client_id = EXCLUDED.google_client_id,
         updated_at = CURRENT_TIMESTAMP
       RETURNING *
     `;
@@ -84,7 +88,8 @@ export async function POST({ request }) {
       emailConfig?.gmailAddress || null,
       emailConfig?.gmailAppPassword || null,
       emailConfig?.smtpHost || null,
-      emailConfig?.smtpPort ? parseInt(emailConfig.smtpPort) : null
+      emailConfig?.smtpPort ? parseInt(emailConfig.smtpPort) : null,
+      googleClientId || null
     ]);
 
     const settings = res.rows[0];
@@ -94,6 +99,7 @@ export async function POST({ request }) {
       smtpHost: settings.smtp_host || 'smtp.gmail.com',
       smtpPort: settings.smtp_port || 465
     };
+    settings.googleClientId = settings.google_client_id || '';
 
     return json({ success: true, settings });
   } catch (error) {

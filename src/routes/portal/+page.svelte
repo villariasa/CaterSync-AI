@@ -13,6 +13,7 @@
   let isChecking = $state(false);
   let errorMessage = $state('');
   let successMessage = $state('');
+  let googleClientId = $state('');
 
   let customer = $state(null);
   let event = $state(null);
@@ -45,6 +46,88 @@
 
   // Tabs
   let activeTab = $state('billing'); // billing, menu, contract, feedback
+
+  // Dynamic Google identity script loader
+  function loadGoogleScript() {
+    if (typeof window === 'undefined') return;
+    if (document.getElementById('google-gsi-client')) {
+      initializeGoogleButton();
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.id = 'google-gsi-client';
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      initializeGoogleButton();
+    };
+    document.head.appendChild(script);
+  }
+
+  function initializeGoogleButton() {
+    if (typeof window === 'undefined' || !window.google || !googleClientId) return;
+
+    try {
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: handleGoogleCredentialResponse,
+        auto_select: false,
+        cancel_on_tap_outside: true
+      });
+
+      const parentDiv = document.getElementById('google-btn-container');
+      if (parentDiv) {
+        window.google.accounts.id.renderButton(
+          parentDiv,
+          { theme: 'outline', size: 'large', width: parentDiv.offsetWidth, text: 'continue_with' }
+        );
+      }
+    } catch (err) {
+      console.error("Google Identity initialization error:", err);
+    }
+  }
+
+  async function handleGoogleCredentialResponse(response) {
+    isChecking = true;
+    errorMessage = '';
+    successMessage = '';
+
+    try {
+      const res = await fetch('/api/auth/google-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: response.credential })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        customer = data.customer;
+        event = data.event;
+        customerContact = data.customer.email || data.customer.contact;
+        
+        if (event) {
+          await loadPortalData();
+          startCountdown();
+        }
+
+        // Settle device PIN for quick lock screen if not configured
+        const hasPin = await hasSecureSessionStored();
+        if (!hasPin) {
+          portalLoginStep = 'setup_pin';
+        } else {
+          isAuthenticated = true;
+        }
+      } else {
+        errorMessage = data.error || 'Google Sign-In failed.';
+      }
+    } catch (err) {
+      errorMessage = 'Google auth error: ' + err.message;
+    } finally {
+      isChecking = false;
+    }
+  }
 
   // Step 1: Identifier Check
   async function checkIdentifier(e) {
@@ -480,6 +563,21 @@
   }
 
   onMount(async () => {
+    // 1. Load configuration and Google Client ID
+    try {
+      const res = await fetch('/api/settings');
+      const data = await res.json();
+      if (res.ok && data.success) {
+        googleClientId = data.settings.googleClientId || '';
+        if (googleClientId) {
+          loadGoogleScript();
+        }
+      }
+    } catch (e) {
+      console.warn("Could not load settings configuration:", e.message);
+    }
+
+    // 2. Handle auto-login via URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const contactParam = urlParams.get('contact') || urlParams.get('token');
     
@@ -573,6 +671,14 @@
             >
               First time here? Claim & Activate Account
             </button>
+
+            <!-- Google Sign In Container -->
+            {#if googleClientId}
+              <div class="border-t border-[#767068]/15 pt-4 my-2 text-center">
+                <span class="text-[9px] uppercase text-[#767068] font-bold block mb-3 font-mono">Or connect with Google</span>
+                <div id="google-btn-container" class="w-full flex justify-center min-h-[40px]"></div>
+              </div>
+            {/if}
           </form>
 
         {:else if portalLoginStep === 'otp'}

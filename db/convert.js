@@ -90,7 +90,8 @@ CREATE TABLE IF NOT EXISTS business_settings (
     gmail_address TEXT,
     gmail_app_password TEXT,
     smtp_host TEXT,
-    smtp_port INTEGER
+    smtp_port INTEGER,
+    google_client_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS users (
