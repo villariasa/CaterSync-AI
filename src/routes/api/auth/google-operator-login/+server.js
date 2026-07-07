@@ -82,7 +82,9 @@ export async function POST({ request, cookies }) {
       success: true,
       user: {
         username: user.username,
-        role: user.role
+        role: user.role,
+        name: name,
+        picture: payload.picture || null
       }
     });
 
@@ -102,7 +104,9 @@ export async function POST({ request, cookies }) {
         offlineFallback: true,
         user: {
           username: name,
-          role: 'Operator'
+          role: 'Operator',
+          name: name,
+          picture: payload.picture || null
         }
       });
     }

@@ -105,13 +105,22 @@
     if (appState.currentUser && appState.currentUser.username) {
       const currentUsername = appState.currentUser.username;
       const currentName = appState.currentUser.name || currentUsername.split('@')[0];
+      const currentPicture = appState.currentUser.picture || null;
       
       // Update or add profile to cache
       if (Array.isArray(cachedProfiles)) {
-        const exists = cachedProfiles.some(p => p && p.username && p.username.toLowerCase() === currentUsername.toLowerCase());
-        if (!exists) {
-          cachedProfiles = [...cachedProfiles, { username: currentUsername, name: currentName }];
+        const index = cachedProfiles.findIndex(p => p && p.username && p.username.toLowerCase() === currentUsername.toLowerCase());
+        if (index === -1) {
+          cachedProfiles = [...cachedProfiles, { username: currentUsername, name: currentName, picture: currentPicture }];
           localStorage.setItem('catersync_saved_profiles', JSON.stringify(cachedProfiles));
+        } else {
+          // Update picture if it changed
+          if (cachedProfiles[index].picture !== currentPicture) {
+            const updated = [...cachedProfiles];
+            updated[index] = { ...updated[index], picture: currentPicture };
+            cachedProfiles = updated;
+            localStorage.setItem('catersync_saved_profiles', JSON.stringify(cachedProfiles));
+          }
         }
       }
     }
@@ -855,11 +864,15 @@
                 appState.playClickSound();
                 showProfileDropdown = !showProfileDropdown;
               }}
-              class="btn-interactive w-8 h-8 rounded-full bg-[#3E6650] hover:bg-[#3E6650]/95 text-[#F6F2EA] flex items-center justify-center font-bold relative border border-[#767068]/20 select-none shadow-sm transition-all focus:outline-none uppercase"
+              class="btn-interactive w-8 h-8 rounded-full bg-[#3E6650] hover:bg-[#3E6650]/95 text-[#F6F2EA] flex items-center justify-center font-bold relative border border-[#767068]/20 select-none shadow-sm transition-all focus:outline-none uppercase overflow-hidden"
               title="Profile menu"
             >
-              <span>{activeProfileName[0]}</span>
-              <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-white"></span>
+              {#if appState.currentUser?.picture}
+                <img src={appState.currentUser.picture} alt="Profile" class="w-full h-full object-cover" />
+              {:else}
+                <span>{activeProfileName[0]}</span>
+              {/if}
+              <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-white z-10"></span>
             </button>
 
             {#if showProfileDropdown}
@@ -872,8 +885,12 @@
                   <!-- Main Active Profile -->
                   <div class="flex items-center justify-between py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded px-2 cursor-default transition-all">
                     <div class="flex items-center gap-3">
-                      <div class="w-9 h-9 rounded-full bg-[#3E6650] text-[#F6F2EA] flex items-center justify-center font-bold text-sm uppercase">
-                        <span>{activeProfileName[0]}</span>
+                      <div class="w-9 h-9 rounded-full bg-[#3E6650] text-[#F6F2EA] flex items-center justify-center font-bold text-sm uppercase overflow-hidden shrink-0">
+                        {#if appState.currentUser?.picture}
+                          <img src={appState.currentUser.picture} alt="Profile" class="w-full h-full object-cover" />
+                        {:else}
+                          <span>{activeProfileName[0]}</span>
+                        {/if}
                       </div>
                       <div>
                         <div class="font-bold text-sm text-[#2A2521] dark:text-[#EBE5DC] truncate max-w-[150px]">{activeProfileName}</div>
@@ -890,8 +907,12 @@
                       class="flex items-center justify-between py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded px-2 cursor-pointer transition-all mt-1"
                     >
                       <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-full bg-[#767068]/20 dark:bg-zinc-800 text-[#767068] dark:text-[#EBE5DC] flex items-center justify-center font-bold text-xs uppercase">
-                          <span>{profile.name[0]}</span>
+                        <div class="w-9 h-9 rounded-full bg-[#767068]/20 dark:bg-zinc-800 text-[#767068] dark:text-[#EBE5DC] flex items-center justify-center font-bold text-xs uppercase overflow-hidden shrink-0">
+                          {#if profile.picture}
+                            <img src={profile.picture} alt="Profile" class="w-full h-full object-cover" />
+                          {:else}
+                            <span>{profile.name[0]}</span>
+                          {/if}
                         </div>
                         <div>
                           <div class="text-sm font-semibold text-[#767068] dark:text-zinc-400 truncate max-w-[130px]">{profile.name}</div>
@@ -1329,8 +1350,12 @@
               onclick={() => !isActive && initiateProfileSwitch(profile)}
               class="flex items-center gap-3 cursor-pointer flex-1"
             >
-              <div class="w-8 h-8 rounded-full bg-[#3E6650] text-[#F6F2EA] flex items-center justify-center font-bold text-xs uppercase">
-                <span>{profile.name[0]}</span>
+              <div class="w-8 h-8 rounded-full bg-[#3E6650] text-[#F6F2EA] flex items-center justify-center font-bold text-xs uppercase overflow-hidden shrink-0">
+                {#if profile.picture}
+                  <img src={profile.picture} alt="Profile" class="w-full h-full object-cover" />
+                {:else}
+                  <span>{profile.name[0]}</span>
+                {/if}
               </div>
               <div>
                 <span class="text-xs font-bold text-[#2A2521] dark:text-[#EBE5DC] block">{profile.name}</span>
