@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { platformStorage } from '$lib/server/db.js';
 
 export async function handle({ event, resolve }) {
   const sessionUser = event.cookies.get('session_user');
@@ -16,5 +17,9 @@ export async function handle({ event, resolve }) {
     }
   }
 
-  return resolve(event);
+  // Bind Cloudflare context to platform storage for database queries
+  return platformStorage.run(event.platform, () => {
+    return resolve(event);
+  });
 }
+

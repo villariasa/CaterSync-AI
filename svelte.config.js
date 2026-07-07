@@ -1,13 +1,8 @@
-import adapter from '@sveltejs/adapter-static';
+import adapter from '@sveltejs/adapter-cloudflare';
 
 export default {
   kit: {
-    adapter: adapter({
-      pages: 'build',
-      assets: 'build',
-      fallback: 'index.html', // For SPA routing
-      precompress: false,
-      strict: true
-    })
+    adapter: adapter()
   }
 };
+
