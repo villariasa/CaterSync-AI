@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import { pool } from '$lib/server/db.js';
 
-export async function GET() {
+export async function GET({ locals }) {
   try {
     const res = await pool.query('SELECT * FROM business_settings WHERE id = 1');
     const settings = res.rows.length > 0 ? res.rows[0] : {
@@ -20,14 +20,28 @@ export async function GET() {
       google_client_id: null
     };
 
-    // Format for frontend
+    const googleClientId = settings.google_client_id || '';
+
+    // If user is not authenticated (anonymous user requesting from Landing Page), strip sensitive credentials!
+    if (!locals.user) {
+      return json({
+        success: true,
+        settings: {
+          business_name: settings.business_name || 'CaterSync',
+          currency_symbol: settings.currency_symbol || '₱',
+          googleClientId: googleClientId
+        }
+      });
+    }
+
+    // Format for authenticated frontend
     settings.emailConfig = {
       gmailAddress: settings.gmail_address || '',
       gmailAppPassword: settings.gmail_app_password || '',
       smtpHost: settings.smtp_host || 'smtp.gmail.com',
       smtpPort: settings.smtp_port || 465
     };
-    settings.googleClientId = settings.google_client_id || '';
+    settings.googleClientId = googleClientId;
 
     return json({ success: true, settings });
   } catch (error) {

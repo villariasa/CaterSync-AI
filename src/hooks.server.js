@@ -11,7 +11,8 @@ export async function handle({ event, resolve }) {
 
   // Protect all non-auth API routes
   if (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth/')) {
-    if (!sessionUser) {
+    const isPublicSettingsGet = pathname === '/api/settings' && event.request.method === 'GET';
+    if (!isPublicSettingsGet && !sessionUser) {
       console.warn(`🔒 Unauthorized API access blocked: ${pathname}`);
       return json({ error: 'Unauthorized session access. Please login.' }, { status: 401 });
     }
