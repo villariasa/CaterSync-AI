@@ -44,6 +44,19 @@
     showLogoutModal = true;
   }
 
+  async function performLogout() {
+    appState.playClickSound();
+    showLogoutModal = false;
+    appState.isAuthenticated = false;
+    if (!appState.usingMockData) {
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+      } catch (err) {
+        console.warn("Server logout request skipped or failed:", err);
+      }
+    }
+  }
+
   function triggerAppUpdate() {
     appState.playClickSound();
     
@@ -602,11 +615,7 @@
           Cancel
         </button>
         <button 
-          onclick={() => {
-            appState.playClickSound();
-            showLogoutModal = false;
-            appState.isAuthenticated = false;
-          }} 
+          onclick={performLogout} 
           class="py-2.5 rounded bg-[#AC3B2A] text-white hover:bg-[#AC3B2A]/90 transition-all font-bold text-center"
         >
           Log Out

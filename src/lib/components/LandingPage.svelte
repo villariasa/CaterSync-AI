@@ -46,39 +46,92 @@
     }
   }
 
-  function handleRegister(e) {
+  async function handleRegister(e) {
     e.preventDefault();
     if (!regUsername || !regPassword) return;
 
     appState.playClickSound();
-    appState.currentUser = {
-      username: regUsername,
-      password: regPassword,
-      pin: regPIN
-    };
-    appState.registeredPIN = regPIN;
-    regMessage = `✅ Profile "${regUsername}" registered successfully. You can now login.`;
-    appState.playStampSound();
-    setTimeout(() => {
-      activeTab = 'password';
-      username = regUsername;
-    }, 1200);
+
+    if (appState.usingMockData) {
+      appState.currentUser = {
+        username: regUsername,
+        password: regPassword,
+        pin: regPIN
+      };
+      appState.registeredPIN = regPIN;
+      regMessage = `✅ Profile "${regUsername}" registered successfully. You can now login.`;
+      appState.playStampSound();
+      setTimeout(() => {
+        activeTab = 'password';
+        username = regUsername;
+      }, 1200);
+    } else {
+      try {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: regUsername, password: regPassword, role: 'Operator' })
+        });
+        const res = await response.json();
+        if (response.ok) {
+          appState.currentUser = {
+            username: regUsername,
+            password: regPassword,
+            pin: regPIN
+          };
+          appState.registeredPIN = regPIN;
+          regMessage = `✅ Profile "${regUsername}" registered successfully. You can now login.`;
+          appState.playStampSound();
+          setTimeout(() => {
+            activeTab = 'password';
+            username = regUsername;
+          }, 1200);
+        } else {
+          regMessage = `❌ Registration failed: ${res.error}`;
+          appState.playBuzzerSound();
+        }
+      } catch (err) {
+        regMessage = `❌ Error: ${err.message}`;
+        appState.playBuzzerSound();
+      }
+    }
   }
 
   // Handle password login
-  function handlePasswordLogin(e) {
+  async function handlePasswordLogin(e) {
     e.preventDefault();
     appState.playClickSound();
 
-    const user = appState.currentUser || { username: 'admin', password: 'admin' };
-
-    if (username === user.username && password === user.password) {
-      appState.isAuthenticated = true;
-      appState.playStampSound();
-      goto('/');
+    if (appState.usingMockData) {
+      const user = appState.currentUser || { username: 'admin', password: 'admin' };
+      if (username === user.username && password === user.password) {
+        appState.isAuthenticated = true;
+        appState.playStampSound();
+        goto('/');
+      } else {
+        loginMessage = '❌ Invalid credentials.';
+        appState.playBuzzerSound();
+      }
     } else {
-      loginMessage = '❌ Invalid credentials.';
-      appState.playBuzzerSound();
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const res = await response.json();
+        if (response.ok && res.success) {
+          appState.isAuthenticated = true;
+          appState.playStampSound();
+          goto('/');
+        } else {
+          loginMessage = `❌ ${res.error || 'Invalid credentials'}`;
+          appState.playBuzzerSound();
+        }
+      } catch (err) {
+        loginMessage = `❌ Connection Error: ${err.message}`;
+        appState.playBuzzerSound();
+      }
     }
   }
 

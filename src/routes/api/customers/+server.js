@@ -26,17 +26,8 @@ export async function POST({ request }) {
       console.log('✅ Customer created in DB:', result.rows[0]);
       return json({ success: true, customer: result.rows[0] });
     } catch (dbErr) {
-      console.warn('⚠️ DB insert failed. Simulating local insert.');
-      const mockCustomer = {
-        id: Math.floor(Math.random() * 1000) + 100,
-        name: name.trim(),
-        contact: contact ? contact.trim() : '',
-        allergies: allergies || [],
-        dietary_prefs: dietary_prefs || [],
-        preferred_theme: preferred_theme || null,
-        simulated: true
-      };
-      return json({ success: true, customer: mockCustomer });
+      console.error('❌ Database insert failed:', dbErr);
+      return json({ error: 'Database write failed: ' + dbErr.message }, { status: 500 });
     }
   } catch (err) {
     return json({ error: err.message }, { status: 500 });

@@ -34,6 +34,18 @@ pool.query(`
   VALUES (1, 'CaterSync-AI Operations', '₱')
   ON CONFLICT (id) DO NOTHING;
   ALTER TABLE staff ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;
+  
+  CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      username VARCHAR(255) NOT NULL UNIQUE,
+      password_hash VARCHAR(255) NOT NULL,
+      role VARCHAR(100) NOT NULL DEFAULT 'Operator',
+      is_active BOOLEAN DEFAULT TRUE NOT NULL,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+  );
+  INSERT INTO users (username, password_hash, role)
+  VALUES ('admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'Admin')
+  ON CONFLICT (username) DO NOTHING;
 `).then(() => {
   console.log('✅ PostgreSQL Schema upgrades completed successfully.');
 }).catch((err) => {

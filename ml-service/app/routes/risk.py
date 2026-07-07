@@ -31,18 +31,18 @@ def predict_event_risk(request: RiskPredictionRequest):
     # 1. Weather / Outdoor checks
     if request.is_outdoor:
         risk_score += 0.45
-        reasons.push("Outdoor setup requested: rainfall probability indicator is at 55% for this seasonal window.")
+        reasons.append("Outdoor setup requested: rainfall probability indicator is at 55% for this seasonal window.")
         
     # 2. Staffing Bottleneck constraints
     if request.guest_count > 180:
         risk_score += 0.22
-        reasons.push("Guest count exceeds 180: kitchen logistics bottleneck risk is flagged.")
+        reasons.append("Guest count exceeds 180: kitchen logistics bottleneck risk is flagged.")
         
     # 3. Budget squeeze
     budget_per_head = request.budget / request.guest_count
     if budget_per_head < 300:
         risk_score += 0.15
-        reasons.push(f"Low budget per guest (₱{budget_per_head:.2f}): raw ingredient substitution risk is flagged.")
+        reasons.append(f"Low budget per guest (₱{budget_per_head:.2f}): raw ingredient substitution risk is flagged.")
         
     risk_score = round(min(1.0, risk_score), 2)
     level = "High" if risk_score > 0.60 else ("Medium" if risk_score > 0.35 else "Low")

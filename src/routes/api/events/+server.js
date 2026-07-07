@@ -29,21 +29,8 @@ export async function POST({ request }) {
       console.log('✅ Event created in DB:', result.rows[0]);
       return json({ success: true, event: result.rows[0] });
     } catch (dbErr) {
-      console.warn('⚠️ DB insert failed. Simulating local insert.');
-      const mockEvent = {
-        id: Math.floor(Math.random() * 1000) + 100,
-        customer_id: parseInt(customer_id),
-        event_type,
-        guest_count: parseInt(guest_count),
-        event_date,
-        budget: parseFloat(budget),
-        theme,
-        venue_type,
-        is_outdoor: is_outdoor === true,
-        status: 'Confirmed',
-        simulated: true
-      };
-      return json({ success: true, event: mockEvent });
+      console.error('❌ Database insert failed:', dbErr);
+      return json({ error: 'Database write failed: ' + dbErr.message }, { status: 500 });
     }
   } catch (err) {
     return json({ error: err.message }, { status: 500 });
