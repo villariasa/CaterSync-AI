@@ -29,6 +29,132 @@ async function getPgPool() {
 // Storage to keep track of request's platform object (Cloudflare Workers environment bindings)
 export const platformStorage = new AsyncLocalStorage();
 
+async function executeD1Query(db, sql, params) {
+  // Convert PostgreSQL placeholders ($1, $2, etc.) to SQLite placeholders (?1, ?2, etc.)
+  const translatedSql = sql.replace(/\$(\d+)/g, '?$1');
+
+  // Serialize Javascript arrays / JSON to JSON strings for SQLite
+  const sqliteParams = params.map(val => {
+    if (Array.isArray(val) || (val && typeof val === 'object' && val.constructor === Object)) {
+      return JSON.stringify(val);
+    }
+    return val;
+  });
+
+  try {
+    const stmt = db.prepare(translatedSql);
+    const res = await stmt.bind(...sqliteParams).all();
+
+    // Format D1 results to match PG query format
+    const arrayColumns = ['allergies', 'dietary_prefs', 'cuisine_tags', 'ingredients_json'];
+    const booleanColumns = ['is_outdoor', 'low_stock_alerts_enabled', 'sound_enabled_default', 'is_active'];
+
+    const rows = (res.results || []).map(row => {
+      const formatted = { ...row };
+
+      // Deserialize JSON strings back to Javascript arrays/objects
+      for (const col of arrayColumns) {
+        if (formatted[col] !== undefined && typeof formatted[col] === 'string') {
+          try {
+            formatted[col] = JSON.parse(formatted[col]);
+          } catch (e) {}
+        }
+      }
+
+      // Map numeric flags back to Javascript booleans
+      for (const col of booleanColumns) {
+        if (formatted[col] !== undefined && typeof formatted[col] === 'number') {
+          formatted[col] = formatted[col] === 1;
+        }
+      }
+
+      return formatted;
+    });
+
+    return { rows };
+  } catch (err) {
+    console.error('❌ Cloudflare D1 Query execution failed:', err);
+    throw err;
+  }
+}
+
+async function executeRemoteD1Proxy(sql, params) {
+  const apiToken = env.CLOUDFLARE_API_TOKEN;
+  const accountId = env.CLOUDFLARE_ACCOUNT_ID || '42cd6827b074b6fa8b7a040dd9962bcf';
+  const databaseId = env.CLOUDFLARE_DATABASE_ID || '0618bd9e-5cd1-464a-89dc-5416cfa05821';
+
+  // Convert PostgreSQL placeholders ($1, $2, etc.) to SQLite placeholders (?1, ?2, etc.)
+  const translatedSql = sql.replace(/\$(\d+)/g, '?$1');
+
+  // Serialize Javascript arrays / JSON to JSON strings for SQLite
+  const sqliteParams = params.map(val => {
+    if (Array.isArray(val) || (val && typeof val === 'object' && val.constructor === Object)) {
+      return JSON.stringify(val);
+    }
+    return val;
+  });
+
+  try {
+    const response = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${databaseId}/query`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sql: translatedSql,
+          params: sqliteParams
+        })
+      }
+    );
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      const errMsg = data.errors && data.errors[0] ? data.errors[0].message : 'Unknown error';
+      throw new Error(`Cloudflare D1 REST API Error: ${errMsg}`);
+    }
+
+    const res = data.result[0];
+    if (!res.success) {
+      const dbErrMsg = res.errors && res.errors[0] ? res.errors[0].message : 'Query compilation failed';
+      throw new Error(`D1 Query Error: ${dbErrMsg}`);
+    }
+
+    // Format D1 results to match PG query format
+    const arrayColumns = ['allergies', 'dietary_prefs', 'cuisine_tags', 'ingredients_json'];
+    const booleanColumns = ['is_outdoor', 'low_stock_alerts_enabled', 'sound_enabled_default', 'is_active'];
+
+    const rows = (res.results || []).map(row => {
+      const formatted = { ...row };
+
+      // Deserialize JSON strings back to Javascript arrays/objects
+      for (const col of arrayColumns) {
+        if (formatted[col] !== undefined && typeof formatted[col] === 'string') {
+          try {
+            formatted[col] = JSON.parse(formatted[col]);
+          } catch (e) {}
+        }
+      }
+
+      // Map numeric flags back to Javascript booleans
+      for (const col of booleanColumns) {
+        if (formatted[col] !== undefined && typeof formatted[col] === 'number') {
+          formatted[col] = formatted[col] === 1;
+        }
+      }
+
+      return formatted;
+    });
+
+    return { rows };
+  } catch (err) {
+    console.error('❌ Cloudflare D1 Remote Proxy execution failed:', err);
+    throw err;
+  }
+}
+
 export const pool = {
   async query(sql, params = []) {
     const platform = platformStorage.getStore();
@@ -36,53 +162,12 @@ export const pool = {
     // 1. If we are running inside Cloudflare Pages (with D1 database binding)
     if (platform && platform.env && platform.env.DB) {
       const db = platform.env.DB;
+      return await executeD1Query(db, sql, params);
+    }
 
-      // Convert PostgreSQL placeholders ($1, $2, etc.) to SQLite placeholders (?1, ?2, etc.)
-      const translatedSql = sql.replace(/\$(\d+)/g, '?$1');
-
-      // Serialize Javascript arrays / JSON to JSON strings for SQLite
-      const sqliteParams = params.map(val => {
-        if (Array.isArray(val) || (val && typeof val === 'object' && val.constructor === Object)) {
-          return JSON.stringify(val);
-        }
-        return val;
-      });
-
-      try {
-        const stmt = db.prepare(translatedSql);
-        const res = await stmt.bind(...sqliteParams).all();
-
-        // Format D1 results to match PG query format
-        const arrayColumns = ['allergies', 'dietary_prefs', 'cuisine_tags', 'ingredients_json'];
-        const booleanColumns = ['is_outdoor', 'low_stock_alerts_enabled', 'sound_enabled_default', 'is_active'];
-
-        const rows = (res.results || []).map(row => {
-          const formatted = { ...row };
-
-          // Deserialize JSON strings back to Javascript arrays/objects
-          for (const col of arrayColumns) {
-            if (formatted[col] !== undefined && typeof formatted[col] === 'string') {
-              try {
-                formatted[col] = JSON.parse(formatted[col]);
-              } catch (e) {}
-            }
-          }
-
-          // Map numeric flags back to Javascript booleans
-          for (const col of booleanColumns) {
-            if (formatted[col] !== undefined && typeof formatted[col] === 'number') {
-              formatted[col] = formatted[col] === 1;
-            }
-          }
-
-          return formatted;
-        });
-
-        return { rows };
-      } catch (err) {
-        console.error('❌ Cloudflare D1 Query execution failed:', err);
-        throw err;
-      }
+    // 2. If we are running locally in Node but configured to proxy to remote D1
+    if (env.CLOUDFLARE_API_TOKEN) {
+      return await executeRemoteD1Proxy(sql, params);
     }
 
     // 2. Fallback to PostgreSQL (Local / Offline dev mode)
