@@ -36,3 +36,12 @@ export async function POST({ request }) {
     return json({ error: err.message }, { status: 500 });
   }
 }
+
+export async function GET() {
+  try {
+    const res = await pool.query('SELECT * FROM events ORDER BY event_date DESC');
+    return json({ success: true, events: res.rows });
+  } catch (error) {
+    return json({ success: false, error: error.message }, { status: 500 });
+  }
+}

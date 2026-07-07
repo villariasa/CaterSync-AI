@@ -38,6 +38,10 @@ export async function load({ fetch }) {
       fetch('/api/staff')
     ]);
 
+    if (!custRes.ok || !evtsRes.ok || !menusRes.ok || !ingsRes.ok || !supsRes.ok || !staffRes.ok) {
+      throw new Error('Database REST API returned non-200 response (Database Offline)');
+    }
+
     const [cust, evts, menus, ings, sups, staff] = await Promise.all([
       custRes.json(),
       evtsRes.json(),
@@ -48,12 +52,12 @@ export async function load({ fetch }) {
     ]);
 
     return {
-      customers: cust.customers || [],
-      events: evts.events || [],
-      menus: menus.menus || [],
-      ingredients: ings.ingredients || [],
-      suppliers: sups.suppliers || [],
-      staff: staff.staff || [],
+      customers: Array.isArray(cust) ? cust : (cust.customers || []),
+      events: Array.isArray(evts) ? evts : (evts.events || []),
+      menus: Array.isArray(menus) ? menus : (menus.menus || []),
+      ingredients: Array.isArray(ings) ? ings : (ings.ingredients || []),
+      suppliers: Array.isArray(sups) ? sups : (sups.suppliers || []),
+      staff: Array.isArray(staff) ? staff : (staff.staff || []),
       demandForecasts: MOCK_DEMAND,
       settings: settingsData.settings,
       usingMockData: false
