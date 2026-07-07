@@ -182,6 +182,85 @@ export const pool = {
           // Retry original query
           return await runQueryFn();
         }
+
+        if (err.message && (
+          err.message.includes('no such table: webauthn_credentials') ||
+          err.message.includes('relation "webauthn_credentials" does not exist')
+        )) {
+          console.warn('⚠️ Detected missing table "webauthn_credentials". Running automatic database migration...');
+          try {
+            const createSql = platform && platform.env && platform.env.DB 
+              ? `CREATE TABLE IF NOT EXISTS webauthn_credentials (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  account_id INT NOT NULL,
+                  account_type VARCHAR(20) NOT NULL,
+                  credential_id TEXT UNIQUE NOT NULL,
+                  public_key TEXT NOT NULL,
+                  sign_count BIGINT NOT NULL DEFAULT 0,
+                  device_label VARCHAR(100),
+                  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+                )`
+              : `CREATE TABLE IF NOT EXISTS webauthn_credentials (
+                  id SERIAL PRIMARY KEY,
+                  account_id INT NOT NULL,
+                  account_type VARCHAR(20) NOT NULL,
+                  credential_id TEXT UNIQUE NOT NULL,
+                  public_key TEXT NOT NULL,
+                  sign_count BIGINT NOT NULL DEFAULT 0,
+                  device_label VARCHAR(100),
+                  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+                )`;
+            await runQueryFn(createSql);
+            console.log('✅ Automatic table migration completed. Retrying original query...');
+          } catch (migrationErr) {
+            console.error('❌ Automatic table migration failed:', migrationErr.message);
+          }
+          return await runQueryFn();
+        }
+
+        if (err.message && (
+          err.message.includes('no such table: subscriber_accounts') ||
+          err.message.includes('relation "subscriber_accounts" does not exist')
+        )) {
+          console.warn('⚠️ Detected missing table "subscriber_accounts". Running automatic database migration...');
+          try {
+            const createSql = platform && platform.env && platform.env.DB 
+              ? `CREATE TABLE IF NOT EXISTS subscriber_accounts (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  customer_id INT,
+                  email VARCHAR(255) UNIQUE,
+                  phone VARCHAR(50) UNIQUE,
+                  password_hash TEXT,
+                  email_verified_at TIMESTAMP WITH TIME ZONE,
+                  phone_verified_at TIMESTAMP WITH TIME ZONE,
+                  otp_code VARCHAR(10),
+                  otp_expires_at TIMESTAMP WITH TIME ZONE,
+                  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                  last_login_at TIMESTAMP WITH TIME ZONE
+                )`
+              : `CREATE TABLE IF NOT EXISTS subscriber_accounts (
+                  id SERIAL PRIMARY KEY,
+                  customer_id INT,
+                  email VARCHAR(255) UNIQUE,
+                  phone VARCHAR(50) UNIQUE,
+                  password_hash TEXT,
+                  email_verified_at TIMESTAMP WITH TIME ZONE,
+                  phone_verified_at TIMESTAMP WITH TIME ZONE,
+                  otp_code VARCHAR(10),
+                  otp_expires_at TIMESTAMP WITH TIME ZONE,
+                  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                  last_login_at TIMESTAMP WITH TIME ZONE
+                )`;
+            await runQueryFn(createSql);
+            console.log('✅ Automatic table migration completed. Retrying original query...');
+          } catch (migrationErr) {
+            console.error('❌ Automatic table migration failed:', migrationErr.message);
+          }
+          return await runQueryFn();
+        }
+
         throw err;
       }
     };

@@ -13,7 +13,8 @@
     Download,
     X,
     Fingerprint,
-    KeyRound
+    KeyRound,
+    CheckCircle2
   } from '@lucide/svelte';
 
   const appState = getCateringContext();
@@ -44,6 +45,27 @@
   let showBiometricSetupPrompt = $state(false);
   let showBiometricRegisterScanner = $state(false);
 
+  // Welcome screen animation states
+  let showWelcomeScreen = $state(false);
+  let welcomeName = $state('');
+
+  function getGreeting() {
+    const hr = new Date().getHours();
+    if (hr >= 5 && hr < 12) return 'Good morning';
+    if (hr >= 12 && hr < 18) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  function triggerWelcomeRedirect(name) {
+    welcomeName = name || 'Operator';
+    showWelcomeScreen = true;
+    appState.playStampSound();
+    setTimeout(() => {
+      appState.isAuthenticated = true;
+      goto('/');
+    }, 3200);
+  }
+
   function startBiometricRegistration() {
     appState.playClickSound();
     showBiometricSetupPrompt = false;
@@ -54,8 +76,7 @@
     appState.playClickSound();
     showBiometricSetupPrompt = false;
     showBiometricRegisterScanner = false;
-    appState.isAuthenticated = true;
-    goto('/');
+    triggerWelcomeRedirect(appState.currentUser?.name || username.trim().split('@')[0]);
   }
 
   $effect(() => {
@@ -142,9 +163,7 @@
     if (appState.usingMockData) {
       const user = appState.currentUser || { username: 'admin', password: 'admin' };
       if (username.trim() === user.username && password === user.password) {
-        appState.isAuthenticated = true;
-        appState.playStampSound();
-        goto('/');
+        triggerWelcomeRedirect(username.trim().split('@')[0]);
       } else {
         loginMessage = '❌ Invalid credentials.';
         appState.playBuzzerSound();
@@ -158,16 +177,12 @@
         });
         const res = await response.json();
         if (response.ok && res.success) {
-          appState.isAuthenticated = true;
-          appState.playStampSound();
-          goto('/');
+          triggerWelcomeRedirect(username.trim().split('@')[0]);
         } else {
           if (response.status === 503 || res.offlineFallback) {
             const user = appState.currentUser || { username: 'admin', password: 'admin' };
             if (username.trim() === user.username && password === user.password) {
-              appState.isAuthenticated = true;
-              appState.playStampSound();
-              goto('/');
+              triggerWelcomeRedirect(username.trim().split('@')[0]);
             } else {
               loginMessage = '❌ Invalid credentials (Offline Mode).';
               appState.playBuzzerSound();
@@ -254,8 +269,7 @@
   }
 
   function handleBiometricsSuccess() {
-    appState.isAuthenticated = true;
-    goto('/');
+    triggerWelcomeRedirect(username.trim().split('@')[0]);
   }
 
   async function handleRegister(e) {
@@ -485,7 +499,41 @@
         </div>
       </div>
 
-      {#if isSignupMode}
+      {#if showWelcomeScreen}
+        <!-- Welcome Screen -->
+        <div class="space-y-6 text-center py-6 animate-fade-in">
+          <!-- Holographic pulse circle -->
+          <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full bg-[#3E6650]/10 animate-ping"></div>
+            <div class="absolute inset-2 rounded-full bg-[#3E6650]/20 animate-pulse"></div>
+            <div class="w-12 h-12 rounded-full bg-[#3E6650] text-[#F6F2EA] flex items-center justify-center shadow-lg transform scale-110">
+              <CheckCircle2 size={24} />
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <h2 class="text-sm font-mono font-bold uppercase tracking-tight text-[#2A2521]">
+              {getGreeting()}, <span class="text-[#3E6650]">{welcomeName}</span>!
+            </h2>
+            <p class="text-[9px] text-[#767068] font-mono uppercase tracking-wider animate-pulse">
+              System Access Authorized
+            </p>
+          </div>
+
+          <!-- AI Waveform Animation -->
+          <div class="flex items-center justify-center gap-1.5 h-6">
+            <div class="w-1 bg-[#3E6650] rounded-full animate-[bounce_1s_infinite_100ms]" style="height: 12px"></div>
+            <div class="w-1 bg-[#3E6650] rounded-full animate-[bounce_1s_infinite_200ms]" style="height: 20px"></div>
+            <div class="w-1 bg-[#3E6650] rounded-full animate-[bounce_1s_infinite_300ms]" style="height: 16px"></div>
+            <div class="w-1 bg-[#3E6650] rounded-full animate-[bounce_1s_infinite_400ms]" style="height: 24px"></div>
+            <div class="w-1 bg-[#3E6650] rounded-full animate-[bounce_1s_infinite_500ms]" style="height: 14px"></div>
+          </div>
+
+          <p class="text-[9px] text-slate-400 font-mono">
+            Loading console workspace...
+          </p>
+        </div>
+      {:else if isSignupMode}
         <!-- signup card -->
         <form onsubmit={handleRegister} class="space-y-4 text-left">
           <div>
@@ -596,8 +644,8 @@
               email={username.trim()}
               accountType="operator"
               onsuccess={() => {
-                appState.isAuthenticated = true;
-                goto('/');
+                showBiometricRegisterScanner = false;
+                triggerWelcomeRedirect(appState.currentUser?.name || username.trim().split('@')[0]);
               }}
               oncancel={skipBiometricRegistration}
             />
