@@ -27,7 +27,8 @@
     MoreHorizontal,
     AlertTriangle,
     Info,
-    User
+    User,
+    Search
   } from '@lucide/svelte';
   import { page } from '$app/state';
   import { CateringState, setCateringContext } from '$lib/states.svelte.js';
@@ -45,6 +46,10 @@
   let showMobileMenu = $state(false);
   let showNotificationsDropdown = $state(false);
   let shouldReloadOnControllerChange = false;
+
+  // Global Search states
+  let globalSearchQuery = $state('');
+  let showGlobalSearchResults = $state(false);
 
   // Premium Profile Switcher and Sub-modals state
   let activeProfile = $state('Medy Villarias');
@@ -161,6 +166,84 @@
       ? appState.notifications.filter(n => n.unread) 
       : appState.notifications
   );
+
+  // Global search result filter matching Customers, Events, Menus, and Help Actions
+  const globalSearchResults = $derived(() => {
+    const query = globalSearchQuery.trim().toLowerCase();
+    
+    // Core actions (help navigation guide)
+    const appActions = [
+      { type: 'action', title: 'Schedule Catering Event', desc: 'Create and plan client orders', path: '/planner' },
+      { type: 'action', title: 'Register New Client', desc: 'Manage client list and preferences', path: '/customers' },
+      { type: 'action', title: 'Generate AI Menus', desc: 'Auto-create menu options using AI', path: '/menus' },
+      { type: 'action', title: 'Check Stock & Inventory', desc: 'Track ingredient stock levels & reorders', path: '/inventory' },
+      { type: 'action', title: 'Roster Staff & Chefs', desc: 'Assign prep tasks and schedule kitchen roster', path: '/scheduling' },
+      { type: 'action', title: 'View Financial Audits', desc: 'Check profit analysis and ledger', path: '/audits' }
+    ];
+
+    if (!query) {
+      // Default: show quick guide actions (Recent search guides)
+      return appActions.slice(0, 4); 
+    }
+
+    const results = [];
+
+    // 1. Match system actions
+    appActions.forEach(act => {
+      if (act.title.toLowerCase().includes(query) || act.desc.toLowerCase().includes(query)) {
+        results.push(act);
+      }
+    });
+
+    // 2. Match customers
+    if (appState.customers) {
+      appState.customers.forEach(c => {
+        if (c.name.toLowerCase().includes(query) || (c.email && c.email.toLowerCase().includes(query))) {
+          results.push({
+            type: 'customer',
+            title: `👤 Customer: ${c.name}`,
+            desc: c.email || 'No email registered',
+            path: '/customers',
+            action: () => {
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('catersync_search_customer', c.name);
+              }
+            }
+          });
+        }
+      });
+    }
+
+    // 3. Match events/orders
+    if (appState.events) {
+      appState.events.forEach(e => {
+        if (e.name.toLowerCase().includes(query) || e.client.toLowerCase().includes(query)) {
+          results.push({
+            type: 'event',
+            title: `📅 Order: ${e.name}`,
+            desc: `Client: ${e.client} · Status: ${e.status}`,
+            path: '/planner'
+          });
+        }
+      });
+    }
+
+    // 4. Match menus
+    if (appState.menus) {
+      appState.menus.forEach(m => {
+        if (m.name.toLowerCase().includes(query)) {
+          results.push({
+            type: 'menu',
+            title: `🍽️ Menu: ${m.name}`,
+            desc: `₱${m.price_per_serving}/serving · Cost: ₱${m.cost_per_serving}`,
+            path: '/menus'
+          });
+        }
+      });
+    }
+
+    return results.slice(0, 6); // Max 6 results for compact Facebook style
+  });
 
   onMount(() => {
     // Fade out initial PWA loading screen
@@ -406,13 +489,57 @@
     <div class="sticky top-0 z-30 bg-[#F6F2EA]/95 dark:bg-[#1A1715]/95 backdrop-blur-md border-b border-[#767068]/30 animate-fade-in">
       <!-- TOP BAR -->
       <header class="px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4 bg-white/50 dark:bg-[#24201E]/50">
-        <!-- LEFT: LOGO & TITLE -->
-        <div class="flex items-center gap-2 sm:gap-3 min-w-0 shrink-0">
+        <!-- LEFT: LOGO & TITLE & SEARCH -->
+        <div class="flex items-center gap-3 min-w-0 shrink-0">
           <div class="hidden lg:block px-2 py-0.5 border border-[#2A2521] dark:border-[#ECE7DF] font-mono text-[9px] font-black tracking-tighter uppercase select-none">
             THE PASS
           </div>
-          <div class="truncate">
+          <div class="truncate mr-1">
             <h1 class="text-xs sm:text-sm font-black tracking-tight leading-none uppercase truncate">{appState.settings.business_name}</h1>
+          </div>
+          
+          <!-- Global Search (Facebook style) -->
+          <div class="relative hidden md:block select-none">
+            <div class="flex items-center bg-[#767068]/10 dark:bg-zinc-800 rounded-full px-3 py-1.5 w-52 border border-transparent focus-within:border-[#3E6650]/65 transition-all">
+              <Search size={12} class="text-[#767068] dark:text-zinc-400 shrink-0 mr-1.5" />
+              <input 
+                type="text" 
+                placeholder="Search orders, clients, help..."
+                bind:value={globalSearchQuery}
+                onfocus={() => { showGlobalSearchResults = true; appState.playClickSound(); }}
+                onblur={() => { setTimeout(() => { showGlobalSearchResults = false; }, 200); }}
+                class="bg-transparent border-none outline-none text-[10px] w-full text-[#2A2521] dark:text-[#EBE5DC] placeholder-[#767068]/60"
+              />
+            </div>
+            
+            {#if showGlobalSearchResults}
+              <div 
+                class="absolute left-0 mt-1 w-64 bg-white dark:bg-[#24201E] border border-[#767068]/20 dark:border-zinc-800 rounded-lg shadow-2xl z-50 py-2 text-[10px]"
+              >
+                <div class="px-3 pb-1 border-b border-[#767068]/10 dark:border-zinc-800/60 text-[9px] font-bold text-[#767068] dark:text-zinc-500 uppercase tracking-wider font-mono">
+                  {globalSearchQuery.trim() ? 'Search Results' : 'Suggested Guides'}
+                </div>
+                
+                <div class="divide-y divide-[#767068]/5 dark:divide-zinc-850 max-h-60 overflow-y-auto">
+                  {#each globalSearchResults() as res}
+                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                    <a 
+                      href={res.path}
+                      onclick={() => {
+                        if (res.action) res.action();
+                        appState.playClickSound();
+                        showGlobalSearchResults = false;
+                        globalSearchQuery = '';
+                      }}
+                      class="px-3 py-2 hover:bg-slate-50 dark:hover:bg-zinc-800/20 block text-[#2A2521] dark:text-[#EBE5DC] no-underline text-left"
+                    >
+                      <div class="font-bold text-[10px] truncate">{res.title || res.name}</div>
+                      <div class="text-[8px] text-[#767068] dark:text-zinc-500 truncate mt-0.5">{res.desc}</div>
+                    </a>
+                  {/each}
+                </div>
+              </div>
+            {/if}
           </div>
         </div>
 
@@ -440,9 +567,7 @@
             <a href="/audits" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/audits') ? 'active' : ''}" data-tooltip="Audits">
               <Wallet size={16} />
             </a>
-            <a href="/settings" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/settings') ? 'active' : ''}" data-tooltip="Settings">
-              <Settings size={16} />
-            </a>
+
           </nav>
         </div>
 
@@ -601,11 +726,6 @@
           </div>
 
 
-          {#if appState.usingMockData}
-            <span class="hidden md:inline-block px-2.5 py-0.5 text-[9px] font-bold bg-[#D9A441]/15 text-[#D9A441] border border-[#D9A441]/30 rounded font-mono">▲ OFFLINE</span>
-          {:else}
-            <span class="hidden md:inline-block px-2.5 py-0.5 text-[9px] font-bold bg-[#3E6650]/15 text-[#3E6650] border border-[#3E6650]/30 rounded font-mono">● ONLINE</span>
-          {/if}
 
           <!-- User Profile Dropdown Button -->
           <div class="relative">
@@ -770,9 +890,7 @@
           <a href="/audits" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/audits') ? 'active' : ''}" data-tooltip="Audits">
             <Wallet size={16} />
           </a>
-          <a href="/settings" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/settings') ? 'active' : ''}" data-tooltip="Settings">
-            <Settings size={16} />
-          </a>
+
         </nav>
       </div>
     </div>

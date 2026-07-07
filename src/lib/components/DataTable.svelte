@@ -1,6 +1,8 @@
 <script>
   import { ChevronLeft, ChevronRight, ArrowUpDown } from '@lucide/svelte';
 
+  import { onMount } from 'svelte';
+
   let { 
     rows = [], 
     columns = [], 
@@ -14,6 +16,16 @@
   let pageSize = $state(10);
   let currentPage = $state(1);
   let searchQuery = $state('');
+
+  onMount(() => {
+    if (typeof window !== 'undefined') {
+      const pendingSearch = localStorage.getItem('catersync_global_search_redirect');
+      if (pendingSearch) {
+        searchQuery = pendingSearch;
+        localStorage.removeItem('catersync_global_search_redirect');
+      }
+    }
+  });
 
   // Sorting states
   let sortKey = $state('');
