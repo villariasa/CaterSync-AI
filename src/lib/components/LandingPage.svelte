@@ -42,6 +42,12 @@
   let totpSetupSecret = $state('');
   let totpSetupQrUrl = $state('');
 
+  $effect(() => {
+    if (totpToken && totpToken.trim().length === 6 && !isChecking) {
+      handleTotpSubmit();
+    }
+  });
+
   async function handleIdentifierSubmit(e) {
     if (e) e.preventDefault();
     if (!username.trim()) return;
