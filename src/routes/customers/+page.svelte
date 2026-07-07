@@ -1,7 +1,7 @@
 <script>
   import { getCateringContext } from '$lib/states.svelte.js';
   import DataTable from '$lib/components/DataTable.svelte';
-  import { Users, Plus, CheckCircle, Mail, Edit3, Trash2 } from '@lucide/svelte';
+  import { Users, Plus, CheckCircle, Mail, Edit3, Trash2, Copy } from '@lucide/svelte';
   import { onMount } from 'svelte';
 
   const appState = getCateringContext();
@@ -316,32 +316,34 @@
 </script>
 
 {#snippet portalActionSnippet(row)}
-  <div class="flex items-center gap-1.5 font-mono text-[9px]">
+  <div class="flex items-center gap-2 select-none">
     <button 
       onclick={(e) => handleCopyPortalLink(e, row)}
-      class="px-2 py-1 bg-[#2A2521] hover:bg-[#D9A441] text-white hover:text-[#1F1B18] rounded uppercase font-bold tracking-wider transition-all btn-interactive"
+      class="w-7 h-7 bg-[#2A2521] hover:bg-[#D9A441] text-[#F6F2EA] hover:text-[#2A2521] rounded-full flex items-center justify-center transition-all btn-interactive"
+      title="Copy Portal Link"
     >
-      Copy Link
+      <Copy size={12} />
     </button>
     <button 
       onclick={() => handleSendPortalEmail(row)}
-      class="px-2 py-1 bg-[#3E6650] hover:bg-[#3E6650]/90 text-white rounded uppercase font-bold tracking-wider transition-all btn-interactive flex items-center gap-1"
+      class="w-7 h-7 bg-[#3E6650] hover:bg-[#3E6650]/80 text-[#F6F2EA] rounded-full flex items-center justify-center transition-all btn-interactive"
+      title="Send Portal Invite Email"
     >
-      <Mail size={10} /> Send Mail
+      <Mail size={12} />
     </button>
     <button 
       onclick={() => startEdit(row)}
-      class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded uppercase font-bold tracking-wider transition-all btn-interactive flex items-center gap-1"
-      title="Edit Client"
+      class="w-7 h-7 bg-amber-500 hover:bg-amber-600 text-white rounded-full flex items-center justify-center transition-all btn-interactive"
+      title="Edit Client Profile"
     >
-      <Edit3 size={10} /> Edit
+      <Edit3 size={12} />
     </button>
     <button 
       onclick={() => deleteCustomer(row.id)}
-      class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded uppercase font-bold tracking-wider transition-all btn-interactive flex items-center gap-1"
-      title="Delete Client"
+      class="w-7 h-7 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center transition-all btn-interactive"
+      title="Delete Client Profile"
     >
-      <Trash2 size={10} /> Delete
+      <Trash2 size={12} />
     </button>
   </div>
 {/snippet}
