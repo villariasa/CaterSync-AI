@@ -1262,7 +1262,7 @@
   </div>
 
   <footer class="border-t border-[#767068]/30 bg-[#2A2521] px-6 py-3 text-center text-[9px] text-[#767068] tracking-widest uppercase">
-    CaterSync Operations Inc. · Version 1.3.9 · Built Offline & Secure
+    CaterSync Operations Inc. · Version 1.4.0 · Built Offline & Secure
   </footer>
 </div>
 
