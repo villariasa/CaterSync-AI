@@ -420,7 +420,7 @@ input:focus, select:focus, textarea:focus {
   background-color: #1A1715 !important;
 }
 
-:root.dark .text-[#2A2521], 
+:root.dark .text-\[\#2A2521\], 
 :root.dark h1, 
 :root.dark h2, 
 :root.dark h3, 
@@ -430,19 +430,47 @@ input:focus, select:focus, textarea:focus {
   color: #ECE7DF !important;
 }
 
-:root.dark .text-[#767068] {
+:root.dark .text-\[\#767068\] {
   color: #9E978F !important;
 }
 
-:root.dark .border-[#767068]\/30,
-:root.dark .border-[#767068]\/20,
-:root.dark .border-[#767068]\/15,
-:root.dark .border-[#767068]\/10 {
+:root.dark .border-\[\#767068\]\/30,
+:root.dark .border-\[\#767068\]\/20,
+:root.dark .border-\[\#767068\]\/15,
+:root.dark .border-\[\#767068\]\/10 {
   border-color: rgba(158, 151, 143, 0.2) !important;
 }
 
-:root.dark .divide-[#767068]\/10 > :not([hidden]) ~ :not([hidden]) {
+:root.dark .divide-\[\#767068\]\/10 > :not([hidden]) ~ :not([hidden]) {
   border-color: rgba(158, 151, 143, 0.15) !important;
+}
+
+/* Explicit Navigation Contrast fixes */
+.app-nav-item {
+  color: var(--color-steel) !important;
+}
+
+.app-nav-item:hover {
+  color: var(--color-basil) !important;
+}
+
+.app-nav-item.active {
+  background-color: var(--color-basil) !important;
+  color: #F6F2EA !important; /* Keep it light on dark green background */
+}
+
+:root.dark .app-nav-item.active {
+  background-color: var(--color-basil) !important;
+  color: #F6F2EA !important;
+}
+
+/* Custom layout utility classes for theme contrast */
+.text-ink {
+  color: var(--color-ink) !important;
+}
+
+.text-steel {
+  color: var(--color-steel) !important;
 }
 
 /* Ticket Cards in Dark Mode */

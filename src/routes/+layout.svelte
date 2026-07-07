@@ -401,7 +401,7 @@
 {#if !appState.isAuthenticated}
   <LandingPage />
 {:else}
-  <div class="min-h-screen bg-[#F6F2EA] text-[#2A2521] flex flex-col antialiased">
+  <div class="min-h-screen bg-[var(--color-paper)] text-ink flex flex-col antialiased">
     <!-- STICKY HEADER & NAV CONTAINER -->
     <div class="sticky top-0 z-30 bg-[#F6F2EA]/95 dark:bg-[#1A1715]/95 backdrop-blur-md border-b border-[#767068]/30 animate-fade-in">
       <!-- TOP BAR -->
@@ -543,9 +543,9 @@
           </div>
 
           <!-- Live Clock -->
-          <div class="hidden lg:flex items-center gap-1.5 text-[#767068] dark:text-zinc-400">
+          <div class="hidden lg:flex items-center gap-1.5 text-steel">
             <span>CLOCK:</span>
-            <span class="text-[#2A2521] dark:text-[#EBE5DC] font-bold">{currentDateTime || '2026-07-06 13:33'}</span>
+            <span class="text-ink font-bold">{currentDateTime || '2026-07-06 13:33'}</span>
           </div>
 
           {#if appState.usingMockData}
