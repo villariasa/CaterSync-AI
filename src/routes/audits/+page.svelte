@@ -2,7 +2,7 @@
   import { getCateringContext } from '$lib/states.svelte.js';
   import AlertBadge from '$lib/components/AlertBadge.svelte';
   import DataTable from '$lib/components/DataTable.svelte';
-  import { Wallet, AlertTriangle, BarChart3, ShieldCheck, ClipboardCheck, Info, Plus } from '@lucide/svelte';
+  import { Wallet, AlertTriangle, BarChart3, ShieldCheck, ClipboardCheck, Info, Plus, CheckCircle2, X } from '@lucide/svelte';
   import { onMount } from 'svelte';
 
   const appState = getCateringContext();
@@ -23,6 +23,7 @@
   let expenseAmount = $state(0);
   let expenseCategory = $state('Utilities');
   let plMessage = $state('');
+  let showExpenseModal = $state(false);
 
   // Define P&L variables (computed reactively)
   let totalEventRevenue = $derived(
