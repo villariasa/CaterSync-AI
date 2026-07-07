@@ -159,21 +159,48 @@ export const pool = {
   async query(sql, params = []) {
     const platform = platformStorage.getStore();
 
+    // Self-healing function to catch missing totp_secret and migrate automatically
+    const executeWithMigration = async (runQueryFn) => {
+      try {
+        return await runQueryFn();
+      } catch (err) {
+        if (err.message && (
+          err.message.includes('no such column: totp_secret') || 
+          err.message.includes('column "totp_secret" does not exist') ||
+          err.message.includes('SQLITE_ERROR') && err.message.includes('totp_secret')
+        )) {
+          console.warn('⚠️ Detected missing column "totp_secret". Running automatic database migration...');
+          try {
+            const alterSql = platform && platform.env && platform.env.DB 
+              ? 'ALTER TABLE users ADD COLUMN totp_secret TEXT'
+              : 'ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret VARCHAR(128)';
+            await runQueryFn(alterSql);
+            console.log('✅ Automatic column migration completed. Retrying original query...');
+          } catch (migrationErr) {
+            console.error('❌ Automatic migration failed or column already exists:', migrationErr.message);
+          }
+          // Retry original query
+          return await runQueryFn();
+        }
+        throw err;
+      }
+    };
+
     // 1. If we are running inside Cloudflare Pages (with D1 database binding)
     if (platform && platform.env && platform.env.DB) {
       const db = platform.env.DB;
-      return await executeD1Query(db, sql, params);
+      return await executeWithMigration((overrideSql) => executeD1Query(db, overrideSql || sql, overrideSql ? [] : params));
     }
 
     // 2. If we are running locally in Node but configured to proxy to remote D1
     if (env.CLOUDFLARE_API_TOKEN) {
-      return await executeRemoteD1Proxy(sql, params);
+      return await executeWithMigration((overrideSql) => executeRemoteD1Proxy(overrideSql || sql, overrideSql ? [] : params));
     }
 
-    // 2. Fallback to PostgreSQL (Local / Offline dev mode)
+    // 3. Fallback to PostgreSQL (Local / Offline dev mode)
     const activePool = await getPgPool();
     if (activePool) {
-      return await activePool.query(sql, params);
+      return await executeWithMigration((overrideSql) => activePool.query(overrideSql || sql, overrideSql ? [] : params));
     }
 
     throw new Error('No active database connection found (D1 binding is missing and PostgreSQL is offline).');
