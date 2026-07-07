@@ -32,7 +32,10 @@ export async function POST({ request }) {
       return json({ success: false, error: 'Operator account is deactivated.' }, { status: 403 });
     }
 
-    const methods = ['password']; // Password is always available
+    const methods = [];
+    if (cleanUsername.toLowerCase() === 'admin') {
+      methods.push('password');
+    }
 
     // 2. Check PIN (PIN is simulated local or server side, let's say it is always a choice)
     methods.push('pin');

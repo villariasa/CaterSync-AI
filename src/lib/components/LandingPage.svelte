@@ -48,11 +48,12 @@
     if (appState.usingMockData) {
       isChecking = false;
       const isRegistered = appState.currentUser && appState.currentUser.username === username.trim();
-      availableMethods = isRegistered ? ['password', 'pin'] : ['password'];
+      const isLinkAdmin = username.trim().toLowerCase() === 'admin';
+      availableMethods = isRegistered ? (isLinkAdmin ? ['password', 'pin'] : ['pin']) : (isLinkAdmin ? ['password'] : []);
       if (googleClientId) {
         availableMethods.push('google');
       }
-      selectedMethod = 'password';
+      selectedMethod = availableMethods[0] || 'password';
       step = 2;
     } else {
       try {
@@ -64,11 +65,15 @@
         const res = await response.json();
         isChecking = false;
         if (response.ok && res.success) {
+          const isLinkAdmin = username.trim().toLowerCase() === 'admin';
           availableMethods = [...res.methods];
+          if (!isLinkAdmin) {
+            availableMethods = availableMethods.filter(m => m !== 'password');
+          }
           if (googleClientId) {
             availableMethods.push('google');
           }
-          selectedMethod = res.methods[0] || 'password';
+          selectedMethod = availableMethods[0] || 'password';
           step = 2;
         } else {
           loginMessage = `❌ ${res.error || 'User not found or inactive.'}`;
@@ -77,11 +82,12 @@
       } catch (err) {
         isChecking = false;
         console.warn("Pre-auth check fallback to local check:", err.message);
-        availableMethods = ['password', 'pin'];
+        const isLinkAdmin = username.trim().toLowerCase() === 'admin';
+        availableMethods = isLinkAdmin ? ['password', 'pin'] : ['pin'];
         if (googleClientId) {
           availableMethods.push('google');
         }
-        selectedMethod = 'password';
+        selectedMethod = availableMethods[0] || 'password';
         step = 2;
       }
     }

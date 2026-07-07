@@ -10,6 +10,10 @@ export async function POST({ request, cookies }) {
       return json({ error: 'Username and password are required' }, { status: 400 });
     }
 
+    if (username.trim().toLowerCase() !== 'admin') {
+      return json({ error: 'Password login is disabled for operator accounts. Please use Google authentication.' }, { status: 401 });
+    }
+
     const hash = crypto.createHash('sha256').update(password).digest('hex');
 
     // Query user
