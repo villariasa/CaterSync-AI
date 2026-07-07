@@ -433,28 +433,28 @@
         <!-- CENTER: DESKTOP HEADER NAVIGATION (Sleek Centered Icons) -->
         <div class="hidden md:flex flex-1 justify-center min-w-0 px-4">
           <nav class="app-nav-row justify-center max-w-full">
-            <a href="/" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/') ? 'active' : ''}" title="Overview">
+            <a href="/" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/') ? 'active' : ''}" data-tooltip="Overview">
               <LayoutDashboard size={16} />
             </a>
-            <a href="/planner" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/planner') ? 'active' : ''}" title="Planner">
+            <a href="/planner" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/planner') ? 'active' : ''}" data-tooltip="Planner">
               <UtensilsCrossed size={16} />
             </a>
-            <a href="/customers" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/customers') ? 'active' : ''}" title="Customers">
+            <a href="/customers" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/customers') ? 'active' : ''}" data-tooltip="Customers">
               <Users size={16} />
             </a>
-            <a href="/menus" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/menus') ? 'active' : ''}" title="Menus">
+            <a href="/menus" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/menus') ? 'active' : ''}" data-tooltip="Menus">
               <FileText size={16} />
             </a>
-            <a href="/inventory" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/inventory') ? 'active' : ''}" title="Inventory">
+            <a href="/inventory" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/inventory') ? 'active' : ''}" data-tooltip="Inventory">
               <Package size={16} />
             </a>
-            <a href="/scheduling" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/scheduling') ? 'active' : ''}" title="Kitchen & Roster">
+            <a href="/scheduling" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/scheduling') ? 'active' : ''}" data-tooltip="Kitchen">
               <ChefHat size={16} />
             </a>
-            <a href="/audits" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/audits') ? 'active' : ''}" title="Audits">
+            <a href="/audits" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/audits') ? 'active' : ''}" data-tooltip="Audits">
               <Wallet size={16} />
             </a>
-            <a href="/settings" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/settings') ? 'active' : ''}" title="Settings">
+            <a href="/settings" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/settings') ? 'active' : ''}" data-tooltip="Settings">
               <Settings size={16} />
             </a>
           </nav>
@@ -778,28 +778,28 @@
       <!-- MOBILE-ONLY HEADER NAVIGATION (Scrollable Row Under Logo row) -->
       <div class="md:hidden bg-white/20 dark:bg-[#24201E]/20 px-4 py-2 border-t border-[#767068]/15 backdrop-blur-sm">
         <nav class="app-nav-row justify-center max-w-full">
-          <a href="/" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/') ? 'active' : ''}" title="Overview">
+          <a href="/" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/') ? 'active' : ''}" data-tooltip="Overview">
             <LayoutDashboard size={16} />
           </a>
-          <a href="/planner" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/planner') ? 'active' : ''}" title="Planner">
+          <a href="/planner" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/planner') ? 'active' : ''}" data-tooltip="Planner">
             <UtensilsCrossed size={16} />
           </a>
-          <a href="/customers" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/customers') ? 'active' : ''}" title="Customers">
+          <a href="/customers" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/customers') ? 'active' : ''}" data-tooltip="Customers">
             <Users size={16} />
           </a>
-          <a href="/menus" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/menus') ? 'active' : ''}" title="Menus">
+          <a href="/menus" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/menus') ? 'active' : ''}" data-tooltip="Menus">
             <FileText size={16} />
           </a>
-          <a href="/inventory" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/inventory') ? 'active' : ''}" title="Inventory">
+          <a href="/inventory" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/inventory') ? 'active' : ''}" data-tooltip="Inventory">
             <Package size={16} />
           </a>
-          <a href="/scheduling" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/scheduling') ? 'active' : ''}" title="Kitchen & Roster">
+          <a href="/scheduling" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/scheduling') ? 'active' : ''}" data-tooltip="Kitchen">
             <ChefHat size={16} />
           </a>
-          <a href="/audits" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/audits') ? 'active' : ''}" title="Audits">
+          <a href="/audits" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/audits') ? 'active' : ''}" data-tooltip="Audits">
             <Wallet size={16} />
           </a>
-          <a href="/settings" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/settings') ? 'active' : ''}" title="Settings">
+          <a href="/settings" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/settings') ? 'active' : ''}" data-tooltip="Settings">
             <Settings size={16} />
           </a>
         </nav>

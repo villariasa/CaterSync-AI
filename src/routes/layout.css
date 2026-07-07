@@ -518,3 +518,50 @@ input:focus, select:focus, textarea:focus {
   border-color: rgba(158, 151, 143, 0.35) !important;
 }
 
+/* --- PREMIUM FACEBOOK-STYLE FLOATING TOOLTIPS --- */
+.app-nav-item[data-tooltip] {
+  position: relative;
+}
+
+.app-nav-item[data-tooltip]::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 110%;
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background-color: #ffffff;
+  color: #2A2521;
+  border: 1px solid rgba(118, 112, 104, 0.15);
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease, transform 120ms ease;
+  box-shadow: 0 4px 12px rgba(42, 37, 33, 0.15);
+  z-index: 50;
+}
+
+:root.dark .app-nav-item[data-tooltip]::before {
+  background-color: #24201E;
+  color: #EBE5DC;
+  border-color: rgba(158, 151, 143, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.app-nav-item[data-tooltip]:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(8px);
+}
+
+/* Disable hover tooltips on mobile viewports */
+@media (max-width: 767px) {
+  .app-nav-item[data-tooltip]::before {
+    display: none !important;
+  }
+}
+
+
