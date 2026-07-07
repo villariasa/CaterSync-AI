@@ -21,6 +21,68 @@
   let transactionReason = $state('spoilage'); // spoilage, over-prep, plate waste, adjustment
   let formMessage = $state('');
 
+  // New Ingredient form state
+  let newIngName = $state('');
+  let newIngUnit = $state('kg');
+  let newIngStock = $state(50);
+  let newIngReorder = $state(15);
+  let newIngShelfLife = $state(30);
+  let newIngMessage = $state('');
+
+  async function submitNewIngredient(e) {
+    if (e) e.preventDefault();
+    if (!newIngName.trim()) return;
+
+    appState.playClickSound();
+
+    const payload = {
+      name: newIngName.trim(),
+      unit: newIngUnit,
+      current_stock: newIngStock,
+      reorder_point: newIngReorder,
+      shelf_life_days: newIngShelfLife
+    };
+
+    if (appState.usingMockData) {
+      const mockIng = {
+        id: Date.now(),
+        ...payload
+      };
+      appState.ingredients = [...appState.ingredients, mockIng];
+      newIngMessage = `✅ Ingredient "${payload.name}" registered locally.`;
+      appState.showToast(`📦 New ingredient registered: ${payload.name}`);
+      appState.playStampSound();
+      
+      // Reset form
+      newIngName = '';
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/ingredients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const res = await response.json();
+      if (res.success) {
+        appState.ingredients = [...appState.ingredients, res.ingredient];
+        newIngMessage = `✅ Ingredient "${payload.name}" registered successfully.`;
+        appState.showToast(`📦 New ingredient registered: ${payload.name}`);
+        appState.playStampSound();
+        
+        // Reset form
+        newIngName = '';
+      } else {
+        newIngMessage = `❌ Failed: ${res.error}`;
+        appState.playBuzzerSound();
+      }
+    } catch (err) {
+      newIngMessage = `❌ Network Error: ${err.message}`;
+      appState.playBuzzerSound();
+    }
+  }
+
   // Define inventory columns
   const columns = [
     { key: 'name', label: 'Ingredient Name', sortable: true, isSans: true },
@@ -325,53 +387,108 @@
         />
       </div>
 
-      <div class="ticket-card p-6 lg:col-span-4 border-l-4 border-[#D9A441] bg-white">
-        <div class="mb-4">
-          <span class="ticket-stamp" style="color: var(--color-saffron); border-color: var(--color-saffron)">EOQ PROCUREMENT</span>
-          <h2 class="text-lg font-bold text-[#2A2521] mt-2 flex items-center gap-1.5">
-            <Truck size={16} /> AI Order suggestions
-          </h2>
+      <div class="lg:col-span-4 space-y-6">
+        <!-- EOQ Suggestions card -->
+        <div class="ticket-card p-6 border-l-4 border-[#D9A441] bg-white">
+          <div class="mb-4">
+            <span class="ticket-stamp" style="color: var(--color-saffron); border-color: var(--color-saffron)">EOQ PROCUREMENT</span>
+            <h2 class="text-lg font-bold text-[#2A2521] mt-2 flex items-center gap-1.5">
+              <Truck size={16} /> AI Order suggestions
+            </h2>
+          </div>
+
+          <p class="text-xs text-[#767068] leading-relaxed mb-4 font-sans">
+            Economic Order Quantity calculations minimize total holding costs while balancing perishability warning thresholds.
+          </p>
+
+          {#if loadingEOQ}
+            <div class="space-y-4">
+              <div class="h-16 bg-[#767068]/15 rounded skeleton-shimmer"></div>
+              <div class="h-16 bg-[#767068]/15 rounded skeleton-shimmer"></div>
+            </div>
+          {:else if eoqSuggestions.length > 0}
+            <div class="space-y-4">
+              {#each eoqSuggestions as item}
+                <div class="p-3.5 bg-[#F6F2EA]/30 border border-[#767068]/20 rounded text-xs font-mono animate-fade-in">
+                  <div class="flex justify-between items-start font-bold">
+                    <span class="text-[#2A2521]">{item.name}</span>
+                    <span class="text-[#D9A441] font-bold">+{item.quantity} {item.unit || 'kg'}</span>
+                  </div>
+                  
+                  <div class="text-[10px] text-[#767068] mt-2 space-y-0.5">
+                    <div>Supplier: <strong class="text-[#2a2521]">{item.supplier_name}</strong></div>
+                    <div>Est Cost: <strong class="text-[#3E6650]">₱{Math.round(item.cost).toLocaleString()}</strong></div>
+                  </div>
+
+                  <div class="mt-3 flex justify-end">
+                    <button 
+                      onclick={() => approveRestockTicket(item)}
+                      class="px-3 py-1 bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-mono text-[9px] uppercase tracking-wider rounded font-bold btn-interactive"
+                    >
+                      Approve & Order PO
+                    </button>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {:else}
+            <div class="p-6 text-center border border-dashed border-[#767068]/30 rounded text-xs font-mono text-[#767068]">
+              No restock suggestions needed at this time.
+            </div>
+          {/if}
         </div>
 
-        <p class="text-xs text-[#767068] leading-relaxed mb-4 font-sans">
-          Economic Order Quantity calculations minimize total holding costs while balancing perishability warning thresholds.
-        </p>
-
-        {#if loadingEOQ}
-          <div class="space-y-4">
-            <div class="h-16 bg-[#767068]/15 rounded skeleton-shimmer"></div>
-            <div class="h-16 bg-[#767068]/15 rounded skeleton-shimmer"></div>
+        <!-- Add New Ingredient Card -->
+        <div class="ticket-card p-6 bg-white animate-fade-in font-sans">
+          <div class="mb-4">
+            <span class="ticket-stamp">DEPOT MANAGEMENT</span>
+            <h2 class="text-lg font-bold text-[#2A2521] mt-2 flex items-center gap-1.5 font-sans">
+              <Plus size={16} /> Register Ingredient
+            </h2>
           </div>
-        {:else if eoqSuggestions.length > 0}
-          <div class="space-y-4">
-            {#each eoqSuggestions as item}
-              <div class="p-3.5 bg-[#F6F2EA]/30 border border-[#767068]/20 rounded text-xs font-mono animate-fade-in">
-                <div class="flex justify-between items-start font-bold">
-                  <span class="text-[#2A2521]">{item.name}</span>
-                  <span class="text-[#D9A441] font-bold">+{item.quantity} {item.unit || 'kg'}</span>
-                </div>
-                
-                <div class="text-[10px] text-[#767068] mt-2 space-y-0.5">
-                  <div>Supplier: <strong class="text-[#2a2521]">{item.supplier_name}</strong></div>
-                  <div>Est Cost: <strong class="text-[#3E6650]">₱{Math.round(item.cost).toLocaleString()}</strong></div>
-                </div>
 
-                <div class="mt-3 flex justify-end">
-                  <button 
-                    onclick={() => approveRestockTicket(item)}
-                    class="px-3 py-1 bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-mono text-[9px] uppercase tracking-wider rounded font-bold btn-interactive"
-                  >
-                    Approve & Order PO
-                  </button>
-                </div>
+          <form onsubmit={submitNewIngredient} class="space-y-4 text-xs font-mono">
+            <div>
+              <label class="block font-bold text-[#767068] uppercase mb-1" for="new-ing-name">Ingredient Name</label>
+              <input id="new-ing-name" type="text" bind:value={newIngName} class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white focus:outline-none" placeholder="e.g. Soy Sauce" required />
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-[#767068] uppercase mb-1" for="new-ing-unit">Unit Measure</label>
+                <select id="new-ing-unit" bind:value={newIngUnit} class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white focus:outline-none">
+                  <option>kg</option>
+                  <option>liter</option>
+                  <option>piece</option>
+                  <option>gram</option>
+                </select>
               </div>
-            {/each}
-          </div>
-        {:else}
-          <div class="p-6 text-center border border-dashed border-[#767068]/30 rounded text-xs font-mono text-[#767068]">
-            No restock suggestions needed at this time.
-          </div>
-        {/if}
+              <div>
+                <label class="block font-bold text-[#767068] uppercase mb-1" for="new-ing-stock">Initial Stock</label>
+                <input id="new-ing-stock" type="number" bind:value={newIngStock} class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white focus:outline-none" min="0" required />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-[#767068] uppercase mb-1" for="new-ing-reorder">Reorder Limit</label>
+                <input id="new-ing-reorder" type="number" bind:value={newIngReorder} class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white focus:outline-none" min="0" required />
+              </div>
+              <div>
+                <label class="block font-bold text-[#767068] uppercase mb-1" for="new-ing-life">Shelf Life (Days)</label>
+                <input id="new-ing-life" type="number" bind:value={newIngShelfLife} class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white focus:outline-none" min="1" required />
+              </div>
+            </div>
+
+            <button type="submit" class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-bold text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive">
+              Add New Ingredient
+            </button>
+
+            {#if newIngMessage}
+              <p class="text-xs text-[#3E6650] font-bold mt-2">{newIngMessage}</p>
+            {/if}
+          </form>
+        </div>
       </div>
     </div>
 
