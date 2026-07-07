@@ -58,10 +58,7 @@ export async function POST({ request }) {
       }
     }
 
-    // 2. Check PIN
-    methods.push('pin');
-
-    // 3. Check registered WebAuthn credentials
+    // 2. Check registered WebAuthn credentials
     const credRes = await pool.query(
       "SELECT id FROM webauthn_credentials WHERE account_id = $1 AND account_type = 'operator' LIMIT 1",
       [user.id]
@@ -82,7 +79,7 @@ export async function POST({ request }) {
     return json({
       success: true,
       userExists: false,
-      methods: isLinkAdmin ? ['password', 'pin'] : ['totp-setup', 'pin'],
+      methods: isLinkAdmin ? ['password'] : ['totp-setup'],
       totpSetup: isLinkAdmin ? null : {
         secret: 'OFFLINETOTPSECRET',
         qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth%3A%2F%2Ftotp%2FCaterSync-AI%3Aoffline%3Fsecret%3DOFFLINETOTPSECRET%26issuer%3DCaterSync-AI'

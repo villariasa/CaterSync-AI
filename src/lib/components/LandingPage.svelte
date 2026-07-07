@@ -21,16 +21,14 @@
   let step = $state(1); // 1 = Operator ID, 2 = Authentication Challenge
   let username = $state('');
   let password = $state('');
-  let inputPIN = $state('');
   let isChecking = $state(false);
   let availableMethods = $state(['password']);
-  let selectedMethod = $state('password'); // password, pin, biometric, totp, totp-setup
+  let selectedMethod = $state('password'); // password, biometric, totp, totp-setup
 
   // Signup fields
   let isSignupMode = $state(false);
   let regUsername = $state('');
   let regPassword = $state('');
-  let regPIN = $state('1234');
   let regMessage = $state('');
   let loginMessage = $state('');
   let biometricAvailable = $state(false);
@@ -41,6 +39,24 @@
   let totpToken = $state('');
   let totpSetupSecret = $state('');
   let totpSetupQrUrl = $state('');
+
+  // Biometric setup states after first login
+  let showBiometricSetupPrompt = $state(false);
+  let showBiometricRegisterScanner = $state(false);
+
+  function startBiometricRegistration() {
+    appState.playClickSound();
+    showBiometricSetupPrompt = false;
+    showBiometricRegisterScanner = true;
+  }
+
+  function skipBiometricRegistration() {
+    appState.playClickSound();
+    showBiometricSetupPrompt = false;
+    showBiometricRegisterScanner = false;
+    appState.isAuthenticated = true;
+    goto('/');
+  }
 
   $effect(() => {
     if (totpToken && totpToken.trim().length === 6 && !isChecking) {
@@ -61,7 +77,7 @@
       isChecking = false;
       const isRegistered = appState.currentUser && appState.currentUser.username === username.trim();
       const isLinkAdmin = username.trim().toLowerCase() === 'admin';
-      availableMethods = isRegistered ? (isLinkAdmin ? ['password', 'pin'] : ['totp', 'pin']) : (isLinkAdmin ? ['password'] : ['totp-setup']);
+      availableMethods = isRegistered ? (isLinkAdmin ? ['password'] : ['totp']) : (isLinkAdmin ? ['password'] : ['totp-setup']);
       
       if (!isLinkAdmin && !isRegistered) {
         totpSetupSecret = 'OFFLINETOTPSECRET';
@@ -105,7 +121,7 @@
         isChecking = false;
         console.warn("Pre-auth check fallback to local check:", err.message);
         const isLinkAdmin = username.trim().toLowerCase() === 'admin';
-        availableMethods = isLinkAdmin ? ['password', 'pin'] : ['totp-setup', 'pin'];
+        availableMethods = isLinkAdmin ? ['password'] : ['totp-setup'];
         if (!isLinkAdmin) {
           totpSetupSecret = 'OFFLINETOTPSECRET';
           totpSetupQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth%3A%2F%2Ftotp%2FCaterSync-AI%3Aoffline%3Fsecret%3DOFFLINETOTPSECRET%26issuer%3DCaterSync-AI';
@@ -176,7 +192,6 @@
     if (appState.usingMockData || totpSetupSecret === 'OFFLINETOTPSECRET') {
       isChecking = false;
       if (totpToken.trim().length === 6 && !isNaN(totpToken.trim())) {
-        appState.isAuthenticated = true;
         // Keep profile picture and name if they were pre-fetched by Google login
         appState.currentUser = { 
           username: username.trim(), 
@@ -185,7 +200,13 @@
           picture: appState.currentUser?.picture || null
         };
         appState.playStampSound();
-        goto('/');
+        
+        if (biometricAvailable) {
+          showBiometricSetupPrompt = true;
+        } else {
+          appState.isAuthenticated = true;
+          goto('/');
+        }
       } else {
         loginMessage = '❌ Invalid code (Offline simulation requires 6 digits).';
         appState.playBuzzerSound();
@@ -207,7 +228,6 @@
       isChecking = false;
 
       if (response.ok && data.success) {
-        appState.isAuthenticated = true;
         // Merge the profile picture/name from Google OAuth if we had them!
         appState.currentUser = {
           ...data.user,
@@ -215,7 +235,13 @@
           picture: appState.currentUser?.picture || data.user.picture || null
         };
         appState.playStampSound();
-        goto('/');
+        
+        if (biometricAvailable && !data.hasBiometrics) {
+          showBiometricSetupPrompt = true;
+        } else {
+          appState.isAuthenticated = true;
+          goto('/');
+        }
       } else {
         loginMessage = `❌ ${data.error || 'Verification failed.'}`;
         appState.playBuzzerSound();
@@ -224,25 +250,6 @@
       isChecking = false;
       loginMessage = `❌ Connection error: ${err.message}`;
       appState.playBuzzerSound();
-    }
-  }
-
-  function handlePinInput() {
-    inputPIN = inputPIN.replace(/[^0-9]/g, '');
-    
-    if (inputPIN.length === 4) {
-      setTimeout(() => {
-        const correctPIN = appState.registeredPIN || '1234';
-        if (inputPIN === correctPIN) {
-          appState.isAuthenticated = true;
-          appState.playStampSound();
-          goto('/');
-        } else {
-          appState.playBuzzerSound();
-          loginMessage = '❌ Incorrect PIN';
-          inputPIN = '';
-        }
-      }, 350);
     }
   }
 
@@ -260,10 +267,8 @@
     if (appState.usingMockData) {
       appState.currentUser = {
         username: regUsername,
-        password: regPassword,
-        pin: regPIN
+        password: regPassword
       };
-      appState.registeredPIN = regPIN;
       regMessage = `✅ Profile "${regUsername}" registered successfully.`;
       appState.playStampSound();
       setTimeout(() => {
@@ -506,20 +511,7 @@
               required 
             />
           </div>
-          <div>
-            <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="reg-pin">Select 4-digit PIN</label>
-            <input 
-              id="reg-pin"
-              type="text" 
-              pattern="[0-9]{4}"
-              maxlength="4"
-              bind:value={regPIN} 
-              autocomplete="off"
-              class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs focus:outline-none focus:border-[#3E6650]" 
-              placeholder="e.g. 1234"
-              required 
-            />
-          </div>
+
 
           <button 
             type="submit" 
@@ -595,34 +587,77 @@
           {/if}
         </form>
       {:else}
-        <!-- Step 2: Progressive disclosure based on available options -->
-        <div class="space-y-4">
-          <div class="flex items-center gap-2 border-b border-[#767068]/10 pb-3">
-            <button 
-              onclick={goBackToIdentifier}
-              class="text-[#767068] hover:text-[#2A2521] transition-all p-1 hover:bg-[#F6F2EA] rounded-full"
-              title="Change ID"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <span class="text-xs font-mono font-bold text-[#767068] truncate">Active ID: <span class="text-[#2A2521]">{username}</span></span>
+        {#if showBiometricRegisterScanner}
+          <div class="space-y-4">
+            <h2 class="text-xs font-mono font-bold uppercase tracking-tight text-[#767068] text-center">Registering Device Biometrics</h2>
+            <BiometricScanner
+              action="register"
+              username={username.trim()}
+              email={username.trim()}
+              accountType="operator"
+              onsuccess={() => {
+                appState.isAuthenticated = true;
+                goto('/');
+              }}
+              oncancel={skipBiometricRegistration}
+            />
           </div>
-
-          <!-- Tabs to swap methods contextually if multiple are registered -->
-          {#if availableMethods.length > 1}
-            <div class="grid gap-1 bg-[#F6F2EA] p-0.5 rounded border border-[#767068]/20 font-mono text-[8px] uppercase tracking-tighter"
-                 style="grid-template-columns: repeat({availableMethods.length}, minmax(0, 1fr));">
-              {#each availableMethods as method}
-                <button
-                  type="button"
-                  onclick={() => { appState.playClickSound(); selectedMethod = method; loginMessage = ''; totpToken = ''; }}
-                  class="py-1 rounded text-center transition-all {selectedMethod === method ? 'bg-white text-[#2A2521] font-bold shadow-sm' : 'text-[#767068] hover:text-[#2A2521]'}"
-                >
-                  {method === 'totp' ? 'Authenticator' : method === 'totp-setup' ? 'Setup 2FA' : method}
-                </button>
-              {/each}
+        {:else if showBiometricSetupPrompt}
+          <div class="space-y-4 text-center">
+            <div class="w-12 h-12 rounded-full bg-[#3E6650]/10 text-[#3E6650] flex items-center justify-center mx-auto mb-2 animate-bounce">
+              <Fingerprint size={28} />
             </div>
-          {/if}
+            <h2 class="text-sm font-mono font-bold uppercase tracking-tight text-[#2A2521]">Enable Biometric Login?</h2>
+            <p class="text-[11px] text-[#767068] leading-relaxed">
+              Would you like to register your device's biometrics or device password lock for faster secure login next time?
+            </p>
+
+            <div class="flex flex-col gap-2 pt-2">
+              <button
+                type="button"
+                onclick={startBiometricRegistration}
+                class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-white font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive"
+              >
+                Allow Biometrics
+              </button>
+              <button
+                type="button"
+                onclick={skipBiometricRegistration}
+                class="w-full border border-[#767068]/30 hover:bg-[#767068]/5 text-[#767068] font-bold font-mono text-xs py-2.5 rounded uppercase tracking-wider transition-all btn-interactive"
+              >
+                Skip for Now
+              </button>
+            </div>
+          </div>
+        {:else}
+          <!-- Step 2: Progressive disclosure based on available options -->
+          <div class="space-y-4">
+            <div class="flex items-center gap-2 border-b border-[#767068]/10 pb-3">
+              <button 
+                onclick={goBackToIdentifier}
+                class="text-[#767068] hover:text-[#2A2521] transition-all p-1 hover:bg-[#F6F2EA] rounded-full"
+                title="Change ID"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <span class="text-xs font-mono font-bold text-[#767068] truncate">Active ID: <span class="text-[#2A2521]">{username}</span></span>
+            </div>
+
+            <!-- Tabs to swap methods contextually if multiple are registered -->
+            {#if availableMethods.length > 1}
+              <div class="grid gap-1 bg-[#F6F2EA] p-0.5 rounded border border-[#767068]/20 font-mono text-[8px] uppercase tracking-tighter"
+                   style="grid-template-columns: repeat({availableMethods.length}, minmax(0, 1fr));">
+                {#each availableMethods as method}
+                  <button
+                    type="button"
+                    onclick={() => { appState.playClickSound(); selectedMethod = method; loginMessage = ''; totpToken = ''; }}
+                    class="py-1 rounded text-center transition-all {selectedMethod === method ? 'bg-white text-[#2A2521] font-bold shadow-sm' : 'text-[#767068] hover:text-[#2A2521]'}"
+                  >
+                    {method === 'totp' ? 'Authenticator' : method === 'totp-setup' ? 'Setup 2FA' : method === 'biometric' ? 'Biometrics' : method}
+                  </button>
+                {/each}
+              </div>
+            {/if}
 
           <!-- Method inputs -->
           {#if selectedMethod === 'password'}
@@ -649,29 +684,7 @@
             </form>
           {/if}
 
-          {#if selectedMethod === 'pin'}
-            <div class="space-y-4">
-              <div>
-                <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="login-pin">Enter 4-Digit Access PIN</label>
-                <input 
-                  id="login-pin"
-                  type="password" 
-                  pattern="[0-9]*" 
-                  inputmode="numeric" 
-                  maxlength="4" 
-                  bind:value={inputPIN} 
-                  oninput={handlePinInput}
-                  class="w-full text-center text-xl tracking-[1.2em] pl-6 py-2.5 rounded border border-[#767068]/30 bg-white focus:outline-none focus:border-[#3E6650] font-mono"
-                  placeholder="••••"
-                  required 
-                  autofocus
-                />
-              </div>
-              <p class="text-[9px] text-[#767068] font-mono text-center">
-                Verification occurs automatically upon entering the 4th digit.
-              </p>
-            </div>
-          {/if}
+
 
           {#if selectedMethod === 'biometric'}
             <BiometricScanner 
@@ -757,6 +770,7 @@
             <p class="text-xs font-mono text-[#AC3B2A] text-center mt-2">{loginMessage}</p>
           {/if}
         </div>
+        {/if}
       {/if}
 
       <div class="ticket-divider my-6"></div>

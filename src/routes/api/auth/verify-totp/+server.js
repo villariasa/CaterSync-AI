@@ -64,8 +64,15 @@ export async function POST({ request, cookies }) {
       maxAge: 60 * 60 * 12 // 12 hours
     });
 
+    const credRes = await pool.query(
+      "SELECT id FROM webauthn_credentials WHERE account_id = $1 AND account_type = 'operator' LIMIT 1",
+      [user.id]
+    );
+    const hasBiometrics = credRes.rows.length > 0;
+
     return json({
       success: true,
+      hasBiometrics,
       user: {
         username: user.username,
         role: user.role
