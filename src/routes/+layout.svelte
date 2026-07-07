@@ -59,9 +59,8 @@
   let globalSearchQuery = $state('');
   let showGlobalSearchResults = $state(false);
 
-  // Premium Profile Switcher and Sub-modals state
-  let activeProfile = $state('Medy Villarias');
-  let secondaryProfile = $state('itsuki');
+  // Premium Dynamic Profile Switcher
+  let cachedProfiles = $state([]);
   let showProfileDropdown = $state(false);
   let showAllProfilesModal = $state(false);
   let showHelpDiagnosticsModal = $state(false);
@@ -72,9 +71,51 @@
   let problemDescription = $state('');
   let darkThemeEnabled = $state(false);
 
-  // Profile switch confirmation modal state
-  let showProfileSwitchModal = $state(false);
-  let pendingProfileToSwitch = $state('');
+  onMount(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('catersync_saved_profiles');
+      if (stored) {
+        try {
+          cachedProfiles = JSON.parse(stored);
+        } catch (e) {
+          cachedProfiles = [];
+        }
+      }
+      
+      // Seed default profiles if empty
+      if (cachedProfiles.length === 0) {
+        cachedProfiles = [
+          { username: 'admin', name: 'Medy Villarias' },
+          { username: 'itsuki@catersync.ai', name: 'itsuki' }
+        ];
+        localStorage.setItem('catersync_saved_profiles', JSON.stringify(cachedProfiles));
+      }
+    }
+  });
+
+  // Track the logged-in user profile, update cached profiles when a new user logs in
+  $effect(() => {
+    if (appState.currentUser && appState.currentUser.username) {
+      const currentUsername = appState.currentUser.username;
+      const currentName = appState.currentUser.name || currentUsername.split('@')[0];
+      
+      // Update or add profile to cache
+      const exists = cachedProfiles.some(p => p.username.toLowerCase() === currentUsername.toLowerCase());
+      if (!exists) {
+        cachedProfiles = [...cachedProfiles, { username: currentUsername, name: currentName }];
+        localStorage.setItem('catersync_saved_profiles', JSON.stringify(cachedProfiles));
+      }
+    }
+  });
+
+  const activeProfile = $derived(appState.currentUser?.username || 'admin');
+  const activeProfileName = $derived(
+    cachedProfiles.find(p => p.username.toLowerCase() === activeProfile.toLowerCase())?.name || activeProfile.split('@')[0]
+  );
+  
+  const otherProfiles = $derived(
+    cachedProfiles.filter(p => p.username.toLowerCase() !== activeProfile.toLowerCase())
+  );
 
   function toggleDarkTheme() {
     appState.playClickSound();
@@ -89,27 +130,38 @@
     }
   }
 
-  function initiateProfileSwitch(name) {
+  function initiateProfileSwitch(profile) {
     appState.playClickSound();
-    if (name === activeProfile) {
+    if (profile.username.toLowerCase() === activeProfile.toLowerCase()) {
       showProfileDropdown = false;
-      showAllProfilesModal = false;
       return;
     }
-    pendingProfileToSwitch = name;
-    showProfileSwitchModal = true;
+    
+    // Log out current session
+    appState.isAuthenticated = false;
+    appState.currentUser = null;
+    sessionStorage.removeItem('catersync_auth_state');
+    
+    // Go to login gate with the selected user pre-filled!
+    goto('/');
     showProfileDropdown = false;
     showAllProfilesModal = false;
+    setTimeout(() => {
+      const usernameInput = document.getElementById('login-username');
+      if (usernameInput) {
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
+        nativeInputValueSetter.call(usernameInput, profile.username);
+        usernameInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }, 100);
   }
 
-  function switchProfile(name) {
+  function removeProfileFromCache(usernameToRemove, event) {
+    if (event) event.stopPropagation(); // Prevent triggering switch profile
     appState.playClickSound();
-    if (name === secondaryProfile) {
-      const oldActive = activeProfile;
-      activeProfile = secondaryProfile;
-      secondaryProfile = oldActive;
-      appState.playStampSound();
-    }
+    cachedProfiles = cachedProfiles.filter(p => p.username.toLowerCase() !== usernameToRemove.toLowerCase());
+    localStorage.setItem('catersync_saved_profiles', JSON.stringify(cachedProfiles));
+    appState.showToast("👤 Profile removed from list");
   }
 
   function handleReportSubmit(e) {
@@ -792,10 +844,10 @@
                 appState.playClickSound();
                 showProfileDropdown = !showProfileDropdown;
               }}
-              class="btn-interactive w-8 h-8 rounded-full bg-[#3E6650] hover:bg-[#3E6650]/95 text-[#F6F2EA] flex items-center justify-center font-bold relative border border-[#767068]/20 select-none shadow-sm transition-all focus:outline-none"
+              class="btn-interactive w-8 h-8 rounded-full bg-[#3E6650] hover:bg-[#3E6650]/95 text-[#F6F2EA] flex items-center justify-center font-bold relative border border-[#767068]/20 select-none shadow-sm transition-all focus:outline-none uppercase"
               title="Profile menu"
             >
-              <span>{activeProfile.split(' ').map(n => n[0]).join('')}</span>
+              <span>{activeProfileName[0]}</span>
               <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-white"></span>
             </button>
 
@@ -806,28 +858,46 @@
               >
                 <!-- Active Profiles list -->
                 <div class="px-4 pb-3 border-b border-[#767068]/15 dark:border-zinc-800/60 font-sans">
-                  <div class="flex items-center justify-between py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded px-2 cursor-pointer transition-all">
+                  <!-- Main Active Profile -->
+                  <div class="flex items-center justify-between py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded px-2 cursor-default transition-all">
                     <div class="flex items-center gap-3">
-                      <div class="w-9 h-9 rounded-full bg-[#3E6650] text-[#F6F2EA] flex items-center justify-center font-bold text-sm">
-                        <span>{activeProfile.split(' ').map(n => n[0]).join('')}</span>
+                      <div class="w-9 h-9 rounded-full bg-[#3E6650] text-[#F6F2EA] flex items-center justify-center font-bold text-sm uppercase">
+                        <span>{activeProfileName[0]}</span>
                       </div>
-                      <span class="font-bold text-sm text-[#2A2521] dark:text-[#EBE5DC]">{activeProfile}</span>
+                      <div>
+                        <div class="font-bold text-sm text-[#2A2521] dark:text-[#EBE5DC] truncate max-w-[150px]">{activeProfileName}</div>
+                        <div class="text-[9px] text-[#767068] font-mono truncate max-w-[150px]">{activeProfile}</div>
+                      </div>
                     </div>
                     <span class="text-[#3E6650] dark:text-[#EBE5DC] font-bold text-sm">✓</span>
                   </div>
 
-                  <!-- Secondary profile switcher -->
-                  <div 
-                    onclick={() => initiateProfileSwitch(secondaryProfile)}
-                    class="flex items-center justify-between py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded px-2 cursor-pointer transition-all mt-1"
-                  >
-                    <div class="flex items-center gap-3">
-                      <div class="w-9 h-9 rounded-full bg-[#767068]/20 dark:bg-zinc-800 text-[#767068] dark:text-[#EBE5DC] flex items-center justify-center font-bold text-xs">
-                        <span>{secondaryProfile.split(' ').map(n => n[0]).join('')}</span>
+                  <!-- Other cached profiles -->
+                  {#each otherProfiles as profile}
+                    <div 
+                      onclick={() => initiateProfileSwitch(profile)}
+                      class="flex items-center justify-between py-1.5 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded px-2 cursor-pointer transition-all mt-1"
+                    >
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full bg-[#767068]/20 dark:bg-zinc-800 text-[#767068] dark:text-[#EBE5DC] flex items-center justify-center font-bold text-xs uppercase">
+                          <span>{profile.name[0]}</span>
+                        </div>
+                        <div>
+                          <div class="text-sm font-semibold text-[#767068] dark:text-zinc-400 truncate max-w-[130px]">{profile.name}</div>
+                          <div class="text-[8px] text-[#767068]/60 font-mono truncate max-w-[130px]">{profile.username}</div>
+                        </div>
                       </div>
-                      <span class="text-sm font-semibold text-[#767068] dark:text-zinc-400">{secondaryProfile}</span>
+                      
+                      <!-- Remove profile button -->
+                      <button 
+                        onclick={(e) => removeProfileFromCache(profile.username, e)}
+                        class="p-1 text-[#767068] hover:text-[#AC3B2A] hover:bg-red-50 dark:hover:bg-red-950/20 rounded transition-all"
+                        title="Remove profile"
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </div>
-                  </div>
+                  {/each}
 
                   <button 
                     onclick={() => { showAllProfilesModal = true; showProfileDropdown = false; appState.playClickSound(); }}
@@ -1241,7 +1311,7 @@
         </div>
         <div class="flex justify-between">
           <span class="text-[#767068] dark:text-zinc-400">USER USERNAME:</span>
-          <span class="font-bold">{activeProfile}</span>
+          <span class="font-bold">{activeProfileName} ({activeProfile})</span>
         </div>
       </div>
 
@@ -1270,30 +1340,37 @@
       </div>
 
       <div class="space-y-2 py-2 text-left">
-        <button 
-          onclick={() => initiateProfileSwitch(activeProfile)}
-          class="w-full flex items-center justify-between p-3 bg-[#F6F2EA]/60 dark:bg-zinc-900/20 rounded border-2 border-[#3E6650] hover:bg-[#767068]/5 transition-all text-left"
-        >
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full bg-[#3E6650] text-[#F6F2EA] flex items-center justify-center font-bold text-xs">
-              <span>{activeProfile.split(' ').map(n => n[0]).join('')}</span>
+        {#each cachedProfiles as profile}
+          {@const isActive = profile.username.toLowerCase() === activeProfile.toLowerCase()}
+          <div 
+            class="w-full flex items-center justify-between p-3 rounded transition-all text-left {isActive ? 'bg-[#F6F2EA]/60 dark:bg-zinc-900/20 border-2 border-[#3E6650]' : 'bg-slate-50 dark:bg-zinc-850 border border-[#767068]/15 dark:border-zinc-800'}"
+          >
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <div 
+              onclick={() => !isActive && initiateProfileSwitch(profile)}
+              class="flex items-center gap-3 cursor-pointer flex-1"
+            >
+              <div class="w-8 h-8 rounded-full bg-[#3E6650] text-[#F6F2EA] flex items-center justify-center font-bold text-xs uppercase">
+                <span>{profile.name[0]}</span>
+              </div>
+              <div>
+                <span class="text-xs font-bold text-[#2A2521] dark:text-[#EBE5DC] block">{profile.name}</span>
+                <span class="text-[8px] font-mono text-[#767068]">{profile.username}</span>
+              </div>
             </div>
-            <span class="text-xs font-bold text-[#2A2521] dark:text-[#EBE5DC]">{activeProfile}</span>
+            {#if isActive}
+              <span class="text-[#3E6650] dark:text-[#EBE5DC] font-bold text-xs">Active</span>
+            {:else}
+              <button 
+                onclick={(e) => removeProfileFromCache(profile.username, e)}
+                class="p-1 text-[#767068] hover:text-[#AC3B2A] hover:bg-red-50 dark:hover:bg-red-950/20 rounded transition-all font-sans"
+                title="Remove profile"
+              >
+                <Trash2 size={13} />
+              </button>
+            {/if}
           </div>
-          <span class="text-[#3E6650] dark:text-[#EBE5DC] font-bold text-xs">Active</span>
-        </button>
-
-        <button 
-          onclick={() => initiateProfileSwitch(secondaryProfile)}
-          class="w-full flex items-center justify-between p-3 bg-slate-50 dark:bg-zinc-850 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded border border-[#767068]/15 dark:border-zinc-800 transition-all text-left"
-        >
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full bg-[#767068]/20 dark:bg-zinc-800 text-[#767068] dark:text-[#EBE5DC] flex items-center justify-center font-bold text-xs">
-              <span>{secondaryProfile.split(' ').map(n => n[0]).join('')}</span>
-            </div>
-            <span class="text-xs font-bold text-[#767068] dark:text-zinc-400">{secondaryProfile}</span>
-          </div>
-        </button>
+        {/each}
       </div>
 
       <div class="pt-4 border-t border-[#767068]/20 dark:border-zinc-800 font-mono text-xs flex justify-end">
