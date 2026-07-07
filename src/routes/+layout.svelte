@@ -19,7 +19,15 @@
     LogOut,
     Menu,
     X,
-    Bell
+    Bell,
+    ChevronRight,
+    HelpCircle,
+    MessageSquare,
+    Moon,
+    MoreHorizontal,
+    AlertTriangle,
+    Info,
+    User
   } from '@lucide/svelte';
   import { page } from '$app/state';
   import { CateringState, setCateringContext } from '$lib/states.svelte.js';
@@ -148,6 +156,12 @@
   });
 
   const unreadCount = $derived(appState.notifications.filter(n => n.unread).length);
+  let activeNotifFilter = $state('all');
+  const filteredNotifications = $derived(
+    activeNotifFilter === 'unread' 
+      ? appState.notifications.filter(n => n.unread) 
+      : appState.notifications
+  );
 
   onMount(() => {
     // Fade out initial PWA loading screen
@@ -477,9 +491,6 @@
               onclick={() => {
                 appState.playClickSound();
                 showNotificationsDropdown = !showNotificationsDropdown;
-                if (showNotificationsDropdown) {
-                  appState.notifications.forEach(n => n.unread = false);
-                }
               }} 
               class="btn-interactive p-1.5 rounded hover:bg-white/50 dark:hover:bg-zinc-800/30 border border-transparent hover:border-[#767068]/20 flex items-center gap-1 text-[#767068] dark:text-zinc-400 relative"
               title="Notifications"
@@ -496,40 +507,119 @@
 
             {#if showNotificationsDropdown}
               <div 
-                transition:slide={{ duration: 200 }} 
-                class="absolute right-0 mt-2 w-72 bg-white dark:bg-[#24201E] border border-[#767068]/30 dark:border-zinc-800 rounded shadow-xl py-2 z-50 text-[#2A2521] dark:text-[#EBE5DC] text-xs font-sans max-h-96 overflow-y-auto"
+                transition:slide={{ duration: 180 }} 
+                class="absolute right-0 mt-2 w-80 bg-white dark:bg-[#24201E] border border-[#767068]/30 dark:border-zinc-800 rounded-lg shadow-2xl py-2 z-50 text-[#2A2521] dark:text-[#EBE5DC] text-xs font-sans text-left"
               >
-                <div class="px-4 py-2 border-b border-[#767068]/15 dark:border-zinc-800/60 flex items-center justify-between font-mono text-[10px] text-[#767068] dark:text-zinc-400 font-bold">
-                  <span>NOTIFICATIONS</span>
+                <!-- Title & Option header -->
+                <div class="px-4 pt-2 pb-1 flex items-center justify-between">
+                  <h3 class="text-base font-extrabold tracking-tight">Notifications</h3>
                   <button 
                     onclick={() => {
                       appState.playClickSound();
                       appState.notifications = [];
                       showNotificationsDropdown = false;
                     }}
-                    class="hover:text-[#AC3B2A] transition-all uppercase"
+                    class="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800 text-[#767068] dark:text-zinc-400 transition-all"
+                    title="Clear All Notifications"
                   >
-                    Clear All
+                    <MoreHorizontal size={16} />
                   </button>
                 </div>
-                
-                {#if appState.notifications.length === 0}
-                  <div class="px-4 py-6 text-center text-[#767068]/60 dark:text-zinc-500 font-mono text-[10px] uppercase">
+
+                <!-- Filter Pills -->
+                <div class="flex gap-2 px-4 py-1.5 border-b border-[#767068]/10 dark:border-zinc-800/60 font-sans text-xs">
+                  <button 
+                    onclick={() => { appState.playClickSound(); activeNotifFilter = 'all'; }}
+                    class="px-3 py-1 rounded-full font-bold transition-all {activeNotifFilter === 'all' ? 'bg-[#3E6650] text-[#F6F2EA]' : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-200/80 dark:hover:bg-zinc-700'}"
+                  >
+                    All
+                  </button>
+                  <button 
+                    onclick={() => { appState.playClickSound(); activeNotifFilter = 'unread'; }}
+                    class="px-3 py-1 rounded-full font-bold transition-all flex items-center gap-1.5 {activeNotifFilter === 'unread' ? 'bg-[#3E6650] text-[#F6F2EA]' : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-200/80 dark:hover:bg-zinc-700'}"
+                  >
+                    <span>Unread</span>
+                    {#if unreadCount > 0}
+                      <span class="bg-[#AC3B2A] text-white text-[8px] px-1 rounded-full font-mono">{unreadCount}</span>
+                    {/if}
+                  </button>
+                </div>
+
+                <!-- Section Label -->
+                <div class="px-4 py-2 flex items-center justify-between text-[10px] font-bold text-[#767068] dark:text-zinc-500 font-sans uppercase tracking-wider">
+                  <span>Earlier</span>
+                  <button 
+                    onclick={() => {
+                      appState.playClickSound();
+                      appState.notifications.forEach(n => n.unread = false);
+                      appState.showToast("All notifications marked as read", "success");
+                    }}
+                    class="hover:underline text-[9px] text-[#3E6650] dark:text-zinc-400 capitalize normal-case"
+                  >
+                    Mark all as read
+                  </button>
+                </div>
+
+                <!-- Notification items -->
+                {#if filteredNotifications.length === 0}
+                  <div class="px-4 py-10 text-center text-[#767068]/60 dark:text-zinc-500 font-mono text-[10px] uppercase select-none">
                     No active notifications
                   </div>
                 {:else}
-                  <div class="divide-y divide-[#767068]/10 dark:divide-zinc-850 max-h-64 overflow-y-auto">
-                    {#each appState.notifications as notif}
-                      <div class="p-3 hover:bg-slate-50 dark:hover:bg-zinc-800/30 flex items-start gap-2.5 transition-all">
-                        <span class="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 {notif.type === 'error' ? 'bg-[#AC3B2A]' : (notif.type === 'info' ? 'bg-[#D9A441]' : 'bg-[#3E6650]')}"></span>
-                        <div class="min-w-0 flex-1">
-                          <p class="leading-relaxed text-[11px] text-[#2A2521] dark:text-[#EBE5DC]">{notif.message}</p>
-                          <span class="text-[8px] font-mono text-slate-400 dark:text-zinc-500 block mt-1">{notif.timestamp}</span>
+                  <div class="max-h-80 overflow-y-auto divide-y divide-[#767068]/5 dark:divide-zinc-850">
+                    {#each filteredNotifications as notif}
+                      <div 
+                        onclick={() => {
+                          notif.unread = false;
+                          appState.playClickSound();
+                        }}
+                        class="p-3 hover:bg-slate-50 dark:hover:bg-zinc-800/20 flex items-start gap-3 transition-all cursor-pointer relative {notif.unread ? 'bg-slate-50/40 dark:bg-zinc-800/10' : ''}"
+                      >
+                        <!-- Left Avatar Circle with type Badge Overlay -->
+                        <div class="relative shrink-0 select-none">
+                          <div class="w-9 h-9 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-[#767068] dark:text-[#EBE5DC]">
+                            <User size={16} />
+                          </div>
+                          <!-- Bottom Right Icon badge overlay -->
+                          <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white dark:border-[#24201E] {notif.type === 'error' ? 'bg-[#AC3B2A] text-white' : (notif.type === 'info' ? 'bg-[#D9A441] text-white' : 'bg-[#3E6650] text-white')}">
+                            {#if notif.type === 'error'}
+                              <AlertTriangle size={9} />
+                            {:else if notif.type === 'info'}
+                              <Info size={9} />
+                            {:else}
+                              <Bell size={9} />
+                            {/if}
+                          </div>
                         </div>
+
+                        <!-- Message Text & Relative Time -->
+                        <div class="min-w-0 flex-1 pr-4">
+                          <p class="leading-snug text-[11px] text-[#2A2521] dark:text-[#EBE5DC] font-sans">
+                            {notif.message}
+                          </p>
+                          <span class="text-[9px] text-[#767068] dark:text-zinc-500 font-sans block mt-1.5">{notif.timestamp}</span>
+                        </div>
+
+                        <!-- Right Unread dot badge -->
+                        {#if notif.unread}
+                          <span class="absolute right-3.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#3E6650] shrink-0" title="Unread"></span>
+                        {/if}
                       </div>
                     {/each}
                   </div>
                 {/if}
+
+                <!-- Footer button -->
+                <button 
+                  onclick={() => {
+                    showNotificationsDropdown = false;
+                    appState.playClickSound();
+                    appState.showToast("Retrieving older system logs...", "info");
+                  }} 
+                  class="w-full text-center py-2 bg-slate-100/60 dark:bg-zinc-800/40 hover:bg-slate-100 dark:hover:bg-zinc-800 text-[10px] font-bold text-[#3E6650] dark:text-[#EBE5DC] rounded-b border-t border-[#767068]/10 dark:border-zinc-800 uppercase tracking-wide"
+                >
+                  See previous notifications
+                </button>
               </div>
             {/if}
           </div>
@@ -599,63 +689,73 @@
                 </div>
 
                 <!-- Profile Menu list -->
-                <div class="px-2 py-1.5 text-xs font-bold font-sans">
+                <div class="px-2 py-1.5 text-xs font-bold font-sans space-y-1">
                   <a 
                     href="/settings"
                     onclick={() => { showProfileDropdown = false; appState.playClickSound(); }}
-                    class="flex items-center justify-between py-2 px-3 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded-md transition-all text-[#2A2521] dark:text-[#EBE5DC] no-underline"
+                    class="flex items-center justify-between py-1.5 px-3 hover:bg-slate-100 dark:hover:bg-zinc-800/30 rounded-md transition-all text-[#2A2521] dark:text-[#EBE5DC] no-underline"
                   >
                     <div class="flex items-center gap-3">
-                      <span class="text-base select-none">⚙️</span>
+                      <div class="w-9 h-9 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center shrink-0 text-[#2A2521] dark:text-[#EBE5DC]">
+                        <Settings size={16} />
+                      </div>
                       <span>Settings & privacy</span>
                     </div>
-                    <span class="text-[#767068] dark:text-zinc-500 font-mono text-sm">➔</span>
+                    <ChevronRight size={14} class="text-[#767068] dark:text-zinc-500" />
                   </a>
 
                   <button 
                     onclick={() => { showHelpDiagnosticsModal = true; showProfileDropdown = false; appState.playClickSound(); }}
-                    class="w-full flex items-center justify-between py-2 px-3 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded-md transition-all text-[#2A2521] dark:text-[#EBE5DC] text-left"
+                    class="w-full flex items-center justify-between py-1.5 px-3 hover:bg-slate-100 dark:hover:bg-zinc-800/30 rounded-md transition-all text-[#2A2521] dark:text-[#EBE5DC] text-left"
                   >
                     <div class="flex items-center gap-3">
-                      <span class="text-base select-none">❓</span>
+                      <div class="w-9 h-9 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center shrink-0 text-[#2A2521] dark:text-[#EBE5DC]">
+                        <HelpCircle size={16} />
+                      </div>
                       <span>Help & support</span>
                     </div>
-                    <span class="text-[#767068] dark:text-zinc-500 font-mono text-sm">➔</span>
+                    <ChevronRight size={14} class="text-[#767068] dark:text-zinc-500" />
                   </button>
 
                   <button 
                     onclick={() => { showReportProblemModal = true; showProfileDropdown = false; appState.playClickSound(); }}
-                    class="w-full flex items-center justify-between py-2 px-3 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded-md transition-all text-[#2A2521] dark:text-[#EBE5DC] text-left"
+                    class="w-full flex items-center justify-between py-1.5 px-3 hover:bg-slate-100 dark:hover:bg-zinc-800/30 rounded-md transition-all text-[#2A2521] dark:text-[#EBE5DC] text-left"
                   >
                     <div class="flex items-center gap-3">
-                      <span class="text-base select-none">💬</span>
+                      <div class="w-9 h-9 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center shrink-0 text-[#2A2521] dark:text-[#EBE5DC]">
+                        <MessageSquare size={16} />
+                      </div>
                       <div class="flex flex-col leading-none">
                         <span>Report a problem</span>
-                        <span class="text-[8px] font-mono text-[#767068] dark:text-zinc-500 font-normal mt-0.5">CTRL + B</span>
+                        <span class="text-[8px] font-mono text-[#767068] dark:text-zinc-500 font-normal mt-0.5">CTRL B</span>
                       </div>
                     </div>
-                    <span class="text-[#767068] dark:text-zinc-500 font-mono text-sm">➔</span>
+                    <ChevronRight size={14} class="text-[#767068] dark:text-zinc-500" />
                   </button>
 
                   <button 
                     onclick={() => { showAccessibilityModal = true; showProfileDropdown = false; appState.playClickSound(); }}
-                    class="w-full flex items-center justify-between py-2 px-3 hover:bg-slate-50 dark:hover:bg-zinc-800/30 rounded-md transition-all text-[#2A2521] dark:text-[#EBE5DC] text-left"
+                    class="w-full flex items-center justify-between py-1.5 px-3 hover:bg-slate-100 dark:hover:bg-zinc-800/30 rounded-md transition-all text-[#2A2521] dark:text-[#EBE5DC] text-left"
                   >
                     <div class="flex items-center gap-3">
-                      <span class="text-base select-none">🌙</span>
+                      <div class="w-9 h-9 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center shrink-0 text-[#2A2521] dark:text-[#EBE5DC]">
+                        <Moon size={16} />
+                      </div>
                       <span>Display & accessibility</span>
                     </div>
-                    <span class="text-[#767068] dark:text-zinc-500 font-mono text-sm">➔</span>
+                    <ChevronRight size={14} class="text-[#767068] dark:text-zinc-500" />
                   </button>
 
                   <div class="h-px bg-[#767068]/10 dark:bg-zinc-800/50 my-1"></div>
 
                   <button 
                     onclick={() => { showLogoutModal = true; showProfileDropdown = false; appState.playClickSound(); }}
-                    class="w-full flex items-center justify-between py-2 px-3 hover:bg-[#AC3B2A]/10 hover:text-[#AC3B2A] rounded-md transition-all text-[#2A2521] dark:text-[#EBE5DC] text-left"
+                    class="w-full flex items-center justify-between py-1.5 px-3 hover:bg-[#AC3B2A]/10 hover:text-[#AC3B2A] rounded-md transition-all text-[#2A2521] dark:text-[#EBE5DC] text-left"
                   >
-                    <div class="flex items-center gap-3 text-[#AC3B2A]">
-                      <span class="text-base select-none">🚪</span>
+                    <div class="flex items-center gap-3 text-[#AC3B2A] dark:text-red-400">
+                      <div class="w-9 h-9 rounded-full bg-[#AC3B2A]/10 flex items-center justify-center shrink-0 text-[#AC3B2A] dark:text-red-400">
+                        <LogOut size={16} />
+                      </div>
                       <span>Log out</span>
                     </div>
                   </button>
