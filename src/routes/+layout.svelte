@@ -401,26 +401,61 @@
 {#if !appState.isAuthenticated}
   <LandingPage />
 {:else}
-  <!-- Outer Market Ledger container -->
   <div class="min-h-screen bg-[#F6F2EA] text-[#2A2521] flex flex-col antialiased">
-    
     <!-- STICKY HEADER & NAV CONTAINER -->
-    <div class="sticky top-0 z-30 bg-[#F6F2EA]/90 backdrop-blur-md border-b border-[#767068]/30 animate-fade-in">
+    <div class="sticky top-0 z-30 bg-[#F6F2EA]/95 dark:bg-[#1A1715]/95 backdrop-blur-md border-b border-[#767068]/30 animate-fade-in">
       <!-- TOP BAR -->
-      <header class="px-4 sm:px-6 py-3 flex items-center justify-between bg-white/50">
-        <div class="flex items-center gap-2 sm:gap-3 min-w-0">
-          <!-- Minimalist receipt stamp logo -->
-          <div class="hidden sm:block px-2.5 py-1 border-2 border-[#2A2521] font-mono text-sm font-black tracking-tighter uppercase select-none">
+      <header class="px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4 bg-white/50 dark:bg-[#24201E]/50">
+        <!-- LEFT: LOGO & TITLE -->
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0 shrink-0">
+          <div class="hidden lg:block px-2 py-0.5 border border-[#2A2521] dark:border-[#ECE7DF] font-mono text-[9px] font-black tracking-tighter uppercase select-none">
             THE PASS
           </div>
           <div class="truncate">
-            <h1 class="text-sm sm:text-base md:text-lg font-black tracking-tight leading-none uppercase truncate">{appState.settings.business_name}</h1>
-            <span class="text-[8px] sm:text-[9px] font-mono text-[#767068] tracking-widest uppercase block mt-0.5">System Core Control</span>
+            <h1 class="text-xs sm:text-sm font-black tracking-tight leading-none uppercase truncate">{appState.settings.business_name}</h1>
           </div>
         </div>
 
-        <!-- Right Controls and Network status -->
-        <div class="flex items-center gap-2 sm:gap-4 shrink-0 font-mono text-xs">
+        <!-- CENTER: DESKTOP HEADER NAVIGATION (Sleek Centered Icons) -->
+        <div class="hidden md:flex flex-1 justify-center min-w-0 px-4">
+          <nav class="app-nav-row justify-center max-w-full">
+            <a href="/" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/') ? 'active' : ''}" title="Overview">
+              <LayoutDashboard size={16} />
+              <span class="app-nav-text">Overview</span>
+            </a>
+            <a href="/planner" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/planner') ? 'active' : ''}" title="Planner">
+              <UtensilsCrossed size={16} />
+              <span class="app-nav-text">Planner</span>
+            </a>
+            <a href="/customers" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/customers') ? 'active' : ''}" title="Customers">
+              <Users size={16} />
+              <span class="app-nav-text">Customers</span>
+            </a>
+            <a href="/menus" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/menus') ? 'active' : ''}" title="Menus">
+              <FileText size={16} />
+              <span class="app-nav-text">Menus</span>
+            </a>
+            <a href="/inventory" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/inventory') ? 'active' : ''}" title="Inventory">
+              <Package size={16} />
+              <span class="app-nav-text">Inventory</span>
+            </a>
+            <a href="/scheduling" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/scheduling') ? 'active' : ''}" title="Kitchen & Roster">
+              <ChefHat size={16} />
+              <span class="app-nav-text">Kitchen</span>
+            </a>
+            <a href="/audits" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/audits') ? 'active' : ''}" title="Audits">
+              <Wallet size={16} />
+              <span class="app-nav-text">Audits</span>
+            </a>
+            <a href="/settings" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/settings') ? 'active' : ''}" title="Settings">
+              <Settings size={16} />
+              <span class="app-nav-text">Settings</span>
+            </a>
+          </nav>
+        </div>
+
+        <!-- RIGHT: CONTROLS & AVATAR -->
+        <div class="flex items-center gap-2 sm:gap-3 shrink-0 font-mono text-xs">
           <!-- PWA Install app Button -->
           {#if appState.pwaInstallable}
             <button 
@@ -429,18 +464,18 @@
               title="Install App"
             >
               <Download size={12} />
-              <span class="hidden sm:inline">Install App</span>
+              <span class="hidden sm:inline">Install</span>
             </button>
           {/if}
 
           <!-- Sound toggle -->
-          <button onclick={() => appState.toggleAudio()} class="btn-interactive p-1.5 rounded hover:bg-white/50 border border-transparent hover:border-[#767068]/20 flex items-center gap-1 text-[#767068]">
+          <button onclick={() => appState.toggleAudio()} class="btn-interactive p-1.5 rounded hover:bg-white/50 dark:hover:bg-zinc-800/30 border border-transparent hover:border-[#767068]/20 flex items-center gap-1 text-[#767068] dark:text-zinc-400">
             {#if appState.audioEnabled}
               <Volume2 size={13} class="text-[#3E6650]" />
-              <span class="hidden sm:inline text-[10px]">Sound: ON</span>
+              <span class="hidden lg:inline text-[9px]">ON</span>
             {:else}
               <VolumeX size={13} class="text-[#AC3B2A]" />
-              <span class="hidden sm:inline text-[10px]">Sound: MUTED</span>
+              <span class="hidden lg:inline text-[9px]">MUTED</span>
             {/if}
           </button>
 
@@ -450,16 +485,15 @@
               onclick={() => {
                 appState.playClickSound();
                 showNotificationsDropdown = !showNotificationsDropdown;
-                // Mark all as read when opened
                 if (showNotificationsDropdown) {
                   appState.notifications.forEach(n => n.unread = false);
                 }
               }} 
-              class="btn-interactive p-1.5 rounded hover:bg-white/50 border border-transparent hover:border-[#767068]/20 flex items-center gap-1 text-[#767068] relative"
+              class="btn-interactive p-1.5 rounded hover:bg-white/50 dark:hover:bg-zinc-800/30 border border-transparent hover:border-[#767068]/20 flex items-center gap-1 text-[#767068] dark:text-zinc-400 relative"
               title="Notifications"
             >
               <Bell size={13} class={unreadCount > 0 ? 'text-[#AC3B2A] animate-bounce' : ''} />
-              <span class="hidden sm:inline text-[10px]">Alerts</span>
+              <span class="hidden lg:inline text-[9px]">ALERTS</span>
               
               {#if unreadCount > 0}
                 <span class="absolute -top-1 -right-1 bg-[#AC3B2A] text-white text-[8px] font-mono font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">
@@ -471,10 +505,10 @@
             {#if showNotificationsDropdown}
               <div 
                 transition:slide={{ duration: 200 }} 
-                class="absolute right-0 mt-2 w-72 bg-white border border-[#767068]/30 rounded shadow-xl py-2 z-50 text-[#2A2521] text-xs font-sans max-h-96 overflow-y-auto"
+                class="absolute right-0 mt-2 w-72 bg-white dark:bg-[#24201E] border border-[#767068]/30 dark:border-zinc-800 rounded shadow-xl py-2 z-50 text-[#2A2521] dark:text-[#EBE5DC] text-xs font-sans max-h-96 overflow-y-auto"
               >
-                <div class="px-4 py-2 border-b border-[#767068]/15 flex items-center justify-between font-mono text-[10px] text-[#767068] font-bold">
-                  <span>SYSTEM NOTIFICATIONS</span>
+                <div class="px-4 py-2 border-b border-[#767068]/15 dark:border-zinc-800/60 flex items-center justify-between font-mono text-[10px] text-[#767068] dark:text-zinc-400 font-bold">
+                  <span>NOTIFICATIONS</span>
                   <button 
                     onclick={() => {
                       appState.playClickSound();
@@ -488,17 +522,17 @@
                 </div>
                 
                 {#if appState.notifications.length === 0}
-                  <div class="px-4 py-6 text-center text-[#767068]/60 font-mono text-[10px] uppercase">
+                  <div class="px-4 py-6 text-center text-[#767068]/60 dark:text-zinc-500 font-mono text-[10px] uppercase">
                     No active notifications
                   </div>
                 {:else}
-                  <div class="divide-y divide-[#767068]/10 max-h-64 overflow-y-auto">
+                  <div class="divide-y divide-[#767068]/10 dark:divide-zinc-850 max-h-64 overflow-y-auto">
                     {#each appState.notifications as notif}
-                      <div class="p-3 hover:bg-slate-50 flex items-start gap-2.5 transition-all">
+                      <div class="p-3 hover:bg-slate-50 dark:hover:bg-zinc-800/30 flex items-start gap-2.5 transition-all">
                         <span class="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 {notif.type === 'error' ? 'bg-[#AC3B2A]' : (notif.type === 'info' ? 'bg-[#D9A441]' : 'bg-[#3E6650]')}"></span>
                         <div class="min-w-0 flex-1">
-                          <p class="leading-relaxed text-[11px] text-[#2A2521]">{notif.message}</p>
-                          <span class="text-[8px] font-mono text-slate-400 block mt-1">{notif.timestamp}</span>
+                          <p class="leading-relaxed text-[11px] text-[#2A2521] dark:text-[#EBE5DC]">{notif.message}</p>
+                          <span class="text-[8px] font-mono text-slate-400 dark:text-zinc-500 block mt-1">{notif.timestamp}</span>
                         </div>
                       </div>
                     {/each}
@@ -509,9 +543,9 @@
           </div>
 
           <!-- Live Clock -->
-          <div class="hidden lg:flex items-center gap-1.5 text-[#767068]">
+          <div class="hidden lg:flex items-center gap-1.5 text-[#767068] dark:text-zinc-400">
             <span>CLOCK:</span>
-            <span class="text-[#2A2521] font-bold">{currentDateTime || '2026-07-06 13:33'}</span>
+            <span class="text-[#2A2521] dark:text-[#EBE5DC] font-bold">{currentDateTime || '2026-07-06 13:33'}</span>
           </div>
 
           {#if appState.usingMockData}
@@ -646,44 +680,35 @@
               </div>
             {/if}
           </div>
-
         </div>
       </header>
 
-      <!-- RESPONSIVE UNIFIED TOP NAVIGATION (Horizontally Scrollable) -->
-      <div class="bg-white/20 px-4 sm:px-6 py-2 border-t border-[#767068]/15 backdrop-blur-sm">
-        <nav class="app-nav-row">
+      <!-- MOBILE-ONLY HEADER NAVIGATION (Scrollable Row Under Logo row) -->
+      <div class="md:hidden bg-white/20 dark:bg-[#24201E]/20 px-4 py-2 border-t border-[#767068]/15 backdrop-blur-sm">
+        <nav class="app-nav-row justify-center max-w-full">
           <a href="/" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/') ? 'active' : ''}" title="Overview">
             <LayoutDashboard size={16} />
-            <span class="app-nav-text">Overview</span>
           </a>
           <a href="/planner" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/planner') ? 'active' : ''}" title="Planner">
             <UtensilsCrossed size={16} />
-            <span class="app-nav-text">Planner</span>
           </a>
           <a href="/customers" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/customers') ? 'active' : ''}" title="Customers">
             <Users size={16} />
-            <span class="app-nav-text">Customers</span>
           </a>
           <a href="/menus" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/menus') ? 'active' : ''}" title="Menus">
             <FileText size={16} />
-            <span class="app-nav-text">Menus</span>
           </a>
           <a href="/inventory" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/inventory') ? 'active' : ''}" title="Inventory">
             <Package size={16} />
-            <span class="app-nav-text">Inventory</span>
           </a>
           <a href="/scheduling" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/scheduling') ? 'active' : ''}" title="Kitchen & Roster">
             <ChefHat size={16} />
-            <span class="app-nav-text">Kitchen</span>
           </a>
           <a href="/audits" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/audits') ? 'active' : ''}" title="Audits">
             <Wallet size={16} />
-            <span class="app-nav-text">Audits</span>
           </a>
           <a href="/settings" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/settings') ? 'active' : ''}" title="Settings">
             <Settings size={16} />
-            <span class="app-nav-text">Settings</span>
           </a>
         </nav>
       </div>
