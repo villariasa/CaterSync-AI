@@ -134,14 +134,6 @@
       // --- UPDATE EXISTING CUSTOMER ---
       const updatePayload = { id: editingCustomer.id, ...payload };
 
-      if (appState.usingMockData) {
-        appState.customers = appState.customers.map(c => c.id === editingCustomer.id ? { ...c, ...payload } : c);
-        appState.showToast("👥 Customer profile updated locally");
-        appState.playStampSound();
-        cancelEdit();
-        return;
-      }
-
       try {
         const response = await fetch('/api/customers', {
           method: 'PATCH',
@@ -156,7 +148,7 @@
           cancelEdit();
         } else {
           // DB Offline write fallback
-          if (res.error && (res.error.includes('Database write') || res.error.includes('ECONNREFUSED'))) {
+          if (res.error && (res.error.includes('Database write') || res.error.includes('ECONNREFUSED') || res.error.includes('Offline'))) {
             appState.customers = appState.customers.map(c => c.id === editingCustomer.id ? { ...c, ...payload } : c);
             appState.showToast("⚠️ DB Offline. Updated profile in local cache.");
             appState.playStampSound();
@@ -168,24 +160,12 @@
       } catch (err) {
         // Network offline fallback
         appState.customers = appState.customers.map(c => c.id === editingCustomer.id ? { ...c, ...payload } : c);
-        appState.showToast("⚠️ Network offline. Updated profile locally.");
+        appState.showToast("⚠️ DB offline. Updated profile locally.");
         appState.playStampSound();
         cancelEdit();
       }
     } else {
       // --- CREATE NEW CUSTOMER ---
-      if (appState.usingMockData) {
-        const mockCustomer = {
-          id: Date.now(),
-          ...payload
-        };
-        appState.customers = [...appState.customers, mockCustomer];
-        appState.showToast("👥 New customer profile created");
-        appState.playStampSound();
-        cancelEdit();
-        return;
-      }
-
       try {
         const response = await fetch('/api/customers', {
           method: 'POST',
@@ -200,7 +180,7 @@
           appState.playStampSound();
           cancelEdit();
         } else {
-          if (res.error && (res.error.includes('Database write failed') || res.error.includes('ECONNREFUSED'))) {
+          if (res.error && (res.error.includes('Database write failed') || res.error.includes('ECONNREFUSED') || res.error.includes('Offline'))) {
             const mockCustomer = {
               id: Date.now(),
               ...payload
@@ -230,13 +210,6 @@
     if (!confirm("Are you sure you want to delete this customer profile?")) return;
     appState.playClickSound();
 
-    if (appState.usingMockData) {
-      appState.customers = appState.customers.filter(c => c.id !== id);
-      appState.showToast("👥 Customer record deleted locally");
-      appState.playStampSound();
-      return;
-    }
-
     try {
       const response = await fetch(`/api/customers?id=${id}`, {
         method: 'DELETE'
@@ -247,7 +220,7 @@
         appState.showToast("👥 Customer profile deleted");
         appState.playStampSound();
       } else {
-        if (res.error && (res.error.includes('Database write') || res.error.includes('ECONNREFUSED'))) {
+        if (res.error && (res.error.includes('Database write') || res.error.includes('ECONNREFUSED') || res.error.includes('Offline'))) {
           appState.customers = appState.customers.filter(c => c.id !== id);
           appState.showToast("⚠️ DB Offline. Deleted locally.");
           appState.playStampSound();
@@ -257,7 +230,7 @@
       }
     } catch (err) {
       appState.customers = appState.customers.filter(c => c.id !== id);
-      appState.showToast("⚠️ Network offline. Deleted locally.");
+      appState.showToast("⚠️ DB offline. Deleted locally.");
       appState.playStampSound();
     }
   }

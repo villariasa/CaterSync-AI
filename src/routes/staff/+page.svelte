@@ -147,19 +147,6 @@
       max_hours_per_week: maxHours
     };
 
-    if (appState.usingMockData) {
-      const mockStaff = {
-        id: Date.now(),
-        ...payload
-      };
-      appState.staff = [...appState.staff, mockStaff];
-      staffMessage = `✅ Staff member "${mockStaff.name}" enrolled locally.`;
-      name = '';
-      appState.showToast("👥 Worker registered");
-      appState.playStampSound();
-      return;
-    }
-
     try {
       const response = await fetch('/api/staff', {
         method: 'POST',
@@ -169,14 +156,24 @@
       const res = await response.json();
       if (res.success) {
         appState.staff = [...appState.staff, res.staff];
-        staffMessage = `✅ Staff member "${res.staff.name}" enrolled.`;
+        staffMessage = `✅ Staff member "${res.staff.name}" enrolled in Database.`;
         name = '';
         appState.showToast("👥 Worker registered");
         appState.playStampSound();
+      } else {
+        throw new Error(res.error || 'Server error');
       }
     } catch (err) {
-      staffMessage = `❌ Enrollment failed: ${err.message}`;
-      appState.playBuzzerSound();
+      console.warn("DB staff enrollment failed, falling back locally:", err);
+      const mockStaff = {
+        id: Date.now(),
+        ...payload
+      };
+      appState.staff = [...appState.staff, mockStaff];
+      staffMessage = `⚠️ Saved locally (DB Write failed: ${err.message})`;
+      name = '';
+      appState.showToast("👥 Worker registered locally");
+      appState.playStampSound();
     }
   }
 

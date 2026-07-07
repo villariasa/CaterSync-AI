@@ -56,21 +56,6 @@
       cuisine_tags: cuisineTags ? cuisineTags.split(',').map(x => x.trim()) : []
     };
 
-    if (appState.usingMockData) {
-      const mockMenu = {
-        id: Date.now(),
-        ...payload
-      };
-      appState.menus = [...appState.menus, mockMenu];
-      menuMessage = '';
-      name = '';
-      cuisineTags = '';
-      appState.showToast("🍽️ Menu index created");
-      appState.playStampSound();
-      showFormModal = false;
-      return;
-    }
-
     try {
       const response = await fetch('/api/menus', {
         method: 'POST',
@@ -84,15 +69,25 @@
         menuMessage = '';
         name = '';
         cuisineTags = '';
-        appState.showToast("🍽️ Menu index created");
+        appState.showToast("🍽️ Menu index created in Database");
         appState.playStampSound();
         showFormModal = false;
       } else {
         throw new Error(res.error);
       }
     } catch (err) {
-      menuMessage = `❌ Creation failed: ${err.message}`;
-      appState.playBuzzerSound();
+      console.warn("DB menu creation failed, falling back locally:", err);
+      const mockMenu = {
+        id: Date.now(),
+        ...payload
+      };
+      appState.menus = [...appState.menus, mockMenu];
+      menuMessage = `⚠️ Saved locally (DB Write failed: ${err.message})`;
+      name = '';
+      cuisineTags = '';
+      appState.showToast("🍽️ Menu template saved locally");
+      appState.playStampSound();
+      showFormModal = false;
     }
   }
 </script>

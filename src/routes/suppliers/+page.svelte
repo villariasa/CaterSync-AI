@@ -167,20 +167,6 @@
       avg_lead_time_days: avgLeadTime
     };
 
-    if (appState.usingMockData) {
-      const mockSupplier = {
-        id: Date.now(),
-        ...payload
-      };
-      appState.suppliers = [...appState.suppliers, mockSupplier];
-      supplierMessage = '';
-      name = '';
-      appState.showToast("🚚 Supplier profile registered successfully");
-      appState.playStampSound();
-      showSupplierModal = false;
-      return;
-    }
-
     try {
       const response = await fetch('/api/suppliers', {
         method: 'POST',
@@ -192,13 +178,24 @@
         appState.suppliers = [...appState.suppliers, res.supplier];
         supplierMessage = '';
         name = '';
-        appState.showToast("🚚 Supplier profile registered successfully");
+        appState.showToast("🚚 Supplier profile registered in Database");
         appState.playStampSound();
         showSupplierModal = false;
+      } else {
+        throw new Error(res.error);
       }
     } catch (err) {
-      supplierMessage = `❌ Creation failed: ${err.message}`;
-      appState.playBuzzerSound();
+      console.warn("DB supplier registration failed, falling back locally:", err);
+      const mockSupplier = {
+        id: Date.now(),
+        ...payload
+      };
+      appState.suppliers = [...appState.suppliers, mockSupplier];
+      supplierMessage = `⚠️ Saved locally (DB Write failed: ${err.message})`;
+      name = '';
+      appState.showToast("🚚 Supplier profile saved locally");
+      appState.playStampSound();
+      showSupplierModal = false;
     }
   }
 

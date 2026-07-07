@@ -43,21 +43,6 @@
       shelf_life_days: newIngShelfLife
     };
 
-    if (appState.usingMockData) {
-      const mockIng = {
-        id: Date.now(),
-        ...payload
-      };
-      appState.ingredients = [...appState.ingredients, mockIng];
-      newIngMessage = `✅ Ingredient "${payload.name}" registered locally.`;
-      appState.showToast(`📦 New ingredient registered: ${payload.name}`);
-      appState.playStampSound();
-      
-      // Reset form
-      newIngName = '';
-      return;
-    }
-
     try {
       const response = await fetch('/api/ingredients', {
         method: 'POST',
@@ -67,19 +52,24 @@
       const res = await response.json();
       if (res.success) {
         appState.ingredients = [...appState.ingredients, res.ingredient];
-        newIngMessage = `✅ Ingredient "${payload.name}" registered successfully.`;
+        newIngMessage = `✅ Ingredient "${payload.name}" registered in Database successfully.`;
         appState.showToast(`📦 New ingredient registered: ${payload.name}`);
         appState.playStampSound();
-        
-        // Reset form
         newIngName = '';
       } else {
-        newIngMessage = `❌ Failed: ${res.error}`;
-        appState.playBuzzerSound();
+        throw new Error(res.error);
       }
     } catch (err) {
-      newIngMessage = `❌ Network Error: ${err.message}`;
-      appState.playBuzzerSound();
+      console.warn("DB ingredient registration failed, falling back locally:", err);
+      const mockIng = {
+        id: Date.now(),
+        ...payload
+      };
+      appState.ingredients = [...appState.ingredients, mockIng];
+      newIngMessage = `⚠️ Saved locally (DB Write failed: ${err.message})`;
+      appState.showToast(`📦 Ingredient saved locally`);
+      appState.playStampSound();
+      newIngName = '';
     }
   }
 
@@ -226,25 +216,6 @@
       created_at: new Date().toISOString()
     };
 
-    if (appState.usingMockData) {
-      appState.showToast(`🛒 PO ordered: +${item.quantity} ${item.unit} added to ${item.name}`);
-      appState.playStampSound();
-      
-      appState.ingredients = appState.ingredients.map(ing => {
-        if (ing.id === item.ingredient_id) {
-          return {
-            ...ing,
-            current_stock: (parseFloat(ing.current_stock) + item.quantity).toFixed(1)
-          };
-        }
-        return ing;
-      });
-
-      appState.inventoryTransactions = [currentTx, ...(appState.inventoryTransactions || [])];
-      eoqSuggestions = eoqSuggestions.filter(s => s.ingredient_id !== item.ingredient_id);
-      return;
-    }
-
     try {
       const response = await fetch('/api/purchase-orders', {
         method: 'POST',
@@ -273,9 +244,26 @@
 
         appState.inventoryTransactions = [currentTx, ...(appState.inventoryTransactions || [])];
         eoqSuggestions = eoqSuggestions.filter(s => s.ingredient_id !== item.ingredient_id);
+      } else {
+        throw new Error(res.error || 'Server error');
       }
     } catch (err) {
-      appState.showToast("❌ Replenishment failed: " + err.message, "error");
+      console.warn("DB purchase order creation failed, falling back locally:", err);
+      appState.showToast(`🛒 Purchase ordered locally (DB failed: ${err.message})`, "warning");
+      appState.playStampSound();
+      
+      appState.ingredients = appState.ingredients.map(ing => {
+        if (ing.id === item.ingredient_id) {
+          return {
+            ...ing,
+            current_stock: (parseFloat(ing.current_stock) + item.quantity).toFixed(1)
+          };
+        }
+        return ing;
+      });
+
+      appState.inventoryTransactions = [currentTx, ...(appState.inventoryTransactions || [])];
+      eoqSuggestions = eoqSuggestions.filter(s => s.ingredient_id !== item.ingredient_id);
     }
   }
 

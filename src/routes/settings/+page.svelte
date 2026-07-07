@@ -93,14 +93,6 @@
       smtpPort
     };
 
-    if (appState.usingMockData) {
-      appState.settings = { ...appState.settings, ...payload, emailConfig, googleClientId };
-      bizMessage = '✅ Configuration parameters saved locally.';
-      appState.showToast("⚙️ Settings updated");
-      appState.playStampSound();
-      return;
-    }
-
     try {
       const response = await fetch('/api/settings', {
         method: 'POST',
@@ -111,14 +103,17 @@
       const res = await response.json();
       if (res.success) {
         appState.settings = res.settings;
-        bizMessage = '✅ Configuration parameters saved to PostgreSQL.';
+        bizMessage = '✅ Configuration parameters saved to Database.';
         appState.showToast("⚙️ Settings updated");
         appState.playStampSound();
       } else {
         throw new Error(res.error);
       }
     } catch (err) {
-      bizMessage = `❌ Save failed: ${err.message}`;
+      console.warn("DB save failed, falling back to local state:", err);
+      appState.settings = { ...appState.settings, ...payload, emailConfig, googleClientId };
+      bizMessage = `⚠️ Saved locally (DB Write failed: ${err.message})`;
+      appState.showToast("⚙️ Settings saved locally");
       appState.playBuzzerSound();
     }
   }
@@ -140,18 +135,6 @@
   async function deactivateStaff(id) {
     appState.playClickSound();
 
-    if (appState.usingMockData) {
-      appState.staff = appState.staff.map(s => {
-        if (s.id === id) {
-          return { ...s, is_active: false };
-        }
-        return s;
-      });
-      appState.showToast("👥 Staff member deactivated");
-      appState.playStampSound();
-      return;
-    }
-
     try {
       const response = await fetch(`/api/staff?id=${id}`, {
         method: 'DELETE'
@@ -166,22 +149,25 @@
         });
         appState.showToast("👥 Staff member deactivated");
         appState.playStampSound();
+      } else {
+        throw new Error(res.error || 'Server error');
       }
     } catch (err) {
-      appState.showToast("❌ Action failed: " + err.message, "error");
+      console.warn("DB staff deactivation failed, falling back locally:", err);
+      appState.staff = appState.staff.map(s => {
+        if (s.id === id) {
+          return { ...s, is_active: false };
+        }
+        return s;
+      });
+      appState.showToast("👥 Staff deactivated locally (DB failed)");
+      appState.playStampSound();
     }
   }
 
   // Delete menu template
   async function deleteMenu(id) {
     appState.playClickSound();
-
-    if (appState.usingMockData) {
-      appState.menus = appState.menus.filter(m => m.id !== id);
-      appState.showToast("🍽️ Menu deleted");
-      appState.playStampSound();
-      return;
-    }
 
     try {
       const response = await fetch(`/api/menus?id=${id}`, {
@@ -192,9 +178,14 @@
         appState.menus = appState.menus.filter(m => m.id !== id);
         appState.showToast("🍽️ Menu deleted");
         appState.playStampSound();
+      } else {
+        throw new Error(res.error || 'Server error');
       }
     } catch (err) {
-      appState.showToast("❌ Action failed: " + err.message, "error");
+      console.warn("DB menu delete failed, falling back locally:", err);
+      appState.menus = appState.menus.filter(m => m.id !== id);
+      appState.showToast("🍽️ Menu deleted locally (DB failed)");
+      appState.playStampSound();
     }
   }
 
