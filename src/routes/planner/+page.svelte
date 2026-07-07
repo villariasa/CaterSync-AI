@@ -20,6 +20,13 @@
   
   let eventMessage = $state('');
 
+  // Equipment & Venue state values
+  let tablesAllocated = $state(10);
+  let chairsAllocated = $state(80);
+  let tentsAllocated = $state(2);
+  let isRentalSubcontract = $state(false);
+  let selectedVehicle = $state('Toyota HiAce Delivery Van (Plate #602)');
+
   // AI load triggers
   let aiGeneratingMenu = $state(false);
   let aiCalculatingQuantities = $state(false);
@@ -514,6 +521,84 @@
         </div>
       </TicketCard>
     {/if}
+
+    <!-- Venue, Equipment, Rental Booking & Vehicle Fleet allocation -->
+    <div class="ticket-card p-6 bg-white space-y-4">
+      <div class="flex justify-between items-start">
+        <span class="ticket-stamp">LOGISTICS & FLEET ALLOCATION</span>
+        <span class="mono-data text-xs font-bold text-[#767068]">VENUE EQUIPMENT</span>
+      </div>
+
+      <div class="space-y-3.5 text-xs font-mono">
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-[10px] text-[#767068] font-bold uppercase mb-1" for="alloc-tables">Chairs</label>
+            <input id="alloc-tables" type="number" bind:value={chairsAllocated} class="w-full px-2 py-1.5 rounded border border-[#767068]/30 bg-white focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-[10px] text-[#767068] font-bold uppercase mb-1" for="alloc-chairs">Tables</label>
+            <input id="alloc-chairs" type="number" bind:value={tablesAllocated} class="w-full px-2 py-1.5 rounded border border-[#767068]/30 bg-white focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-[10px] text-[#767068] font-bold uppercase mb-1" for="alloc-tents">Banquet Tents</label>
+            <input id="alloc-tents" type="number" bind:value={tentsAllocated} class="w-full px-2 py-1.5 rounded border border-[#767068]/30 bg-white focus:outline-none" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[10px] text-[#767068] font-bold uppercase mb-1" for="alloc-vehicle">Delivery Vehicle</label>
+            <select id="alloc-vehicle" bind:value={selectedVehicle} class="w-full px-2 py-1.5 rounded border border-[#767068]/30 bg-white focus:outline-none">
+              <option>Toyota HiAce Delivery Van (Plate #602)</option>
+              <option>L300 Cargo Hauler (Plate #918)</option>
+              <option>Isusu Elf 10ft Closed Truck (Plate #347)</option>
+            </select>
+          </div>
+          <div class="flex items-center pt-5 pl-2">
+            <label class="flex items-center gap-2 cursor-pointer font-bold text-[#2A2521]" for="rental-sub">
+              <input id="rental-sub" type="checkbox" bind:checked={isRentalSubcontract} class="rounded border-[#767068]/30 text-[#3E6650] focus:ring-0 bg-white w-4 h-4" />
+              Need 3rd Party Rental
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kitchen production schedule and dish prep times -->
+    <div class="ticket-card p-6 bg-white space-y-4">
+      <div class="flex justify-between items-start">
+        <span class="ticket-stamp">KITCHEN PREP SCHEDULER</span>
+        <span class="mono-data text-xs font-bold text-[#767068]">DISH PREP TIMERS</span>
+      </div>
+
+      <div class="space-y-2.5">
+        {#if generatedMenuResult || liveDraftMenu}
+          {@const activeMenu = generatedMenuResult ? generatedMenuResult.menu : liveDraftMenu}
+          <div class="p-3 bg-[#F6F2EA] border border-[#767068]/20 rounded text-xs font-mono">
+            <span class="text-[#2A2521] font-bold block mb-2 uppercase">📝 Prep Timeline for: {activeMenu.name}</span>
+            <div class="space-y-1 text-[#767068] pl-2 border-l border-[#767068]/30">
+              {#if activeMenu.name.includes('Filipino')}
+                <div>1. Chicken & Pork Adobo — <strong class="text-slate-800">90 minutes</strong> prep time</div>
+                <div>2. Garlic Fried Rice — <strong class="text-slate-800">30 minutes</strong> prep time</div>
+                <div>3. Pork Sinigang — <strong class="text-slate-800">75 minutes</strong> prep time</div>
+                <div class="pt-2 font-bold text-[#3E6650]">Total kitchen timeline: 195 minutes (Estimated)</div>
+              {:else if activeMenu.name.includes('Seafood')}
+                <div>1. Garlic Butter Tiger Prawns — <strong class="text-slate-800">45 minutes</strong> prep time</div>
+                <div>2. Baked Salmon Fillet — <strong class="text-slate-800">60 minutes</strong> prep time</div>
+                <div>3. Steamed Rice — <strong class="text-slate-800">25 minutes</strong> prep time</div>
+                <div class="pt-2 font-bold text-[#3E6650]">Total kitchen timeline: 130 minutes (Estimated)</div>
+              {:else}
+                <div>1. Vegetable / Protein mains prep — <strong class="text-slate-800">45 minutes</strong> prep time</div>
+                <div>2. Rice and starch side dishes — <strong class="text-slate-800">30 minutes</strong> prep time</div>
+                <div class="pt-2 font-bold text-[#3E6650]">Total kitchen timeline: 75 minutes (Estimated)</div>
+              {/if}
+            </div>
+          </div>
+        {:else}
+          <p class="text-xs text-[#767068] py-4 text-center font-mono">No active menu generated to schedule kitchen timings.</p>
+        {/if}
+      </div>
+    </div>
 
   </div>
 
