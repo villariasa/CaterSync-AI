@@ -9,13 +9,16 @@
     ChevronRight, 
     Volume2,
     Users,
-    Download
+    Download,
+    X
   } from '@lucide/svelte';
 
   const appState = getCateringContext();
 
   let activeTab = $state('password'); // password, pin, biometric, register
   let biometricAvailable = $state(false);
+  let showInstallHelp = $state(false);
+  let installHelp = $derived(appState.getPwaInstallHelp());
 
   // Password Login Fields
   let username = $state('');
@@ -43,6 +46,13 @@
         const el = document.getElementById('login-pin');
         if (el) el.focus();
       }, 100);
+    }
+  }
+
+  async function handleInstallClick() {
+    const installedPromptOpened = await appState.executeAppInstall();
+    if (!installedPromptOpened && !appState.pwaInstalled) {
+      showInstallHelp = true;
     }
   }
 
@@ -393,8 +403,9 @@
 
       {#if appState.pwaInstallable}
         <button 
-          onclick={() => appState.executeAppInstall()} 
+          onclick={handleInstallClick} 
           class="text-[10px] font-mono text-[#F6F2EA] bg-[#3E6650] hover:bg-[#3E6650]/90 flex items-center gap-1 px-2.5 py-1.5 rounded border border-transparent shadow-sm transition-all btn-interactive"
+          title="Install CaterSync on this device"
         >
           <Download size={12} />
           <span>Install App</span>
@@ -408,4 +419,46 @@
     </div>
 
   </div>
+
+  {#if showInstallHelp}
+    <div class="fixed inset-0 z-50 bg-[#2A2521]/55 backdrop-blur-sm flex items-end sm:items-center justify-center p-3">
+      <div class="w-full max-w-sm bg-white rounded-lg border border-[#767068]/25 shadow-2xl overflow-hidden text-left animate-fade-in">
+        <div class="flex items-start justify-between gap-3 px-5 py-4 border-b border-[#767068]/15">
+          <div>
+            <span class="ticket-stamp">PHONE INSTALL</span>
+            <h3 class="text-base font-black text-[#2A2521] mt-1">{installHelp.title}</h3>
+          </div>
+          <button
+            onclick={() => showInstallHelp = false}
+            class="shrink-0 p-1.5 rounded hover:bg-[#F6F2EA] text-[#767068] transition-all"
+            title="Close install instructions"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div class="px-5 py-4 space-y-4">
+          <p class="text-xs leading-relaxed text-[#767068]">{installHelp.detail}</p>
+          <ol class="space-y-2">
+            {#each installHelp.steps as step, index}
+              <li class="flex gap-2 text-xs text-[#2A2521] leading-relaxed">
+                <span class="shrink-0 w-5 h-5 rounded bg-[#3E6650] text-[#F6F2EA] font-mono text-[10px] flex items-center justify-center">{index + 1}</span>
+                <span>{step}</span>
+              </li>
+            {/each}
+          </ol>
+
+          {#if installHelp.platform === 'android' && appState.pwaInstallPromptAvailable}
+            <button
+              onclick={handleInstallClick}
+              class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1.5"
+            >
+              <Download size={14} />
+              Install Now
+            </button>
+          {/if}
+        </div>
+      </div>
+    </div>
+  {/if}
 </div>

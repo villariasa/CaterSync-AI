@@ -67,6 +67,8 @@
   let showHelpDiagnosticsModal = $state(false);
   let showReportProblemModal = $state(false);
   let showAccessibilityModal = $state(false);
+  let showInstallHelpModal = $state(false);
+  let installHelp = $derived(appState.getPwaInstallHelp());
   let problemDescription = $state('');
   let darkThemeEnabled = $state(false);
 
@@ -137,6 +139,13 @@
       } catch (err) {
         console.warn("Server logout request skipped or failed:", err);
       }
+    }
+  }
+
+  async function handleAppInstallClick() {
+    const installedPromptOpened = await appState.executeAppInstall();
+    if (!installedPromptOpened && !appState.pwaInstalled) {
+      showInstallHelpModal = true;
     }
   }
 
@@ -623,9 +632,9 @@
           <!-- PWA Install app Button -->
           {#if appState.pwaInstallable}
             <button 
-              onclick={() => appState.executeAppInstall()} 
+              onclick={handleAppInstallClick} 
               class="btn-interactive px-2 py-1.5 rounded bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] text-[10px] font-bold flex items-center gap-1 transition-all shadow-sm"
-              title="Install App"
+              title="Install CaterSync on this device"
             >
               <Download size={12} />
               <span class="hidden sm:inline">Install</span>
@@ -947,6 +956,49 @@
     <main class="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-8 pb-12 md:pb-8">
       {@render children()}
     </main>
+  </div>
+{/if}
+
+<!-- MODAL: PHONE APP INSTALL HELP -->
+{#if showInstallHelpModal}
+  <div class="fixed inset-0 bg-[#2A2521]/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-3 sm:p-4 animate-fade-in">
+    <div class="ticket-card bg-white dark:bg-[#24201E] p-0 max-w-sm w-full border border-[#767068]/30 dark:border-zinc-800 shadow-2xl overflow-hidden text-[#2A2521] dark:text-[#EBE5DC]">
+      <div class="flex items-start justify-between gap-3 px-5 py-4 border-b border-[#767068]/15 dark:border-zinc-800">
+        <div>
+          <span class="ticket-stamp bg-emerald-50 text-[#3E6650] border-[#3E6650]/20 dark:bg-[#3E6650]/15 dark:text-emerald-400">PHONE INSTALL</span>
+          <h3 class="text-base font-black mt-2">{installHelp.title}</h3>
+        </div>
+        <button
+          onclick={() => { appState.playClickSound(); showInstallHelpModal = false; }}
+          class="shrink-0 p-1.5 rounded hover:bg-[#F6F2EA] dark:hover:bg-zinc-800 text-[#767068] transition-all"
+          title="Close install instructions"
+        >
+          <X size={16} />
+        </button>
+      </div>
+
+      <div class="px-5 py-4 space-y-4">
+        <p class="text-xs leading-relaxed text-[#767068] dark:text-zinc-400">{installHelp.detail}</p>
+        <ol class="space-y-2">
+          {#each installHelp.steps as step, index}
+            <li class="flex gap-2 text-xs leading-relaxed">
+              <span class="shrink-0 w-5 h-5 rounded bg-[#3E6650] text-[#F6F2EA] font-mono text-[10px] flex items-center justify-center">{index + 1}</span>
+              <span>{step}</span>
+            </li>
+          {/each}
+        </ol>
+
+        {#if installHelp.platform === 'android' && appState.pwaInstallPromptAvailable}
+          <button
+            onclick={handleAppInstallClick}
+            class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1.5"
+          >
+            <Download size={14} />
+            Install Now
+          </button>
+        {/if}
+      </div>
+    </div>
   </div>
 {/if}
 

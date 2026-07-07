@@ -60,6 +60,7 @@ export class CateringState {
   biometricCredentialRegistered = $state(false);
   deferredPrompt = $state(null);
   pwaInstallable = $state(false);
+  pwaInstallPromptAvailable = $state(false);
   pwaInstalled = $state(false);
   pushSubscriptionActive = $state(false);
 
@@ -218,6 +219,63 @@ export class CateringState {
     return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   }
 
+  getPwaInstallPlatform() {
+    if (typeof navigator === 'undefined') return 'desktop';
+
+    const ua = navigator.userAgent || '';
+    const platform = navigator.platform || '';
+    const maxTouchPoints = navigator.maxTouchPoints || 0;
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (platform === 'MacIntel' && maxTouchPoints > 1);
+    const isAndroid = /Android/.test(ua);
+
+    if (isIOS) return 'ios';
+    if (isAndroid) return 'android';
+    return 'desktop';
+  }
+
+  getPwaInstallHelp() {
+    const platform = this.getPwaInstallPlatform();
+
+    if (platform === 'ios') {
+      return {
+        platform,
+        title: 'Install on iPhone / iPad',
+        detail: 'Apple does not allow web apps to open an install popup. Use Safari and add CaterSync to the Home Screen.',
+        steps: [
+          'Open this page in Safari.',
+          'Tap the Share button in the bottom toolbar.',
+          'Scroll and tap Add to Home Screen.',
+          'Tap Add. CaterSync will appear like a normal app.'
+        ]
+      };
+    }
+
+    if (platform === 'android') {
+      return {
+        platform,
+        title: 'Install on Android',
+        detail: 'Android installs PWAs from Chrome when the site is secure and the install prompt is ready.',
+        steps: [
+          'Open this page in Chrome.',
+          'Tap Install App. If no popup appears, tap the three-dot browser menu.',
+          'Tap Install app or Add to Home screen.',
+          'Confirm Install.'
+        ]
+      };
+    }
+
+    return {
+      platform,
+      title: 'Install CaterSync',
+      detail: 'Install is controlled by your browser. Use Chrome or Edge on a secure app URL.',
+      steps: [
+        'Open this app from HTTPS, localhost, or 127.0.0.1.',
+        'Click Install App when the prompt appears.',
+        'If no prompt appears, open the browser menu and choose Install app.'
+      ]
+    };
+  }
+
   async syncPwaInstallState() {
     if (typeof window === 'undefined') return;
 
@@ -236,11 +294,13 @@ export class CateringState {
 
     if (this.pwaInstalled) {
       this.deferredPrompt = null;
+      this.pwaInstallPromptAvailable = false;
     }
   }
 
   setPwaInstallPrompt(promptEvent) {
     this.deferredPrompt = promptEvent;
+    this.pwaInstallPromptAvailable = true;
     this.pwaInstalled = false;
     this.pwaInstallable = true;
   }
@@ -248,36 +308,61 @@ export class CateringState {
   markPwaInstalled() {
     this.pwaInstalled = true;
     this.pwaInstallable = false;
+    this.pwaInstallPromptAvailable = false;
     this.deferredPrompt = null;
   }
 
   // SvelteKit PWA installer prompt execution
   async executeAppInstall() {
-    if (typeof window !== 'undefined') {
-      await this.syncPwaInstallState();
-    }
-
     this.playClickSound();
 
     if (this.pwaInstalled) {
       this.pwaInstallable = false;
-      return;
+      this.pwaInstallPromptAvailable = false;
+      return true;
     }
 
     if (!this.deferredPrompt) {
-      this.showToast("Install is available from your browser menu. Look for Install app or Add to Home screen.", "info");
-      return;
+      if (typeof window !== 'undefined') {
+        await this.syncPwaInstallState();
+      }
+
+      if (this.pwaInstalled) return true;
+
+      const isSecureInstallOrigin = typeof window !== 'undefined' && (window.isSecureContext || ['localhost', '127.0.0.1'].includes(window.location.hostname));
+      const hasServiceWorker = typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
+      const help = this.getPwaInstallHelp();
+
+      if (!isSecureInstallOrigin) {
+        this.showToast("Install on phones needs HTTPS. Open CaterSync from a secure link, then install again.", "error");
+      } else if (!hasServiceWorker) {
+        this.showToast("This browser does not support the service worker needed for app install.", "error");
+      } else {
+        this.showToast(help.platform === 'ios' ? "On iPhone, use Safari Share > Add to Home Screen." : "Use the browser menu: Install app / Add to Home screen.", "info");
+      }
+      return false;
     }
 
-    this.deferredPrompt.prompt();
-    const { outcome } = await this.deferredPrompt.userChoice;
-    this.deferredPrompt = null;
+    try {
+      const promptEvent = this.deferredPrompt;
+      this.deferredPrompt = null;
+      this.pwaInstallPromptAvailable = false;
 
-    if (outcome === 'accepted') {
-      this.markPwaInstalled();
-      this.showToast("📲 App installation accepted! Welcome to the Desktop.");
-    } else {
+      promptEvent.prompt();
+      const { outcome } = await promptEvent.userChoice;
+
+      if (outcome === 'accepted') {
+        this.markPwaInstalled();
+        this.showToast("📲 App installation accepted! Welcome to the Desktop.");
+        return true;
+      } else {
+        this.pwaInstallable = !this.pwaInstalled;
+        return false;
+      }
+    } catch (err) {
       this.pwaInstallable = !this.pwaInstalled;
+      this.showToast(`Install prompt failed: ${err.message || 'browser blocked the prompt'}`, "error");
+      return false;
     }
   }
 
