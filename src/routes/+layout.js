@@ -12,68 +12,74 @@ import {
 export const ssr = false;
 export const prerender = false;
 
-export async function load({ fetch }) {
+/** Fetch a JSON endpoint and return parsed body, or null on any failure */
+async function safeFetch(fetch, url) {
   try {
-    // Try to fetch settings from REST API first
-    const settingsRes = await fetch('/api/settings');
-    const contentType = settingsRes.headers.get('content-type');
-    
-    // If static host returns index.html fallback, content-type contains text/html (or is not JSON)
-    if (!settingsRes.ok || !contentType || !contentType.includes('application/json')) {
-      throw new Error('Backend REST APIs unreachable (Static Host Fallback)');
-    }
-    
-    const settingsData = await settingsRes.json();
-    if (!settingsData.success) {
-      throw new Error('Settings API query failed');
-    }
-
-    // Parallel fetch of other entities
-    const [custRes, evtsRes, menusRes, ingsRes, supsRes, staffRes] = await Promise.all([
-      fetch('/api/customers'),
-      fetch('/api/events'),
-      fetch('/api/menus'),
-      fetch('/api/ingredients'),
-      fetch('/api/suppliers'),
-      fetch('/api/staff')
-    ]);
-
-    if (!custRes.ok || !evtsRes.ok || !menusRes.ok || !ingsRes.ok || !supsRes.ok || !staffRes.ok) {
-      throw new Error('Database REST API returned non-200 response (Database Offline)');
-    }
-
-    const [cust, evts, menus, ings, sups, staff] = await Promise.all([
-      custRes.json(),
-      evtsRes.json(),
-      menusRes.json(),
-      ingsRes.json(),
-      supsRes.json(),
-      staffRes.json()
-    ]);
-
-    return {
-      customers: Array.isArray(cust) ? cust : (cust.customers || []),
-      events: Array.isArray(evts) ? evts : (evts.events || []),
-      menus: Array.isArray(menus) ? menus : (menus.menus || []),
-      ingredients: Array.isArray(ings) ? ings : (ings.ingredients || []),
-      suppliers: Array.isArray(sups) ? sups : (sups.suppliers || []),
-      staff: Array.isArray(staff) ? staff : (staff.staff || []),
-      demandForecasts: MOCK_DEMAND,
-      settings: settingsData.settings,
-      usingMockData: false
-    };
-  } catch (err) {
-    console.warn('⚠️ Client-side load: PostgreSQL endpoints unreachable. Fallback to offline simulation mode:', err.message);
-    return {
-      customers: MOCK_CUSTOMERS,
-      events: MOCK_EVENTS,
-      menus: MOCK_MENUS,
-      ingredients: MOCK_INGREDIENTS,
-      suppliers: MOCK_SUPPLIERS,
-      staff: MOCK_STAFF,
-      demandForecasts: MOCK_DEMAND,
-      settings: MOCK_SETTINGS,
-      usingMockData: true
-    };
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const ct = res.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) return null;
+    return await res.json();
+  } catch {
+    return null;
   }
 }
+
+export async function load({ fetch }) {
+  let usingMockData = false;
+
+  // ── Settings ────────────────────────────────────────────────────────────────
+  let settings = MOCK_SETTINGS;
+  const settingsData = await safeFetch(fetch, '/api/settings');
+  if (settingsData?.success && settingsData.settings) {
+    settings = settingsData.settings;
+  } else {
+    usingMockData = true;
+    console.warn('⚠️ Settings API unavailable — using mock settings.');
+  }
+
+  // ── Parallel entity fetches ──────────────────────────────────────────────────
+  const [custData, evtsData, menusData, ingsData, supsData, staffData] = await Promise.all([
+    safeFetch(fetch, '/api/customers'),
+    safeFetch(fetch, '/api/events'),
+    safeFetch(fetch, '/api/menus'),
+    safeFetch(fetch, '/api/ingredients'),
+    safeFetch(fetch, '/api/suppliers'),
+    safeFetch(fetch, '/api/staff')
+  ]);
+
+  // Helper: extract array from response or fall back to mock
+  function resolveList(data, key, mock, label) {
+    const list = data?.success ? (data[key] ?? (Array.isArray(data) ? data : null)) : null;
+    if (!list) {
+      usingMockData = true;
+      console.warn(`⚠️ ${label} API unavailable — using mock data.`);
+      return mock;
+    }
+    return list;
+  }
+
+  const customers    = resolveList(custData,  'customers',   MOCK_CUSTOMERS,   'Customers');
+  const events       = resolveList(evtsData,  'events',      MOCK_EVENTS,      'Events');
+  const menus        = resolveList(menusData, 'menus',       MOCK_MENUS,       'Menus');
+  const ingredients  = resolveList(ingsData,  'ingredients', MOCK_INGREDIENTS, 'Ingredients');
+  const suppliers    = resolveList(supsData,  'suppliers',   MOCK_SUPPLIERS,   'Suppliers');
+  const staff        = resolveList(staffData, 'staff',       MOCK_STAFF,       'Staff');
+
+  if (usingMockData) {
+    console.warn('📦 One or more data sources offline — running in offline simulation mode.');
+  }
+
+  return {
+    customers,
+    events,
+    menus,
+    ingredients,
+    suppliers,
+    staff,
+    demandForecasts: MOCK_DEMAND,
+    settings,
+    usingMockData
+  };
+}
+

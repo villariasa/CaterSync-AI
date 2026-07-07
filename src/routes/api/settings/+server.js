@@ -4,22 +4,22 @@ import { pool } from '$lib/server/db.js';
 export async function GET() {
   try {
     const res = await pool.query('SELECT * FROM business_settings WHERE id = 1');
-    if (res.rows.length === 0) {
-      // Return default configuration if database is empty/mock
-      return json({
-        business_name: 'CaterSync-AI Operations',
-        currency_symbol: '₱',
-        overhead_rate: 0.12,
-        min_budget_per_guest: 150.00,
-        risk_medium_threshold: 0.35,
-        risk_high_threshold: 0.60,
-        low_stock_alerts_enabled: true,
-        sound_enabled_default: false
-      });
-    }
-    return json(res.rows[0]);
+    const settings = res.rows.length > 0 ? res.rows[0] : {
+      business_name: 'CaterSync-AI Operations',
+      currency_symbol: '₱',
+      overhead_rate: 0.12,
+      min_budget_per_guest: 150.00,
+      risk_medium_threshold: 0.35,
+      risk_high_threshold: 0.60,
+      low_stock_alerts_enabled: true,
+      sound_enabled_default: false,
+      gmail_user: null,
+      gmail_app_password: null
+    };
+    return json({ success: true, settings });
   } catch (error) {
-    return json({ error: error.message }, { status: 500 });
+    // Return 503 so layout loader knows to fall back to offline mock mode
+    return json({ success: false, error: error.message }, { status: 503 });
   }
 }
 

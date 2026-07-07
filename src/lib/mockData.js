@@ -1,19 +1,28 @@
 // Comprehensive mock data mirroring seed.sql for resilient client-side standalone execution
 
+const FIRST_NAMES = ['Maria', 'Jose', 'Juan', 'Ana', 'Rosa', 'Pedro', 'Carlo', 'Liza', 'Mark', 'Jenny'];
+const LAST_NAMES  = ['Santos', 'Reyes', 'Cruz', 'Garcia', 'Torres', 'Lopez', 'Flores', 'Rivera', 'Gomez', 'Dela Cruz'];
+
 export const MOCK_CUSTOMERS = Array.from({ length: 55 }, (_, idx) => {
   const i = idx + 1;
+  const fn = FIRST_NAMES[i % 10];
+  const ln = LAST_NAMES[(i + 3) % 10];
   const allergies = i % 7 === 0 ? ['Shellfish'] : (i % 11 === 0 ? ['Peanuts', 'Gluten'] : []);
   const dietary_prefs = i % 5 === 0 ? ['Vegetarian'] : (i % 9 === 0 ? ['No Pork'] : []);
   const themes = ['Modern Elegant', 'Rustic Barn', 'Tropical Luau', 'Corporate Minimalist'];
   return {
     id: i,
-    name: `Customer ${i}`,
+    name: `${fn} ${ln}`,
+    email: `${fn.toLowerCase()}.${ln.toLowerCase().replace(' ', '')}${i}@example.com`,
     contact: `+63 917 123${String(i).padStart(4, '0')}`,
     allergies,
     dietary_prefs,
-    preferred_theme: themes[i % 4]
+    preferred_theme: themes[i % 4],
+    total_events: Math.floor(i / 5),
+    last_event_date: i > 10 ? new Date(Date.now() - i * 86400000 * 30).toISOString().split('T')[0] : null
   };
 });
+
 
 export const MOCK_INGREDIENTS = [
   { id: 1, name: 'Jasmine Rice', unit: 'kg', current_stock: 150.0, reorder_point: 50.0, shelf_life_days: 365 },
