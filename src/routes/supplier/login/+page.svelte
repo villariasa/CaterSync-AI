@@ -122,11 +122,11 @@
   
   <div class="max-w-md w-full text-center space-y-6 relative z-10 animate-fade-in">
     <div>
-      <span class="px-2 py-0.5 text-[8px] tracking-[0.2em] font-bold text-[#D9A441] border border-[#D9A441]/40 rounded bg-[#D9A441]/5 uppercase">SUPPLY PORTAL GATEWAY</span>
+      <span class="px-2 py-0.5 text-[8px] tracking-[0.2em] font-bold text-[#D9A441] border border-[#D9A441]/40 rounded bg-[#D9A441]/5 uppercase">SUPPLIER HUB</span>
       <h1 class="text-2xl font-black tracking-tight text-[#2A2521] dark:text-[#EBE5DC] uppercase mt-2">
-        CATERSYNC<span class="text-[#D9A441]">-PARTNER</span>
+        CaterSync<span class="text-[#D9A441]"> Partner</span>
       </h1>
-      <p class="text-[9px] text-[#767068] uppercase tracking-widest mt-1">Supplier Commerce Hub</p>
+      <p class="text-[9px] text-[#767068] uppercase tracking-widest mt-1">Supply wholesale ingredients and fulfill orders</p>
     </div>
 
     <!-- TABS -->
@@ -141,28 +141,31 @@
         onclick={() => { appState.playClickSound(); tab = 'register'; errorMessage = ''; successMessage = ''; }}
         class="py-2 rounded transition-all {tab === 'register' ? 'bg-white dark:bg-[#35302C] text-[#D9A441] shadow' : 'text-[#767068] hover:text-[#2A2521] dark:hover:text-[#EBE5DC]'}"
       >
-        Register Account
+        Register Supplier
       </button>
     </div>
 
     <div class="bg-white dark:bg-[#1F1C1A] border border-slate-200 dark:border-[#767068]/30 shadow-2xl p-6 md:p-8 rounded text-left relative">
-      <!-- Back to selection button -->
-      <a 
-        href="/"
-        onclick={() => appState.playClickSound()}
-        class="absolute -top-10 left-0 text-[10px] font-mono font-bold uppercase tracking-wider text-[#767068] hover:text-[#2A2521] dark:hover:text-[#EBE5DC] flex items-center gap-1 transition-colors bg-white/60 dark:bg-[#1F1C1A]/60 py-1.5 px-3 rounded border border-[#767068]/20 no-underline"
-      >
-        <ChevronLeft size={14} /> Back to Portals
-      </a>
       <div class="absolute top-0 right-0 w-24 h-1 bg-gradient-to-r from-transparent to-[#D9A441]"></div>
+      
+      {#if !isChecking}
+        <!-- Back to selection button inside card -->
+        <a 
+          href="/"
+          onclick={() => appState.playClickSound()}
+          class="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-[#767068] hover:text-[#2A2521] dark:hover:text-[#F6F2EA] transition-colors mb-4 no-underline bg-slate-50 dark:bg-zinc-850/60 py-1 px-2 rounded border border-[#767068]/20"
+        >
+          <ChevronLeft size={12} /> Back to portals
+        </a>
+      {/if}
       
       <div class="mb-6 flex justify-between items-start">
         <div>
           <span class="text-[8px] uppercase tracking-widest text-[#767068] font-bold">
-            {#if tab === 'login'}PARTNER SECURE LOGIN{:else}PARTNER ENROLLMENT{/if}
+            {#if tab === 'login'}WELCOME BACK{:else}PARTNER ACCOUNT{/if}
           </span>
           <h2 class="text-lg font-bold mt-0.5 text-[#2A2521] dark:text-[#EBE5DC]">
-            {#if tab === 'login'}Access Commerce Workspace{:else}Merchant Signup{/if}
+            {#if tab === 'login'}Partner Sign In{:else}Register as a wholesale supply partner{/if}
           </h2>
         </div>
         <div class="p-2 rounded bg-slate-50 dark:bg-[#141210] border border-slate-200 dark:border-[#767068]/20 text-[#D9A441]">
@@ -174,7 +177,7 @@
         <!-- Login Form -->
         <form onsubmit={handleLogin} class="space-y-4">
           <div>
-            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="supplier-email">Merchant Email Address</label>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="supplier-email">Your Email Address</label>
             <input 
               id="supplier-email"
               type="email" 
@@ -187,7 +190,7 @@
           </div>
 
           <div>
-            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="supplier-pass">Access Password</label>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="supplier-pass">Your Password</label>
             <input 
               id="supplier-pass"
               type="password" 
@@ -215,14 +218,14 @@
             disabled={isChecking}
             class="w-full py-3 rounded bg-slate-100 dark:bg-[#35302C] hover:bg-slate-200 dark:hover:bg-[#433D38] border border-slate-300 dark:border-[#D9A441]/50 text-[#2A2521] dark:text-[#D9A441] font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1 transition-all active:scale-[0.98]"
           >
-            {#if isChecking}Verifying...{:else}Access Hub <ArrowRight size={13} />{/if}
+            {#if isChecking}Verifying...{:else}Sign In to Dashboard <ArrowRight size={13} />{/if}
           </button>
         </form>
       {:else}
         <!-- Register Form -->
         <form onsubmit={handleRegister} class="space-y-4">
           <div>
-            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="reg-biz">Registered Business Name</label>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="reg-biz">Your Business Name</label>
             <input 
               id="reg-biz"
               type="text" 
@@ -235,7 +238,7 @@
           </div>
 
           <div>
-            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="reg-email">Business Email Address</label>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="reg-email">Your Business Email</label>
             <input 
               id="reg-email"
               type="email" 
@@ -248,7 +251,7 @@
           </div>
 
           <div>
-            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="reg-pass">Create Account Password</label>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="reg-pass">Create Password</label>
             <input 
               id="reg-pass"
               type="password" 
@@ -276,7 +279,7 @@
             disabled={isChecking}
             class="w-full py-3 rounded bg-slate-100 dark:bg-[#35302C] hover:bg-slate-200 dark:hover:bg-[#433D38] border border-slate-300 dark:border-[#D9A441]/50 text-[#2A2521] dark:text-[#D9A441] font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1 transition-all active:scale-[0.98]"
           >
-            {#if isChecking}Submitting Signup...{:else}Enroll Merchant Catalog <ClipboardList size={13} />{/if}
+            {#if isChecking}Submitting Signup...{:else}Create Partner Account <ClipboardList size={13} />{/if}
           </button>
         </form>
       {/if}

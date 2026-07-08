@@ -267,11 +267,11 @@
   
   <div class="max-w-md w-full text-center space-y-6 relative z-10 animate-fade-in">
     <div>
-      <span class="px-2 py-0.5 text-[8px] tracking-[0.2em] font-bold text-[#3E6650] border border-[#3E6650]/40 rounded bg-[#3E6650]/5 uppercase">MARKETPLACE CUSTOMER</span>
+      <span class="px-2 py-0.5 text-[8px] tracking-[0.2em] font-bold text-[#3E6650] border border-[#3E6650]/40 rounded bg-[#3E6650]/5 uppercase">CUSTOMER AREA</span>
       <h1 class="text-2xl font-black tracking-tight text-[#2A2521] dark:text-white uppercase mt-2">
-        CATERSYNC<span class="text-[#3E6650]">-MEMBER</span>
+        CaterSync<span class="text-[#3E6650]"> Client</span>
       </h1>
-      <p class="text-[9px] text-[#767068] uppercase tracking-widest mt-1">Client Access Portal</p>
+      <p class="text-[9px] text-[#767068] uppercase tracking-widest mt-1">Book event caterers and customize menus</p>
     </div>
 
     <!-- TABS (Only visible when entering identifiers) -->
@@ -287,40 +287,43 @@
           onclick={() => { appState.playClickSound(); tab = 'register'; errorMessage = ''; successMessage = ''; }}
           class="py-2 rounded transition-all {tab === 'register' ? 'bg-white dark:bg-zinc-900 text-[#3E6650] dark:text-emerald-400 shadow' : 'text-[#767068] hover:text-[#2A2521] dark:hover:text-[#F6F2EA]'}"
         >
-          Register Account
+          Create Account
         </button>
       </div>
     {/if}
 
     <div class="bg-white dark:bg-[#24201E] border border-[#767068]/30 dark:border-zinc-800 shadow-2xl p-6 md:p-8 rounded text-left relative">
-      <!-- Back to selection button -->
-      <a 
-        href="/"
-        onclick={() => appState.playClickSound()}
-        class="absolute -top-10 left-0 text-[10px] font-mono font-bold uppercase tracking-wider text-[#767068] hover:text-[#2A2521] dark:hover:text-[#F6F2EA] flex items-center gap-1 transition-colors bg-white/60 dark:bg-[#24201E]/60 py-1.5 px-3 rounded border border-[#767068]/20 no-underline"
-      >
-        <ChevronLeft size={14} /> Back to Portals
-      </a>
       <div class="absolute top-0 right-0 w-24 h-1 bg-gradient-to-r from-transparent to-[#3E6650]"></div>
       
+      {#if !isChecking && step === 'email'}
+        <!-- Back to selection button inside card -->
+        <a 
+          href="/"
+          onclick={() => appState.playClickSound()}
+          class="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-[#767068] hover:text-[#2A2521] dark:hover:text-[#F6F2EA] transition-colors mb-4 no-underline bg-slate-50 dark:bg-zinc-800/60 py-1 px-2 rounded border border-[#767068]/20"
+        >
+          <ChevronLeft size={12} /> Back to portals
+        </a>
+      {/if}
+
       <div class="mb-6 flex justify-between items-start">
         <div>
           <span class="text-[8px] uppercase tracking-widest text-[#767068] font-bold">
             {#if step === 'otp'}
-              VERIFICATION KEY
+              ENTER CODE
             {:else if tab === 'login'}
-              CLIENT IDENTIFIER
+              SIGN IN
             {:else}
-              CREATE PROFILE
+              SIGN UP
             {/if}
           </span>
           <h2 class="text-lg font-bold mt-0.5 text-[#2A2521] dark:text-[#F6F2EA]">
             {#if step === 'otp'}
-              Enter Login Code
+              Verify your email
             {:else if tab === 'login'}
-              Sign In to Member Portal
+              Welcome back! Sign in
             {:else}
-              Register Client Account
+              Join CaterSync today
             {/if}
           </h2>
         </div>
@@ -343,10 +346,10 @@
           </div>
           
           <div class="space-y-1.5 w-full">
-            <span class="text-[9px] uppercase font-bold text-[#3E6650] tracking-widest block">AI Operations Scanning</span>
+            <span class="text-[9px] uppercase font-bold text-[#3E6650] tracking-widest block">CaterSync Smart Assistant</span>
             <div class="flex items-center justify-center gap-1.5 text-[9px] text-[#767068] uppercase font-mono">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-              <span>Authenticating identity session...</span>
+              <span>Setting up your profile...</span>
             </div>
           </div>
         </div>
@@ -354,13 +357,13 @@
         <!-- Google Single Sign-On Option -->
         {#if googleClientId}
           <div class="space-y-2 mb-4">
-            <span class="block text-[9px] font-bold text-[#767068] uppercase tracking-widest mb-1.5">Marketplace One-Tap Identity</span>
+            <span class="block text-[9px] font-bold text-[#767068] uppercase tracking-widest mb-1.5">Quick Sign In with Google</span>
             <div id="google-btn-customer" class="w-full flex justify-center py-1 bg-white border border-slate-200 dark:border-zinc-800 rounded"></div>
           </div>
 
           <div class="relative my-5 flex items-center justify-center">
             <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-[#767068]/20"></div></div>
-            <span class="relative bg-white dark:bg-[#24201E] px-3 text-[9px] font-bold text-[#767068] uppercase font-mono">Or Manual Method</span>
+            <span class="relative bg-white dark:bg-[#24201E] px-3 text-[9px] font-bold text-[#767068] uppercase font-mono">Or use email code</span>
           </div>
         {/if}
 
@@ -368,7 +371,7 @@
           <!-- Manual Login (Email -> OTP) -->
           <form onsubmit={checkIdentifier} class="space-y-4">
             <div>
-              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="cust-email">Registered Customer Email</label>
+              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="cust-email">Your Email Address</label>
               <input 
                 id="cust-email"
                 type="email" 
@@ -391,14 +394,14 @@
               disabled={isChecking}
               class="w-full py-3 rounded bg-[#3E6650] hover:bg-[#3E6650]/90 text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1 transition-all active:scale-[0.98]"
             >
-              Request Secure Link <ArrowRight size={13} />
+              Send Access Code <ArrowRight size={13} />
             </button>
           </form>
         {:else}
           <!-- Manual Sign Up (Name, Email, Phone -> OTP) -->
           <form onsubmit={handleManualRegister} class="space-y-4">
             <div>
-              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="reg-cust-name">Full Name</label>
+              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="reg-cust-name">Your Name</label>
               <input 
                 id="reg-cust-name"
                 type="text" 
@@ -411,7 +414,7 @@
             </div>
 
             <div>
-              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="reg-cust-email">Email Address</label>
+              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="reg-cust-email">Your Email</label>
               <input 
                 id="reg-cust-email"
                 type="email" 
@@ -424,7 +427,7 @@
             </div>
 
             <div>
-              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="reg-cust-phone">Phone Number</label>
+              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="reg-cust-phone">Your Phone Number</label>
               <input 
                 id="reg-cust-phone"
                 type="tel" 
@@ -447,7 +450,7 @@
               disabled={isChecking}
               class="w-full py-3 rounded bg-[#3E6650] hover:bg-[#3E6650]/90 text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1 transition-all active:scale-[0.98]"
             >
-              Create Account & Verify <ArrowRight size={13} />
+              Send Verification Code <ArrowRight size={13} />
             </button>
           </form>
         {/if}
@@ -466,7 +469,7 @@
           </div>
 
           <div>
-            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5 text-center" for="cust-otp">Enter 6-Digit Verification Code</label>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5 text-center" for="cust-otp">We sent a 6-digit code to your email. Enter it below:</label>
             <input 
               id="cust-otp"
               type="text" 
@@ -500,7 +503,7 @@
             disabled={isChecking || otpCode.trim().length !== 6}
             class="w-full py-3 rounded bg-[#3E6650] hover:bg-[#3E6650]/90 text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1 transition-all active:scale-[0.98]"
           >
-            Authorize Portal Access <CheckCircle2 size={13} />
+            Verify and Enter Dashboard <CheckCircle2 size={13} />
           </button>
         </form>
       {/if}

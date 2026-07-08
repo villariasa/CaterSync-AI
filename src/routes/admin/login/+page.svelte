@@ -146,29 +146,32 @@
   
   <div class="max-w-md w-full text-center space-y-6 relative z-10 animate-fade-in">
     <div>
-      <span class="px-2 py-0.5 text-[8px] tracking-[0.2em] font-bold text-[#AC3B2A] border border-[#AC3B2A]/40 rounded bg-[#AC3B2A]/5 uppercase">SYSTEM KERNEL SECURITY</span>
+      <span class="px-2 py-0.5 text-[8px] tracking-[0.2em] font-bold text-[#AC3B2A] border border-[#AC3B2A]/40 rounded bg-[#AC3B2A]/5 uppercase">ADMIN SYSTEM</span>
       <h1 class="text-2xl font-black tracking-tight text-[#2A2521] dark:text-[#EBE5DC] uppercase mt-2">
-        CATERSYNC<span class="text-[#AC3B2A]">-ADMIN</span>
+        CaterSync<span class="text-[#AC3B2A]"> Admin</span>
       </h1>
-      <p class="text-[9px] text-[#767068] uppercase tracking-widest mt-1">Platform Operations Gateway</p>
+      <p class="text-[9px] text-[#767068] uppercase tracking-widest mt-1">Sign in as a platform manager</p>
     </div>
 
     <div class="bg-white dark:bg-[#1F1C1A] border border-[#767068]/30 shadow-2xl p-6 md:p-8 rounded text-left relative">
-      <!-- Back to selection button -->
-      <a 
-        href="/"
-        onclick={() => appState.playClickSound()}
-        class="absolute -top-10 left-0 text-[10px] font-mono font-bold uppercase tracking-wider text-[#767068] hover:text-[#2A2521] dark:hover:text-[#EBE5DC] flex items-center gap-1 transition-colors bg-white/60 dark:bg-[#1F1C1A]/60 py-1.5 px-3 rounded border border-[#767068]/20 no-underline"
-      >
-        <ChevronLeft size={14} /> Back to Portals
-      </a>
       <div class="absolute top-0 right-0 w-24 h-1 bg-gradient-to-r from-transparent to-[#AC3B2A]"></div>
       
+      {#if !isChecking}
+        <!-- Back to selection button inside card -->
+        <a 
+          href="/"
+          onclick={() => appState.playClickSound()}
+          class="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-[#767068] hover:text-[#2A2521] dark:hover:text-[#F6F2EA] transition-colors mb-4 no-underline bg-slate-50 dark:bg-zinc-850/60 py-1 px-2 rounded border border-[#767068]/20"
+        >
+          <ChevronLeft size={12} /> Back to portals
+        </a>
+      {/if}
+
       <div class="mb-6 flex justify-between items-start">
         <div>
-          <span class="text-[8px] uppercase tracking-widest text-[#767068] font-bold">AUTHENTICATION</span>
+          <span class="text-[8px] uppercase tracking-widest text-[#767068] font-bold">MANAGER ACCESS</span>
           <h2 class="text-lg font-bold mt-0.5 text-[#2A2521] dark:text-[#EBE5DC]">
-            {#if step === 1}Credentials Gate{:else}2FA Security Key{/if}
+            {#if step === 1}System Manager Sign In{:else}Two-Factor Verification Code{/if}
           </h2>
         </div>
         <div class="p-2 rounded bg-slate-50 dark:bg-[#141210] border border-slate-200 dark:border-[#767068]/20 text-[#AC3B2A]">
@@ -180,7 +183,7 @@
         <!-- Step 1 Form -->
         <form onsubmit={handleCredentialsSubmit} class="space-y-4">
           <div>
-            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="admin-email">Admin Email / Username</label>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="admin-email">Your Email or Username</label>
             <input 
               id="admin-email"
               type="text" 
@@ -193,7 +196,7 @@
           </div>
 
           <div>
-            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="admin-pass">Access Password</label>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="admin-pass">Your Password</label>
             <input 
               id="admin-pass"
               type="password" 
