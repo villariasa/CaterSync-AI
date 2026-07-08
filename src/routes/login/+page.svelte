@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation';
   import { onMount, onDestroy } from 'svelte';
   import { Lock, ArrowRight, CheckCircle2, ChevronLeft, Mail, UserPlus, Phone } from '@lucide/svelte';
+  import VideoLoader from '$lib/components/VideoLoader.svelte';
 
   const appState = getCateringContext();
 
@@ -401,26 +402,7 @@
       </div>
 
       {#if isChecking}
-        <!-- Sci-Fi AI Scanning Console -->
-        <div class="flex flex-col items-center justify-center py-8 space-y-5 animate-fade-in text-center font-mono">
-          <div class="relative w-24 h-24 flex items-center justify-center">
-            <div class="absolute inset-0 rounded-full border border-[#3E6650]/20 animate-ping duration-1000"></div>
-            <div class="absolute inset-2 rounded-full border border-dashed border-[#3E6650]/40 animate-spin duration-[4000ms]"></div>
-            <div class="absolute inset-4 rounded-full bg-[#3E6650]/5 border border-[#3E6650]/30 animate-pulse duration-700"></div>
-            <div class="w-10 h-10 rounded-full bg-[#3E6650] shadow-[0_0_20px_#3e6650] flex items-center justify-center text-white">
-              <span class="text-xs animate-bounce font-bold">AI</span>
-            </div>
-            <div class="absolute w-full h-[2px] bg-[#3E6650]/65 top-0 left-0 animate-[bounce_2s_infinite]"></div>
-          </div>
-          
-          <div class="space-y-1.5 w-full">
-            <span class="text-[9px] uppercase font-bold text-[#3E6650] tracking-widest block">CaterSync Smart Assistant</span>
-            <div class="flex items-center justify-center gap-1.5 text-[9px] text-[#767068] uppercase font-mono">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-              <span>Setting up your profile...</span>
-            </div>
-          </div>
-        </div>
+        <VideoLoader message="Authenticating..." />
       {:else if step === 'email'}
         <!-- Google Single Sign-On Option -->
         {#if googleClientId}

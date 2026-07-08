@@ -350,29 +350,18 @@
   });
 
   onMount(() => {
-    // Fade out initial PWA loading screen
+    // Fade out video loading screen after app is ready
     if (typeof window !== 'undefined') {
       const loader = document.getElementById('pwa-loading-screen');
-      const percentEl = document.getElementById('pwa-loading-percentage');
       if (loader) {
-        let progress = 0;
-        const loadInterval = setInterval(() => {
-          progress += Math.floor(Math.random() * 25) + 15;
-          if (progress >= 100) {
-            progress = 100;
-            clearInterval(loadInterval);
-            if (percentEl) percentEl.textContent = '100%';
-            
-            // Fade out overlay
-            loader.style.opacity = '0';
-            loader.style.visibility = 'hidden';
-            setTimeout(() => {
-              try { loader.remove(); } catch (e) {}
-            }, 450);
-          } else {
-            if (percentEl) percentEl.textContent = `${progress}%`;
-          }
-        }, 60);
+        // Short delay so video gets at least one play cycle
+        setTimeout(() => {
+          loader.style.opacity = '0';
+          loader.style.visibility = 'hidden';
+          setTimeout(() => {
+            try { loader.remove(); } catch (e) {}
+          }, 500);
+        }, 900);
       }
     }
 

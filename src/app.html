@@ -29,26 +29,21 @@
 	</head>
 	<body data-sveltekit-preload-data="hover" class="font-body antialiased bg-[#F6F2EA] text-[#2A2521]">
 		<!-- Initial PWA App Loading Screen -->
-		<div id="pwa-loading-screen" style="position: fixed; inset: 0; background-color: #F6F2EA; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; transition: opacity 0.4s ease, visibility 0.4s ease;">
-			<div style="border: 2px solid #2A2521; padding: 12px 24px; font-weight: 900; letter-spacing: -0.05em; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 16px; animation: pulse 1.5s infinite ease-in-out;">
-				THE PASS
-			</div>
-			<div style="font-size: 9px; letter-spacing: 0.2em; color: #767068; text-transform: uppercase; margin-bottom: 8px;">
-				Initializing Operations Roster
-			</div>
-			<!-- Simulating receipt style dotted loader -->
-			<div style="width: 140px; height: 1px; border-top: 2px dotted #767068; margin-bottom: 12px;"></div>
-			<div id="pwa-loading-percentage" style="font-size: 10px; font-weight: bold; color: #2A2521; font-variant-numeric: tabular-nums;">0%</div>
+		<div id="pwa-loading-screen" style="position: fixed; inset: 0; background-color: #e8e4de; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease, visibility 0.5s ease;">
+			<video
+				autoplay
+				muted
+				loop
+				playsinline
+				style="width: 260px; height: 260px; object-fit: contain; display: block;"
+			>
+				<source src="/loader.mp4" type="video/mp4" />
+			</video>
 		</div>
 
 		<div style="display: contents">%sveltekit.body%</div>
 
-		<style>
-			@keyframes pulse {
-				0%, 100% { transform: scale(1); opacity: 1; }
-				50% { transform: scale(0.96); opacity: 0.85; }
-			}
-		</style>
+
 	</body>
 </html>
 
