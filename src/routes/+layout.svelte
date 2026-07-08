@@ -625,8 +625,19 @@
       <header class="px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4 bg-white/50 dark:bg-[#24201E]/50">
         <!-- LEFT: LOGO & TITLE & SEARCH -->
         <div class="flex items-center gap-3 min-w-0 shrink-0">
-          <a href="/" onclick={() => appState.playClickSound()} class="flex items-center gap-2 no-underline text-[#2A2521] dark:text-[#EBE5DC] select-none hover:opacity-90 active:scale-95 transition-all">
-            <img src={favicon} alt="Logo" class="w-6 h-6 object-contain" />
+          <a href="/" onclick={() => appState.playClickSound()} class="flex items-center gap-2 no-underline text-[#2A2521] dark:text-[#EBE5DC] select-none hover:opacity-95 active:scale-95 transition-all">
+            <img src={favicon} alt="CaterSync Logo" class="w-10 h-10 object-contain drop-shadow-md" />
+            <div class="flex flex-col font-sans select-none leading-none pt-0.5">
+              <div class="flex items-center gap-1">
+                <span class="text-sm font-extrabold tracking-tight text-[#4c3227] dark:text-[#F6F2EA] uppercase">
+                  Cater<span class="text-[#3E6650] dark:text-emerald-400">Sync</span>
+                </span>
+                <span class="bg-[#ff6f59] text-white text-[8px] font-black px-1.5 py-0.5 rounded-full transform rotate-2 shadow-sm">
+                  AI
+                </span>
+              </div>
+              <span class="text-[7px] font-mono text-[#767068] dark:text-zinc-500 tracking-widest uppercase mt-0.5">OPERATIONS</span>
+            </div>
           </a>
           
           <!-- Global Search (Facebook style) -->
