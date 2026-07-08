@@ -243,16 +243,29 @@
       isChecking = false;
 
       if (res.ok && data.success) {
-        appState.currentUser = {
-          ...data.customer,
-          userType: 'subscriber'
-        };
-        appState.playStampSound();
-        successMessage = 'Successfully signed in with Google!';
-        setTimeout(() => {
-          appState.isAuthenticated = true;
-          goto('/portal');
-        }, 1200);
+        if (data.needsOtp) {
+          customerContact = data.email;
+          successMessage = 'Google account linked! We sent a 6-digit code to ' + data.email;
+          step = 'otp';
+          startCountdown();
+          if (data.usingFallback && data.previewUrl) {
+            window.open(data.previewUrl, '_blank');
+          }
+          if (data.offlineFallback) {
+            alert('Offline Sandbox Mode: Your verification code is 888888');
+          }
+        } else {
+          appState.currentUser = {
+            ...data.customer,
+            userType: 'subscriber'
+          };
+          appState.playStampSound();
+          successMessage = 'Successfully signed in with Google!';
+          setTimeout(() => {
+            appState.isAuthenticated = true;
+            goto('/portal');
+          }, 1200);
+        }
       } else {
         appState.playBuzzerSound();
         errorMessage = data.error || 'Google Authentication failed.';
