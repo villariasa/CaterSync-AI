@@ -19,7 +19,7 @@ export class CateringState {
   activeEventForAnalysis = $state(null);
   anomalyReport = $state(null);
   usingMockData = $state(false);
-  version = '1.5.7';
+  version = '1.5.8';
   isDataLoaded = $state(false);
 
   // Authentication & PWA variables

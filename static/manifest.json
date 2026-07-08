@@ -4,7 +4,7 @@
   "description": "AI-Powered Catering Operations & Predictive Forecasting Console",
   "start_url": "/",
   "display": "fullscreen",
-  "orientation": "any",
+  "orientation": "portrait",
   "theme_color": "#2A2521",
   "background_color": "#F6F2EA",
   "dir": "ltr",
