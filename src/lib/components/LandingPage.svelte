@@ -1,6 +1,7 @@
 <script>
   import { getCateringContext } from '$lib/states.svelte.js';
   import BiometricScanner from './BiometricScanner.svelte';
+  import mascot from '$lib/assets/catersync_ai_mascot.png';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import { 
@@ -529,7 +530,20 @@
   
   <div class="{selectedPortal === null && !showWelcomeScreen ? 'max-w-3xl' : 'max-w-md'} w-full text-center space-y-6 relative z-10 transition-all duration-300">
     
-    <div>
+    <div class="flex flex-col items-center">
+      <!-- Floating, glowing AI mascot companion -->
+      <div class="relative w-24 h-24 mb-4 select-none pointer-events-none group">
+        <!-- Pulse glow behind -->
+        <div class="absolute inset-2 rounded-full bg-[#3E6650]/15 dark:bg-emerald-450/10 blur-xl animate-pulse"></div>
+        <!-- Hover spin helper ring -->
+        <div class="absolute inset-[-6px] rounded-full border border-dashed border-[#3E6650]/20 animate-[spin_15s_linear_infinite] opacity-60"></div>
+        <img 
+          src={mascot} 
+          alt="CaterSync AI Companion" 
+          class="w-full h-full object-contain relative z-10 animate-[float_4s_ease-in-out_infinite] filter drop-shadow-[0_8px_16px_rgba(62,102,80,0.25)]" 
+        />
+      </div>
+
       <span class="ticket-stamp">WELCOME</span>
       <h1 class="text-3xl font-black tracking-tighter text-[#2A2521] dark:text-white uppercase leading-none mt-2">
         CaterSync<span class="text-[#3E6650]">-AI</span>
@@ -1110,3 +1124,14 @@
     </div>
   {/if}
 </div>
+
+<style>
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+</style>
