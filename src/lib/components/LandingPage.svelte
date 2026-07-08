@@ -551,9 +551,9 @@
     
     <div class="flex flex-col items-center">
       <!-- Floating, glowing AI mascot companion (Sequential Video Player) -->
-      <div class="relative w-40 h-40 mb-2 select-none group flex items-center justify-center">
+      <div class="relative w-72 h-56 select-none group flex items-center justify-center">
         <!-- Pulse glow behind -->
-        <div class="absolute inset-4 rounded-full bg-[#3E6650]/10 dark:bg-emerald-450/5 blur-xl animate-pulse"></div>
+        <div class="absolute inset-4 rounded-full bg-[#3E6650]/8 dark:bg-emerald-450/5 blur-2xl animate-pulse"></div>
         <!-- Video Player -->
         <!-- svelte-ignore a11y_media_has_caption -->
         <video 
@@ -564,7 +564,7 @@
           playsinline
           loop={isLooping}
           onended={handleVideoEnded}
-          class="w-36 h-36 relative z-10 filter drop-shadow-[0_8px_16px_rgba(62,102,80,0.2)] object-contain"
+          class="w-64 h-48 relative z-10 filter drop-shadow-[0_8px_16px_rgba(62,102,80,0.15)] object-contain mascot-video"
         ></video>
       </div>
 
@@ -1150,6 +1150,14 @@
 </div>
 
 <style>
+  .mascot-video {
+    mix-blend-mode: multiply;
+  }
+  :global(.dark) .mascot-video {
+    filter: invert(0.92) contrast(1.1) brightness(1.1) hue-rotate(180deg);
+    mix-blend-mode: screen;
+  }
+
   @keyframes float {
     0%, 100% {
       transform: translateY(0px);
