@@ -3,7 +3,7 @@
   import BiometricScanner from './BiometricScanner.svelte';
   import mascot from '$lib/assets/catersync_ai_mascot.png';
   import { goto } from '$app/navigation';
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { 
     Lock, 
     UserPlus, 
@@ -497,6 +497,59 @@
     }
   });
 
+  let removeRiveListener = null;
+
+  function loadRiveScript(callback) {
+    if (typeof window === 'undefined') return;
+    if (window.rive) {
+      callback();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = "https://unpkg.com/@rive-app/canvas@2.7.0";
+    script.async = true;
+    script.onload = callback;
+    document.head.appendChild(script);
+  }
+
+  function initRive() {
+    if (typeof window === 'undefined' || !window.rive) return;
+    const canvas = document.getElementById("rumplelookscanvas");
+    if (!canvas) return;
+
+    try {
+      const riveInstance = new window.rive.Rive({
+        src: "https://ucarecdn.com/d2e95826-37c2-4c9d-af6c-e96e00a232f6/rumplelooks.riv",
+        canvas: canvas,
+        autoplay: true,
+        artboard: "New Artboard",
+        stateMachines: ["State Machine 1"],
+        onLoad: () => {
+          riveInstance.resizeDrawingSurfaceToCanvas();
+          const inputs = riveInstance.stateMachineInputs("State Machine 1");
+          if (!inputs) return;
+
+          const xInput = inputs.find((input) => input.name === "xAxis");
+          const yInput = inputs.find((input) => input.name === "yAxis");
+
+          const handleMouseMove = (e) => {
+            const maxWidth = window.innerWidth;
+            const maxHeight = window.innerHeight;
+            if (xInput) xInput.value = (e.clientX / maxWidth) * 100;
+            if (yInput) yInput.value = 100 - (e.clientY / maxHeight) * 100;
+          };
+
+          window.addEventListener("mousemove", handleMouseMove);
+          removeRiveListener = () => {
+            window.removeEventListener("mousemove", handleMouseMove);
+          };
+        }
+      });
+    } catch (err) {
+      console.warn("Rive initialization bypassed:", err.message);
+    }
+  }
+
   onMount(async () => {
     // 1. Fetch settings to see if Google Client ID is configured
     try {
@@ -521,6 +574,15 @@
         console.warn("WebAuthn platform check bypassed:", err);
       }
     }
+
+    // 3. Load Rive Script and initialize interactive mascot
+    loadRiveScript(() => {
+      initRive();
+    });
+  });
+
+  onDestroy(() => {
+    if (removeRiveListener) removeRiveListener();
   });
 </script>
 
@@ -531,17 +593,12 @@
   <div class="{selectedPortal === null && !showWelcomeScreen ? 'max-w-3xl' : 'max-w-md'} w-full text-center space-y-6 relative z-10 transition-all duration-300">
     
     <div class="flex flex-col items-center">
-      <!-- Floating, glowing AI mascot companion -->
-      <div class="relative w-24 h-24 mb-4 select-none pointer-events-none group">
+      <!-- Floating, glowing AI mascot companion (Rive Interactive Canvas) -->
+      <div class="relative w-40 h-40 mb-2 select-none group flex items-center justify-center">
         <!-- Pulse glow behind -->
-        <div class="absolute inset-2 rounded-full bg-[#3E6650]/15 dark:bg-emerald-450/10 blur-xl animate-pulse"></div>
-        <!-- Hover spin helper ring -->
-        <div class="absolute inset-[-6px] rounded-full border border-dashed border-[#3E6650]/20 animate-[spin_15s_linear_infinite] opacity-60"></div>
-        <img 
-          src={mascot} 
-          alt="CaterSync AI Companion" 
-          class="w-full h-full object-contain relative z-10 animate-[float_4s_ease-in-out_infinite] filter drop-shadow-[0_8px_16px_rgba(62,102,80,0.25)]" 
-        />
+        <div class="absolute inset-4 rounded-full bg-[#3E6650]/10 dark:bg-emerald-450/5 blur-xl animate-pulse"></div>
+        <!-- Interactive Rive Canvas -->
+        <canvas id="rumplelookscanvas" width="250" height="250" class="w-36 h-36 relative z-10 filter drop-shadow-[0_8px_16px_rgba(62,102,80,0.2)]"></canvas>
       </div>
 
       <span class="ticket-stamp">WELCOME</span>
