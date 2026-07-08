@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import { FileText, Calendar, Sparkles, MapPin, Receipt, Star, CheckCircle, PenTool, LogOut, Info, ShieldAlert, KeyRound, ChevronLeft, ArrowRight, Lock } from '@lucide/svelte';
   import { encryptSessionWithPIN, decryptSessionWithPIN, hasSecureSessionStored, wipeSecureSession } from '$lib/crypto.js';
 
@@ -391,6 +392,7 @@
       review: null
     };
     clearInterval(intervalId);
+    goto('/login');
   }
 
   function startCountdown() {
@@ -563,6 +565,34 @@
   }
 
   onMount(async () => {
+    isChecking = true;
+    
+    // Check if there is an active customer session cookie
+    try {
+      const sessionRes = await fetch('/api/auth/portal-login');
+      const sessionData = await sessionRes.json();
+      
+      if (sessionRes.ok && sessionData.success) {
+        customer = sessionData.customer;
+        event = sessionData.event;
+        isAuthenticated = true;
+        
+        if (event && event.id) {
+          await loadPortalData();
+        }
+      } else {
+        // No active session, redirect directly to the unified login page
+        goto('/login');
+        return;
+      }
+    } catch (err) {
+      console.warn("Session check failed:", err.message);
+      goto('/login');
+      return;
+    } finally {
+      isChecking = false;
+    }
+
     // 1. Load configuration and Google Client ID
     try {
       const res = await fetch('/api/settings');
@@ -575,15 +605,6 @@
       }
     } catch (e) {
       console.warn("Could not load settings configuration:", e.message);
-    }
-
-    // 2. Handle auto-login via URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const contactParam = urlParams.get('contact') || urlParams.get('token');
-    
-    if (contactParam) {
-      customerContact = contactParam;
-      await checkIdentifier();
     }
 
     return () => {
