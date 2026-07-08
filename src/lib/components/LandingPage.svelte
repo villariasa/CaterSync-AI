@@ -479,13 +479,19 @@
   }
 
   $effect(() => {
-    if (isSignupMode !== undefined && googleClientId) {
+    if (selectedPortal === 'operator' && googleClientId) {
       setTimeout(initializeGoogleButton, 80);
     }
   });
 
   $effect(() => {
-    if (step === 1 && googleClientId) {
+    if (isSignupMode !== undefined && selectedPortal === 'operator' && googleClientId) {
+      setTimeout(initializeGoogleButton, 80);
+    }
+  });
+
+  $effect(() => {
+    if (step === 1 && selectedPortal === 'operator' && googleClientId) {
       setTimeout(initializeGoogleButton, 80);
     }
   });
