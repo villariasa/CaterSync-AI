@@ -1,7 +1,7 @@
 <script>
   import { getCateringContext } from '$lib/states.svelte.js';
   import { goto } from '$app/navigation';
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { Lock, ArrowRight, CheckCircle2, ChevronLeft, Mail, UserPlus, Phone } from '@lucide/svelte';
 
   const appState = getCateringContext();
@@ -20,6 +20,28 @@
   let errorMessage = $state('');
   let successMessage = $state('');
   let googleClientId = $state('');
+
+  // Countdown timer variables
+  let timerSeconds = $state(120);
+  let timerInterval = null;
+
+  function startCountdown() {
+    clearInterval(timerInterval);
+    timerSeconds = 120;
+    timerInterval = setInterval(() => {
+      if (timerSeconds > 0) {
+        timerSeconds--;
+      } else {
+        clearInterval(timerInterval);
+        appState.playBuzzerSound();
+        errorMessage = 'Verification code has expired. Please request a new one by going back.';
+      }
+    }, 1000);
+  }
+
+  onDestroy(() => {
+    clearInterval(timerInterval);
+  });
 
   // Handle email lookup and OTP dispatch for existing users
   async function checkIdentifier(e) {
@@ -53,6 +75,7 @@
         if (optRes.ok && otpData.success) {
           successMessage = 'A verification code was sent to your email!';
           step = 'otp';
+          startCountdown();
           if (otpData.usingFallback && otpData.previewUrl) {
             window.open(otpData.previewUrl, '_blank');
           }
@@ -98,6 +121,7 @@
       if (response.ok && data.success) {
         successMessage = 'Profile registered successfully! A verification code has been dispatched to your email.';
         step = 'otp';
+        startCountdown();
         if (data.usingFallback && data.previewUrl) {
           window.open(data.previewUrl, '_blank');
         }
@@ -116,6 +140,11 @@
   async function verifyOtp(e) {
     if (e) e.preventDefault();
     if (!otpCode.trim()) return;
+    if (timerSeconds <= 0) {
+      errorMessage = 'Verification code has expired. Please go back and request a new code.';
+      appState.playBuzzerSound();
+      return;
+    }
 
     isChecking = true;
     errorMessage = '';
@@ -130,6 +159,7 @@
       const res = await response.json();
 
       if (response.ok && res.success) {
+        clearInterval(timerInterval);
         // Create backend session
         const loginRes = await fetch('/api/auth/portal-login', {
           method: 'POST',
@@ -169,6 +199,7 @@
 
   function goBack() {
     appState.playClickSound();
+    clearInterval(timerInterval);
     step = 'email';
     otpCode = '';
     errorMessage = '';
@@ -477,12 +508,21 @@
               inputmode="numeric"
               maxlength="6"
               bind:value={otpCode}
-              oninput={() => { if (otpCode.trim().length === 6) verifyOtp(); }}
+              oninput={() => { if (otpCode.trim().length === 6 && timerSeconds > 0) verifyOtp(); }}
               class="w-full text-center text-lg font-bold tracking-[0.5em] px-3 py-2.5 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-zinc-800 rounded text-[#2A2521] dark:text-[#EBE5DC] focus:outline-none focus:border-[#3E6650] transition-colors"
               placeholder="000000"
               required
               autofocus
             />
+          </div>
+
+          <div class="flex justify-between items-center bg-slate-50 dark:bg-zinc-800/40 p-2.5 rounded border border-[#767068]/15 text-[10px] uppercase font-bold text-center select-none font-mono">
+            <span class="text-[#767068]">Code Expires In:</span>
+            {#if timerSeconds > 0}
+              <span class="text-[#3E6650] dark:text-emerald-450 animate-pulse">{Math.floor(timerSeconds / 60)}:{(timerSeconds % 60).toString().padStart(2, '0')}</span>
+            {:else}
+              <span class="text-[#AC3B2A]">Expired</span>
+            {/if}
           </div>
 
           {#if errorMessage}
@@ -500,8 +540,8 @@
 
           <button 
             type="submit"
-            disabled={isChecking || otpCode.trim().length !== 6}
-            class="w-full py-3 rounded bg-[#3E6650] hover:bg-[#3E6650]/90 text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1 transition-all active:scale-[0.98]"
+            disabled={isChecking || otpCode.trim().length !== 6 || timerSeconds <= 0}
+            class="w-full py-3 rounded bg-[#3E6650] hover:bg-[#3E6650]/90 text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1 transition-all active:scale-[0.98] disabled:bg-slate-300 dark:disabled:bg-zinc-800 disabled:text-slate-500"
           >
             Verify and Enter Dashboard <CheckCircle2 size={13} />
           </button>

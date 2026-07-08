@@ -38,7 +38,7 @@ export async function POST({ request }) {
 
     // 2. Generate 6-digit OTP code
     const otpCode = String(100000 + Math.floor(Math.random() * 900000));
-    const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 mins
+    const otpExpiresAt = new Date(Date.now() + 120 * 1000).toISOString(); // 120 seconds (2 minutes)
 
     // 3. Upsert subscriber account
     const subRes = await pool.query(
