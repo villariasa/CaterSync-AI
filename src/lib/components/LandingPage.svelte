@@ -530,7 +530,7 @@
   
   <div class="absolute inset-0 bg-[radial-gradient(#767068/10_1px,transparent_1px)] dark:bg-[radial-gradient(#767068/5_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none opacity-40"></div>
   
-  <div class="{selectedPortal === null && !showWelcomeScreen ? 'max-w-3xl' : 'max-w-md'} w-full text-center space-y-6 relative z-10 transition-all duration-300">
+  <div class="{selectedPortal === null && !showWelcomeScreen ? 'max-w-5xl' : 'max-w-md'} w-full text-center space-y-6 relative z-10 transition-all duration-300">
     
     <div class="flex flex-col items-center">
       <!-- Text header remains intact at the top -->
@@ -562,77 +562,73 @@
     </div>
 
     {#if selectedPortal === null && !showWelcomeScreen}
-      <!-- 4 PORTAL CARDS SELECTION -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left animate-fade-in">
+      <!-- 4 PORTAL CARDS SELECTION (SSS Style: Horizontal Layout, Small, 4 Columns) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-left animate-fade-in w-full">
         <!-- 1. Customer Card -->
         <a 
           href="/login" 
           onclick={() => appState.playClickSound()}
-          class="group p-6 bg-white dark:bg-[#24201E] border border-slate-200 dark:border-zinc-800 rounded-lg shadow-md hover:shadow-xl hover:border-[#3E6650]/40 transition-all select-none no-underline block transform hover:-translate-y-0.5"
+          class="group p-4 bg-white dark:bg-[#24201E] border border-slate-200 dark:border-zinc-800 rounded-lg shadow-sm hover:shadow-md hover:border-[#3E6650]/40 transition-all select-none no-underline flex items-center gap-3 transform hover:-translate-y-0.5"
         >
-          <div class="flex items-start justify-between">
-            <div class="p-2.5 rounded bg-[#3E6650]/10 text-[#3E6650] dark:bg-[#3E6650]/20 dark:text-emerald-400 group-hover:scale-105 transition-transform">
-              <Users size={20} />
-            </div>
-            <span class="text-[8px] uppercase tracking-widest text-[#767068] font-bold">CATERING CLIENTS</span>
+          <div class="p-2 shrink-0 rounded bg-[#3E6650]/10 text-[#3E6650] dark:bg-[#3E6650]/20 dark:text-emerald-400 group-hover:scale-105 transition-transform">
+            <Users size={18} />
           </div>
-          <h3 class="text-sm font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide mt-4 group-hover:text-[#3E6650] transition-colors">Customer Portal</h3>
-          <p class="text-[10px] leading-relaxed text-[#767068] dark:text-zinc-400 mt-2 font-sans">
-            Review quotes, sign contracts, and manage event preferences.
-          </p>
+          <div class="min-w-0">
+            <h4 class="text-xs font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide group-hover:text-[#3E6650] transition-colors leading-tight">Customer Portal</h4>
+            <p class="text-[9px] text-[#767068] dark:text-zinc-400 mt-0.5 font-sans leading-tight">
+              Review quotes & preferences.
+            </p>
+          </div>
         </a>
 
         <!-- 2. Operator Card -->
         <button 
           onclick={() => { appState.playClickSound(); selectedPortal = 'operator'; }}
-          class="group p-6 bg-white dark:bg-[#24201E] border border-slate-200 dark:border-zinc-800 rounded-lg shadow-md hover:shadow-xl hover:border-[#2A2521]/40 dark:hover:border-zinc-650 transition-all text-left select-none block transform hover:-translate-y-0.5"
+          class="group p-4 bg-white dark:bg-[#24201E] border border-slate-200 dark:border-zinc-800 rounded-lg shadow-sm hover:shadow-md hover:border-[#2A2521]/40 dark:hover:border-zinc-650 transition-all text-left select-none flex items-center gap-3 transform hover:-translate-y-0.5 cursor-pointer w-full"
         >
-          <div class="flex items-start justify-between">
-            <div class="p-2.5 rounded bg-slate-100 text-[#2A2521] dark:bg-zinc-800 dark:text-[#EBE5DC] group-hover:scale-105 transition-transform">
-              <ChefHat size={20} />
-            </div>
-            <span class="text-[8px] uppercase tracking-widest text-[#767068] font-bold">CATERING MANAGERS</span>
+          <div class="p-2 shrink-0 rounded bg-slate-100 text-[#2A2521] dark:bg-zinc-800 dark:text-[#EBE5DC] group-hover:scale-105 transition-transform">
+            <ChefHat size={18} />
           </div>
-          <h3 class="text-sm font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide mt-4 group-hover:text-[#2A2521] dark:group-hover:text-zinc-300 transition-colors">Catering Operator</h3>
-          <p class="text-[10px] leading-relaxed text-[#767068] dark:text-zinc-400 mt-2 font-sans">
-            Organize events, schedule staff, and manage kitchen assets.
-          </p>
+          <div class="min-w-0">
+            <h4 class="text-xs font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide group-hover:text-[#2A2521] dark:group-hover:text-zinc-300 transition-colors leading-tight">Catering Operator</h4>
+            <p class="text-[9px] text-[#767068] dark:text-zinc-400 mt-0.5 font-sans leading-tight">
+              Organize events & staff.
+            </p>
+          </div>
         </button>
 
         <!-- 3. Supplier Card -->
         <a 
           href="/supplier/login" 
           onclick={() => appState.playClickSound()}
-          class="group p-6 bg-white dark:bg-[#24201E] border border-slate-200 dark:border-zinc-800 rounded-lg shadow-md hover:shadow-xl hover:border-[#D9A441]/40 transition-all select-none no-underline block transform hover:-translate-y-0.5"
+          class="group p-4 bg-white dark:bg-[#24201E] border border-slate-200 dark:border-zinc-800 rounded-lg shadow-sm hover:shadow-md hover:border-[#D9A441]/40 transition-all select-none no-underline flex items-center gap-3 transform hover:-translate-y-0.5"
         >
-          <div class="flex items-start justify-between">
-            <div class="p-2.5 rounded bg-[#D9A441]/10 text-[#D9A441] dark:bg-[#D9A441]/20 dark:text-amber-400 group-hover:scale-105 transition-transform">
-              <Truck size={20} />
-            </div>
-            <span class="text-[8px] uppercase tracking-widest text-[#767068] font-bold">SUPPLY MERCHANTS</span>
+          <div class="p-2 shrink-0 rounded bg-[#D9A441]/10 text-[#D9A441] dark:bg-[#D9A441]/20 dark:text-amber-400 group-hover:scale-105 transition-transform">
+            <Truck size={18} />
           </div>
-          <h3 class="text-sm font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide mt-4 group-hover:text-[#D9A441] transition-colors">Supplier Hub</h3>
-          <p class="text-[10px] leading-relaxed text-[#767068] dark:text-zinc-400 mt-2 font-sans">
-            Manage wholesale ingredient catalogs and client store orders.
-          </p>
+          <div class="min-w-0">
+            <h4 class="text-xs font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide group-hover:text-[#D9A441] transition-colors leading-tight">Supplier Hub</h4>
+            <p class="text-[9px] text-[#767068] dark:text-zinc-400 mt-0.5 font-sans leading-tight">
+              Manage ingredient orders.
+            </p>
+          </div>
         </a>
 
         <!-- 4. Admin Card -->
         <a 
           href="/admin/login" 
           onclick={() => appState.playClickSound()}
-          class="group p-6 bg-white dark:bg-[#24201E] border border-slate-200 dark:border-zinc-800 rounded-lg shadow-md hover:shadow-xl hover:border-[#AC3B2A]/40 transition-all select-none no-underline block transform hover:-translate-y-0.5"
+          class="group p-4 bg-white dark:bg-[#24201E] border border-slate-200 dark:border-zinc-800 rounded-lg shadow-sm hover:shadow-md hover:border-[#AC3B2A]/40 transition-all select-none no-underline flex items-center gap-3 transform hover:-translate-y-0.5"
         >
-          <div class="flex items-start justify-between">
-            <div class="p-2.5 rounded bg-[#AC3B2A]/10 text-[#AC3B2A] dark:bg-[#AC3B2A]/20 dark:text-red-400 group-hover:scale-105 transition-transform">
-              <Lock size={20} />
-            </div>
-            <span class="text-[8px] uppercase tracking-widest text-[#767068] font-bold">PLATFORM MANAGERS</span>
+          <div class="p-2 shrink-0 rounded bg-[#AC3B2A]/10 text-[#AC3B2A] dark:bg-[#AC3B2A]/20 dark:text-red-400 group-hover:scale-105 transition-transform">
+            <Lock size={18} />
           </div>
-          <h3 class="text-sm font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide mt-4 group-hover:text-[#AC3B2A] transition-colors">Admin Console</h3>
-          <p class="text-[10px] leading-relaxed text-[#767068] dark:text-zinc-400 mt-2 font-sans">
-            Configure platform settings, manage licenses, and review logs.
-          </p>
+          <div class="min-w-0">
+            <h4 class="text-xs font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide group-hover:text-[#AC3B2A] transition-colors leading-tight">Admin Console</h4>
+            <p class="text-[9px] text-[#767068] dark:text-zinc-400 mt-0.5 font-sans leading-tight">
+              Manage system settings.
+            </p>
+          </div>
         </a>
       </div>
     {:else}
