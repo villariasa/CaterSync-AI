@@ -4,7 +4,7 @@ import nodemailer from 'nodemailer';
 
 export async function POST({ request }) {
   try {
-    const { email } = await request.json();
+    const { email, name, phone } = await request.json();
 
     if (!email || !email.includes('@')) {
       return json({ success: false, error: 'Valid email address is required.' }, { status: 400 });
@@ -25,11 +25,12 @@ export async function POST({ request }) {
       customerId = customerRes.rows[0].id;
       customerName = customerRes.rows[0].name;
     } else {
-      // Create a bare customer row
-      const placeholderName = cleanEmail.split('@')[0];
+      // Create a customer row
+      const finalName = name && name.trim() ? name.trim() : cleanEmail.split('@')[0];
+      const finalPhone = phone && phone.trim() ? phone.trim() : cleanEmail;
       const insertCustomerRes = await pool.query(
         'INSERT INTO customers (name, contact, email) VALUES ($1, $2, $3) RETURNING id, name',
-        [placeholderName, cleanEmail, cleanEmail]
+        [finalName, finalPhone, cleanEmail]
       );
       customerId = insertCustomerRes.rows[0].id;
       customerName = insertCustomerRes.rows[0].name;
@@ -47,13 +48,13 @@ export async function POST({ request }) {
 
     if (subRes.rows.length > 0) {
       await pool.query(
-        'UPDATE subscriber_accounts SET customer_id = $1, otp_code = $2, otp_expires_at = $3, status = $4 WHERE LOWER(email) = $5',
-        [customerId, otpCode, otpExpiresAt, 'pending', cleanEmail]
+        'UPDATE subscriber_accounts SET customer_id = $1, phone = COALESCE($2, phone), otp_code = $3, otp_expires_at = $4, status = $5 WHERE LOWER(email) = $6',
+        [customerId, phone ? phone.trim() : null, otpCode, otpExpiresAt, 'pending', cleanEmail]
       );
     } else {
       await pool.query(
-        'INSERT INTO subscriber_accounts (customer_id, email, otp_code, otp_expires_at, status) VALUES ($1, $2, $3, $4, $5)',
-        [customerId, cleanEmail, otpCode, otpExpiresAt, 'pending']
+        'INSERT INTO subscriber_accounts (customer_id, email, phone, otp_code, otp_expires_at, status) VALUES ($1, $2, $3, $4, $5, $6)',
+        [customerId, cleanEmail, phone ? phone.trim() : null, otpCode, otpExpiresAt, 'pending']
       );
     }
 

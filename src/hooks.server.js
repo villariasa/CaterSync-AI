@@ -6,7 +6,7 @@ export async function handle({ event, resolve }) {
   return platformStorage.run(event.platform, async () => {
     const sessionAdmin = event.cookies.get('cs_admin_session');
     const sessionOrg = event.cookies.get('cs_org_session') || event.cookies.get('session_user');
-    const sessionCustomer = event.cookies.get('cs_customer_session');
+    const sessionCustomer = event.cookies.get('cs_customer_session') || event.cookies.get('portal_customer_id');
     const sessionSupplier = event.cookies.get('cs_supplier_session');
 
     event.locals.user = null;
@@ -33,10 +33,14 @@ export async function handle({ event, resolve }) {
       }
     } else if (sessionCustomer) {
       try {
-        const res = await pool.query('SELECT id, customer_id, email, phone FROM subscriber_accounts WHERE email = $1 OR phone = $1', [sessionCustomer]);
+        const isNumeric = /^\d+$/.test(sessionCustomer);
+        const queryStr = isNumeric 
+          ? 'SELECT id, id as customer_id, email, contact as phone FROM customers WHERE id = $1'
+          : 'SELECT id, customer_id, email, phone FROM subscriber_accounts WHERE email = $1 OR phone = $1';
+        const res = await pool.query(queryStr, [isNumeric ? parseInt(sessionCustomer, 10) : sessionCustomer]);
         if (res.rows.length > 0) {
           event.locals.user = {
-            username: sessionCustomer,
+            username: res.rows[0].email || sessionCustomer,
             type: 'subscriber',
             subscriber_id: res.rows[0].id,
             customer_id: res.rows[0].customer_id
