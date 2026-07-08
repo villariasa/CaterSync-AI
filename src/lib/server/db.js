@@ -261,6 +261,200 @@ export const pool = {
           return await runQueryFn();
         }
 
+        // --- NEW MULTI-TENANT SELF-HEALING TABLES ---
+        if (err.message && (
+          err.message.includes('no such table: organizations') ||
+          err.message.includes('relation "organizations" does not exist')
+        )) {
+          console.warn('⚠️ Detected missing table "organizations". Running automatic database migration...');
+          try {
+            const createSql = platform && platform.env && platform.env.DB 
+              ? `CREATE TABLE IF NOT EXISTS organizations (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  slug TEXT UNIQUE NOT NULL CHECK (length(trim(slug)) > 0),
+                  name TEXT NOT NULL,
+                  logo_url TEXT,
+                  cover_image_url TEXT,
+                  description TEXT,
+                  contact_email TEXT NOT NULL,
+                  contact_phone TEXT,
+                  service_areas TEXT DEFAULT '[]',
+                  min_guest_count INTEGER,
+                  max_guest_count INTEGER,
+                  price_range TEXT,
+                  verification_status TEXT NOT NULL DEFAULT 'pending',
+                  verified_at DATETIME,
+                  is_active INTEGER NOT NULL DEFAULT 1,
+                  onboarded_at DATETIME,
+                  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
+                )`
+              : `CREATE TABLE IF NOT EXISTS organizations (
+                  id SERIAL PRIMARY KEY,
+                  slug VARCHAR(100) UNIQUE NOT NULL CHECK (length(trim(slug)) > 0),
+                  name VARCHAR(255) NOT NULL,
+                  logo_url TEXT,
+                  cover_image_url TEXT,
+                  description TEXT,
+                  contact_email VARCHAR(255) NOT NULL,
+                  contact_phone VARCHAR(50),
+                  service_areas TEXT[] DEFAULT '{}'::TEXT[],
+                  min_guest_count INT,
+                  max_guest_count INT,
+                  price_range VARCHAR(10),
+                  verification_status VARCHAR(20) NOT NULL DEFAULT 'pending'
+                      CHECK (verification_status IN ('pending','verified','rejected','suspended')),
+                  verified_at TIMESTAMP WITH TIME ZONE,
+                  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                  onboarded_at TIMESTAMP WITH TIME ZONE,
+                  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+                )`;
+            await runQueryFn(createSql);
+
+            // Seed default organization
+            const seedSql = `INSERT INTO organizations (id, slug, name, contact_email, verification_status)
+                             VALUES (1, 'default-org', 'Default Organization', 'org@example.com', 'verified')
+                             ON CONFLICT (id) DO NOTHING`;
+            await runQueryFn(seedSql);
+            console.log('✅ Automatic table migration completed for organizations. Retrying original query...');
+          } catch (migrationErr) {
+            console.error('❌ Automatic table migration failed for organizations:', migrationErr.message);
+          }
+          return await runQueryFn();
+        }
+
+        if (err.message && (
+          err.message.includes('no such table: platform_admins') ||
+          err.message.includes('relation "platform_admins" does not exist')
+        )) {
+          console.warn('⚠️ Detected missing table "platform_admins". Running automatic database migration...');
+          try {
+            const createSql = platform && platform.env && platform.env.DB 
+              ? `CREATE TABLE IF NOT EXISTS platform_admins (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  username TEXT NOT NULL UNIQUE,
+                  email TEXT NOT NULL UNIQUE,
+                  password_hash TEXT NOT NULL,
+                  permission_level TEXT NOT NULL DEFAULT 'support',
+                  is_active INTEGER NOT NULL DEFAULT 1,
+                  totp_secret TEXT,
+                  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                  last_login_at DATETIME
+                )`
+              : `CREATE TABLE IF NOT EXISTS platform_admins (
+                  id SERIAL PRIMARY KEY,
+                  username VARCHAR(255) NOT NULL UNIQUE,
+                  email VARCHAR(255) NOT NULL UNIQUE,
+                  password_hash VARCHAR(255) NOT NULL,
+                  permission_level VARCHAR(50) NOT NULL DEFAULT 'support'
+                      CHECK (permission_level IN ('super_admin','ops','support','finance')),
+                  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                  totp_secret VARCHAR(128),
+                  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                  last_login_at TIMESTAMP WITH TIME ZONE
+                )`;
+            await runQueryFn(createSql);
+
+            // Seed default platform admin
+            const seedSql = `INSERT INTO platform_admins (username, email, password_hash, permission_level)
+                             VALUES ('platform_admin', 'admin@catersync.ai', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'super_admin')
+                             ON CONFLICT (username) DO NOTHING`;
+            await runQueryFn(seedSql);
+            console.log('✅ Automatic table migration completed for platform_admins. Retrying original query...');
+          } catch (migrationErr) {
+            console.error('❌ Automatic table migration failed for platform_admins:', migrationErr.message);
+          }
+          return await runQueryFn();
+        }
+
+        if (err.message && (
+          err.message.includes('no such table: supplier_accounts') ||
+          err.message.includes('relation "supplier_accounts" does not exist')
+        )) {
+          console.warn('⚠️ Detected missing table "supplier_accounts". Running automatic database migration...');
+          try {
+            const createSql = platform && platform.env && platform.env.DB 
+              ? `CREATE TABLE IF NOT EXISTS supplier_accounts (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  supplier_id INTEGER NOT NULL,
+                  email TEXT UNIQUE NOT NULL,
+                  password_hash TEXT NOT NULL,
+                  is_active INTEGER NOT NULL DEFAULT 1,
+                  email_verified_at DATETIME,
+                  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                  last_login_at DATETIME
+                )`
+              : `CREATE TABLE IF NOT EXISTS supplier_accounts (
+                  id SERIAL PRIMARY KEY,
+                  supplier_id INT NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
+                  email VARCHAR(255) UNIQUE NOT NULL,
+                  password_hash TEXT NOT NULL,
+                  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                  email_verified_at TIMESTAMP WITH TIME ZONE,
+                  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                  last_login_at TIMESTAMP WITH TIME ZONE
+                )`;
+            await runQueryFn(createSql);
+            console.log('✅ Automatic table migration completed for supplier_accounts. Retrying original query...');
+          } catch (migrationErr) {
+            console.error('❌ Automatic table migration failed for supplier_accounts:', migrationErr.message);
+          }
+          return await runQueryFn();
+        }
+
+        if (err.message && (
+          err.message.includes('no such table: organization_suppliers') ||
+          err.message.includes('relation "organization_suppliers" does not exist')
+        )) {
+          console.warn('⚠️ Detected missing table "organization_suppliers". Running automatic database migration...');
+          try {
+            const createSql = platform && platform.env && platform.env.DB 
+              ? `CREATE TABLE IF NOT EXISTS organization_suppliers (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  organization_id INTEGER NOT NULL,
+                  supplier_id INTEGER NOT NULL,
+                  status TEXT NOT NULL DEFAULT 'active',
+                  connected_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                  UNIQUE (organization_id, supplier_id)
+                )`
+              : `CREATE TABLE IF NOT EXISTS organization_suppliers (
+                  id SERIAL PRIMARY KEY,
+                  organization_id INT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+                  supplier_id INT NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
+                  status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active','blocked')),
+                  connected_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                  UNIQUE (organization_id, supplier_id)
+                )`;
+            await runQueryFn(createSql);
+            console.log('✅ Automatic table migration completed for organization_suppliers. Retrying original query...');
+          } catch (migrationErr) {
+            console.error('❌ Automatic table migration failed for organization_suppliers:', migrationErr.message);
+          }
+          return await runQueryFn();
+        }
+
+        if (err.message && (
+          err.message.includes('no such column: organization_id') ||
+          err.message.includes('column "organization_id" does not exist') ||
+          (err.message.includes('SQLITE_ERROR') && err.message.includes('organization_id'))
+        )) {
+          console.warn('⚠️ Detected missing column "organization_id". Running automatic database migration...');
+          try {
+            const alterSql = platform && platform.env && platform.env.DB 
+              ? 'ALTER TABLE users ADD COLUMN organization_id INTEGER'
+              : 'ALTER TABLE users ADD COLUMN IF NOT EXISTS organization_id INT REFERENCES organizations(id)';
+            await runQueryFn(alterSql);
+
+            // Backfill organization_id = 1
+            await runQueryFn("UPDATE users SET organization_id = 1 WHERE organization_id IS NULL");
+            console.log('✅ Automatic column migration completed for organization_id. Retrying original query...');
+          } catch (migrationErr) {
+            console.error('❌ Automatic migration failed for organization_id:', migrationErr.message);
+          }
+          return await runQueryFn();
+        }
+
         throw err;
       }
     };
@@ -316,17 +510,84 @@ if (env.DATABASE_URL) {
         
         ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret VARCHAR(128);
 
+        CREATE TABLE IF NOT EXISTS organizations (
+            id SERIAL PRIMARY KEY,
+            slug VARCHAR(100) UNIQUE NOT NULL CHECK (length(trim(slug)) > 0),
+            name VARCHAR(255) NOT NULL,
+            logo_url TEXT,
+            cover_image_url TEXT,
+            description TEXT,
+            contact_email VARCHAR(255) NOT NULL,
+            contact_phone VARCHAR(50),
+            service_areas TEXT[] DEFAULT '{}'::TEXT[],
+            min_guest_count INT,
+            max_guest_count INT,
+            price_range VARCHAR(10),
+            verification_status VARCHAR(20) NOT NULL DEFAULT 'pending'
+                CHECK (verification_status IN ('pending','verified','rejected','suspended')),
+            verified_at TIMESTAMP WITH TIME ZONE,
+            is_active BOOLEAN NOT NULL DEFAULT TRUE,
+            onboarded_at TIMESTAMP WITH TIME ZONE,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+        );
+        INSERT INTO organizations (id, slug, name, contact_email, verification_status)
+        VALUES (1, 'default-org', 'Default Organization', 'org@example.com', 'verified')
+        ON CONFLICT (id) DO NOTHING;
+
+        -- Alter users to add organization_id
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS organization_id INT REFERENCES organizations(id);
+        UPDATE users SET organization_id = 1 WHERE organization_id IS NULL;
+
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
+            organization_id INT REFERENCES organizations(id),
             username VARCHAR(255) NOT NULL UNIQUE,
             password_hash VARCHAR(255) NOT NULL,
             role VARCHAR(100) NOT NULL DEFAULT 'Operator',
             is_active BOOLEAN DEFAULT TRUE NOT NULL,
+            totp_secret VARCHAR(128),
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
         );
-        INSERT INTO users (username, password_hash, role)
-        VALUES ('admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'Admin')
+        INSERT INTO users (username, password_hash, role, organization_id)
+        VALUES ('admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'Admin', 1)
         ON CONFLICT (username) DO NOTHING;
+
+        CREATE TABLE IF NOT EXISTS platform_admins (
+            id SERIAL PRIMARY KEY,
+            username VARCHAR(255) NOT NULL UNIQUE,
+            email VARCHAR(255) NOT NULL UNIQUE,
+            password_hash VARCHAR(255) NOT NULL,
+            permission_level VARCHAR(50) NOT NULL DEFAULT 'support'
+                CHECK (permission_level IN ('super_admin','ops','support','finance')),
+            is_active BOOLEAN NOT NULL DEFAULT TRUE,
+            totp_secret VARCHAR(128),
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            last_login_at TIMESTAMP WITH TIME ZONE
+        );
+        INSERT INTO platform_admins (username, email, password_hash, permission_level)
+        VALUES ('platform_admin', 'admin@catersync.ai', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'super_admin')
+        ON CONFLICT (username) DO NOTHING;
+
+        CREATE TABLE IF NOT EXISTS supplier_accounts (
+            id SERIAL PRIMARY KEY,
+            supplier_id INT NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            is_active BOOLEAN NOT NULL DEFAULT TRUE,
+            email_verified_at TIMESTAMP WITH TIME ZONE,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            last_login_at TIMESTAMP WITH TIME ZONE
+        );
+
+        CREATE TABLE IF NOT EXISTS organization_suppliers (
+            id SERIAL PRIMARY KEY,
+            organization_id INT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+            supplier_id INT NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
+            status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active','blocked')),
+            connected_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            UNIQUE (organization_id, supplier_id)
+        );
 
         -- Migration for customer email
         ALTER TABLE customers ADD COLUMN IF NOT EXISTS email VARCHAR(255) DEFAULT '';

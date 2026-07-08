@@ -14,20 +14,36 @@ export async function POST({ request, cookies }) {
     }
 
     const cleanUsername = username.trim().toLowerCase();
+    const isPlatformAdmin = body.userType === 'platform_admin';
 
-    // 1. Fetch user from database
-    const userRes = await pool.query(
-      'SELECT id, username, role, totp_secret, is_active FROM users WHERE LOWER(username) = $1 LIMIT 1',
-      [cleanUsername]
-    );
+    let user = null;
+    let table = isPlatformAdmin ? 'platform_admins' : 'users';
 
-    if (userRes.rows.length === 0) {
-      return json({ success: false, error: 'Operator account not found.' }, { status: 404 });
+    // 1. Fetch user/admin from database
+    if (isPlatformAdmin) {
+      const adminRes = await pool.query(
+        'SELECT id, username, totp_secret, is_active FROM platform_admins WHERE LOWER(username) = $1 LIMIT 1',
+        [cleanUsername]
+      );
+      if (adminRes.rows.length > 0) {
+        user = adminRes.rows[0];
+      }
+    } else {
+      const userRes = await pool.query(
+        'SELECT id, username, role, totp_secret, is_active FROM users WHERE LOWER(username) = $1 LIMIT 1',
+        [cleanUsername]
+      );
+      if (userRes.rows.length > 0) {
+        user = userRes.rows[0];
+      }
     }
 
-    const user = userRes.rows[0];
+    if (!user) {
+      return json({ success: false, error: `${isPlatformAdmin ? 'Platform Admin' : 'Operator'} account not found.` }, { status: 404 });
+    }
+
     if (!user.is_active) {
-      return json({ success: false, error: 'Operator account is deactivated.' }, { status: 403 });
+      return json({ success: false, error: `${isPlatformAdmin ? 'Platform Admin' : 'Operator'} account is deactivated.` }, { status: 403 });
     }
 
     let secretToVerify = user.totp_secret;
@@ -51,31 +67,50 @@ export async function POST({ request, cookies }) {
     // 3. If registering, save the secret permanently to the database
     if (isRegistering) {
       await pool.query(
-        'UPDATE users SET totp_secret = $1 WHERE id = $2',
+        `UPDATE ${table} SET totp_secret = $1 WHERE id = $2`,
         [secretToVerify, user.id]
       );
     }
 
-    // 4. Set Operator session cookie
-    cookies.set('session_user', user.username, {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 12 // 12 hours
-    });
+    // 4. Set appropriate session cookies
+    if (isPlatformAdmin) {
+      cookies.set('cs_admin_session', user.username, {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 24 * 7 // 7 days
+      });
+    } else {
+      cookies.set('cs_org_session', user.username, {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 24 * 14 // 14 days
+      });
+      cookies.set('session_user', user.username, {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 24 * 14 // 14 days
+      });
+    }
 
-    const credRes = await pool.query(
-      "SELECT id FROM webauthn_credentials WHERE account_id = $1 AND account_type = 'operator' LIMIT 1",
-      [user.id]
-    );
-    const hasBiometrics = credRes.rows.length > 0;
+    let hasBiometrics = false;
+    if (!isPlatformAdmin) {
+      const credRes = await pool.query(
+        "SELECT id FROM webauthn_credentials WHERE account_id = $1 AND account_type = 'operator' LIMIT 1",
+        [user.id]
+      );
+      hasBiometrics = credRes.rows.length > 0;
+    }
 
     return json({
       success: true,
       hasBiometrics,
       user: {
         username: user.username,
-        role: user.role
+        role: isPlatformAdmin ? 'platform_admin' : user.role,
+        userType: isPlatformAdmin ? 'platform_admin' : 'org_user'
       }
     });
 

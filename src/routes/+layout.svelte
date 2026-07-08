@@ -609,6 +609,13 @@
     }
     return page.url.pathname.startsWith(path);
   }
+
+  const isPublicRoute = $derived(
+    page.url.pathname === '/admin/login' || 
+    page.url.pathname === '/supplier/login' || 
+    page.url.pathname === '/login' || 
+    page.url.pathname === '/portal'
+  );
 </script>
 
 <svelte:head>
@@ -616,7 +623,9 @@
 </svelte:head>
 
 
-{#if !appState.isAuthenticated}
+{#if isPublicRoute}
+  {@render children()}
+{:else if !appState.isAuthenticated}
   <LandingPage />
 {:else}
   <div class="min-h-screen bg-[var(--color-paper)] text-ink flex flex-col antialiased">
@@ -678,28 +687,51 @@
         <!-- CENTER: DESKTOP HEADER NAVIGATION (Sleek Centered Icons) -->
         <div class="hidden md:flex flex-1 justify-center min-w-0 px-4">
           <nav class="app-nav-row justify-center max-w-full">
-            <a href="/planner" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/planner') ? 'active' : ''}" data-tooltip="Planner">
-              <UtensilsCrossed size={16} />
-            </a>
-            <a href="/customers" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/customers') ? 'active' : ''}" data-tooltip="Customers">
-              <Users size={16} />
-            </a>
-            <a href="/menus" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/menus') ? 'active' : ''}" data-tooltip="Menus">
-              <FileText size={16} />
-            </a>
-            <a href="/inventory" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/inventory') ? 'active' : ''}" data-tooltip="Inventory">
-              <Package size={16} />
-            </a>
-            <a href="/suppliers" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/suppliers') ? 'active' : ''}" data-tooltip="Purchasing">
-              <Truck size={16} />
-            </a>
-            <a href="/scheduling" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/scheduling') ? 'active' : ''}" data-tooltip="Kitchen">
-              <ChefHat size={16} />
-            </a>
-            <a href="/audits" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/audits') ? 'active' : ''}" data-tooltip="Audits">
-              <Wallet size={16} />
-            </a>
-
+            {#if appState.userType === 'platform_admin'}
+              <!-- Platform Admin Navigation -->
+              <span class="text-[#767068]/50 px-2 font-mono text-[9px] uppercase tracking-wider">🔒 Admin Portal</span>
+              <a href="/" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/') ? 'active' : ''}" data-tooltip="Admin Home">
+                <LayoutDashboard size={16} />
+              </a>
+              <a href="/audits" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/audits') ? 'active' : ''}" data-tooltip="Audits">
+                <Wallet size={16} />
+              </a>
+            {:else if appState.userType === 'supplier'}
+              <!-- Supplier Navigation -->
+              <span class="text-[#767068]/50 px-2 font-mono text-[9px] uppercase tracking-wider">🚚 Supplier Portal</span>
+              <a href="/" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/') ? 'active' : ''}" data-tooltip="Partner Home">
+                <LayoutDashboard size={16} />
+              </a>
+            {:else if appState.userType === 'subscriber'}
+              <!-- Customer Navigation -->
+              <span class="text-[#767068]/50 px-2 font-mono text-[9px] uppercase tracking-wider">👤 Client Portal</span>
+              <a href="/portal" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/portal') ? 'active' : ''}" data-tooltip="My Bookings">
+                <FileText size={16} />
+              </a>
+            {:else}
+              <!-- Existing Org User Navigation -->
+              <a href="/planner" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/planner') ? 'active' : ''}" data-tooltip="Planner">
+                <UtensilsCrossed size={16} />
+              </a>
+              <a href="/customers" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/customers') ? 'active' : ''}" data-tooltip="Customers">
+                <Users size={16} />
+              </a>
+              <a href="/menus" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/menus') ? 'active' : ''}" data-tooltip="Menus">
+                <FileText size={16} />
+              </a>
+              <a href="/inventory" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/inventory') ? 'active' : ''}" data-tooltip="Inventory">
+                <Package size={16} />
+              </a>
+              <a href="/suppliers" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/suppliers') ? 'active' : ''}" data-tooltip="Purchasing">
+                <Truck size={16} />
+              </a>
+              <a href="/scheduling" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/scheduling') ? 'active' : ''}" data-tooltip="Kitchen">
+                <ChefHat size={16} />
+              </a>
+              <a href="/audits" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/audits') ? 'active' : ''}" data-tooltip="Audits">
+                <Wallet size={16} />
+              </a>
+            {/if}
           </nav>
         </div>
 
@@ -1029,29 +1061,48 @@
       <!-- MOBILE-ONLY HEADER NAVIGATION (Scrollable Row Under Logo row) -->
       <div class="md:hidden bg-white/20 dark:bg-[#24201E]/20 px-4 py-2 border-t border-[#767068]/15 backdrop-blur-sm">
         <nav class="app-nav-row justify-center max-w-full">
-
-          <a href="/planner" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/planner') ? 'active' : ''}" data-tooltip="Planner">
-            <UtensilsCrossed size={16} />
-          </a>
-          <a href="/customers" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/customers') ? 'active' : ''}" data-tooltip="Customers">
-            <Users size={16} />
-          </a>
-          <a href="/menus" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/menus') ? 'active' : ''}" data-tooltip="Menus">
-            <FileText size={16} />
-          </a>
-          <a href="/inventory" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/inventory') ? 'active' : ''}" data-tooltip="Inventory">
-            <Package size={16} />
-          </a>
-          <a href="/suppliers" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/suppliers') ? 'active' : ''}" data-tooltip="Purchasing">
-            <Truck size={16} />
-          </a>
-          <a href="/scheduling" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/scheduling') ? 'active' : ''}" data-tooltip="Kitchen">
-            <ChefHat size={16} />
-          </a>
-          <a href="/audits" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/audits') ? 'active' : ''}" data-tooltip="Audits">
-            <Wallet size={16} />
-          </a>
-
+          {#if appState.userType === 'platform_admin'}
+            <!-- Platform Admin Mobile Navigation -->
+            <a href="/" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/') ? 'active' : ''}" data-tooltip="Admin Home">
+              <LayoutDashboard size={16} />
+            </a>
+            <a href="/audits" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/audits') ? 'active' : ''}" data-tooltip="Audits">
+              <Wallet size={16} />
+            </a>
+          {:else if appState.userType === 'supplier'}
+            <!-- Supplier Mobile Navigation -->
+            <a href="/" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/') ? 'active' : ''}" data-tooltip="Partner Home">
+              <LayoutDashboard size={16} />
+            </a>
+          {:else if appState.userType === 'subscriber'}
+            <!-- Customer Mobile Navigation -->
+            <a href="/portal" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/portal') ? 'active' : ''}" data-tooltip="My Bookings">
+              <FileText size={16} />
+            </a>
+          {:else}
+            <!-- Existing Org User Navigation -->
+            <a href="/planner" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/planner') ? 'active' : ''}" data-tooltip="Planner">
+              <UtensilsCrossed size={16} />
+            </a>
+            <a href="/customers" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/customers') ? 'active' : ''}" data-tooltip="Customers">
+              <Users size={16} />
+            </a>
+            <a href="/menus" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/menus') ? 'active' : ''}" data-tooltip="Menus">
+              <FileText size={16} />
+            </a>
+            <a href="/inventory" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/inventory') ? 'active' : ''}" data-tooltip="Inventory">
+              <Package size={16} />
+            </a>
+            <a href="/suppliers" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/suppliers') ? 'active' : ''}" data-tooltip="Purchasing">
+              <Truck size={16} />
+            </a>
+            <a href="/scheduling" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/scheduling') ? 'active' : ''}" data-tooltip="Kitchen">
+              <ChefHat size={16} />
+            </a>
+            <a href="/audits" onclick={() => appState.playClickSound()} class="app-nav-item {isRouteActive('/audits') ? 'active' : ''}" data-tooltip="Audits">
+              <Wallet size={16} />
+            </a>
+          {/if}
         </nav>
       </div>
     </div>

@@ -788,10 +788,36 @@ CREATE TABLE IF NOT EXISTS prediction_accuracy_logs (
 );
 
 -- =========================================================================
--- S. SUBSCRIBER REGISTRATION & SECURE AUTHENTICATION (Phase 13)
+-- S. MULTI-TENANT ORGANIZATIONS & PLATFORM ADMINS
 -- =========================================================================
+CREATE TABLE IF NOT EXISTS organizations (
+    id SERIAL PRIMARY KEY,
+    slug VARCHAR(100) UNIQUE NOT NULL CHECK (length(trim(slug)) > 0),
+    name VARCHAR(255) NOT NULL,
+    logo_url TEXT,
+    cover_image_url TEXT,
+    description TEXT,
+    contact_email VARCHAR(255) NOT NULL,
+    contact_phone VARCHAR(50),
+    service_areas TEXT[] DEFAULT '{}'::TEXT[],
+    min_guest_count INT,
+    max_guest_count INT,
+    price_range VARCHAR(10),
+    verification_status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (verification_status IN ('pending','verified','rejected','suspended')),
+    verified_at TIMESTAMP WITH TIME ZONE,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    onboarded_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE INDEX idx_organizations_slug ON organizations(slug);
+CREATE INDEX idx_organizations_verification ON organizations(verification_status);
+
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
+    organization_id INT REFERENCES organizations(id),
     username VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(100) NOT NULL DEFAULT 'Operator',
@@ -825,3 +851,37 @@ CREATE TABLE IF NOT EXISTS webauthn_credentials (
     device_label VARCHAR(100),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS platform_admins (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    permission_level VARCHAR(50) NOT NULL DEFAULT 'support'
+        CHECK (permission_level IN ('super_admin','ops','support','finance')),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    totp_secret VARCHAR(128),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    last_login_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE IF NOT EXISTS supplier_accounts (
+    id SERIAL PRIMARY KEY,
+    supplier_id INT NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    email_verified_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    last_login_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE IF NOT EXISTS organization_suppliers (
+    id SERIAL PRIMARY KEY,
+    organization_id INT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    supplier_id INT NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
+    status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active','blocked')),
+    connected_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    UNIQUE (organization_id, supplier_id)
+);
+

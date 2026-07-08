@@ -33,6 +33,12 @@ export async function POST({ request, cookies }) {
     }
 
     // Set cookie session (simple username token for demo verification, or signed session)
+    cookies.set('cs_org_session', user.username, {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24 // 24 hours
+    });
     cookies.set('session_user', user.username, {
       path: '/',
       httpOnly: true,
@@ -45,11 +51,25 @@ export async function POST({ request, cookies }) {
       user: {
         id: user.id,
         username: user.username,
-        role: user.role
+        role: user.role,
+        organization_id: user.organization_id || 1
       }
     });
   } catch (err) {
     if (err.message.includes('ECONNREFUSED') || err.message.includes('connection')) {
+      // Offline fallback: set cookies
+      cookies.set('cs_org_session', username.trim(), {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 24
+      });
+      cookies.set('session_user', username.trim(), {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 24
+      });
       return json({ offlineFallback: true, error: 'Database service is offline. Falling back to local offline simulation.' }, { status: 503 });
     }
     return json({ error: err.message }, { status: 500 });

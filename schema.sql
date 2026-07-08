@@ -26,7 +26,6 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'Operator',
     is_active INTEGER DEFAULT 1 NOT NULL,
-    totp_secret TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
@@ -838,14 +837,41 @@ CREATE TABLE IF NOT EXISTS prediction_accuracy_logs (
 );
 
 -- =========================================================================
--- S. SUBSCRIBER REGISTRATION & SECURE AUTHENTICATION (Phase 13)
+-- S. MULTI-TENANT ORGANIZATIONS & PLATFORM ADMINS
 -- =========================================================================
+CREATE TABLE IF NOT EXISTS organizations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    slug TEXT UNIQUE NOT NULL CHECK (length(trim(slug)) > 0),
+    name TEXT NOT NULL,
+    logo_url TEXT,
+    cover_image_url TEXT,
+    description TEXT,
+    contact_email TEXT NOT NULL,
+    contact_phone TEXT,
+    service_areas TEXT DEFAULT '[]',
+    min_guest_count INTEGER,
+    max_guest_count INTEGER,
+    price_range TEXT,
+    verification_status TEXT NOT NULL DEFAULT 'pending'
+        CHECK (verification_status IN ('pending','verified','rejected','suspended')),
+    verified_at DATETIME,
+    is_active INTEGER NOT NULL DEFAULT TRUE,
+    onboarded_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_organizations_slug ON organizations(slug);
+CREATE INDEX IF NOT EXISTS idx_organizations_verification ON organizations(verification_status);
+
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    organization_id INTEGER REFERENCES organizations(id),
     username TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'Operator',
     is_active INTEGER DEFAULT 1 NOT NULL,
+    totp_secret TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
@@ -874,3 +900,37 @@ CREATE TABLE IF NOT EXISTS webauthn_credentials (
     device_label TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS platform_admins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    permission_level TEXT NOT NULL DEFAULT 'support'
+        CHECK (permission_level IN ('super_admin','ops','support','finance')),
+    is_active INTEGER NOT NULL DEFAULT TRUE,
+    totp_secret TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    last_login_at DATETIME
+);
+
+CREATE TABLE IF NOT EXISTS supplier_accounts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    supplier_id INTEGER NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    is_active INTEGER NOT NULL DEFAULT TRUE,
+    email_verified_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    last_login_at DATETIME
+);
+
+CREATE TABLE IF NOT EXISTS organization_suppliers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    organization_id INTEGER NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    supplier_id INTEGER NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','blocked')),
+    connected_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    UNIQUE (organization_id, supplier_id)
+);
+

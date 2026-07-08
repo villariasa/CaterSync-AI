@@ -47,6 +47,14 @@ export class CateringState {
     }
   }
 
+  get userType() {
+    return this._currentUser?.userType || (this._currentUser?.role === 'platform_admin' ? 'platform_admin' : 'org_user');
+  }
+
+  get organizationId() {
+    return this._currentUser?.organization_id || null;
+  }
+
   get registeredPIN() {
     return this._registeredPIN;
   }
