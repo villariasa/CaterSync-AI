@@ -578,7 +578,7 @@
           </div>
           <h3 class="text-sm font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide mt-4 group-hover:text-[#3E6650] transition-colors">Customer Portal</h3>
           <p class="text-[10px] leading-relaxed text-[#767068] dark:text-zinc-400 mt-2 font-sans">
-            Request quotes, review event contracts, sign agreements, specify dietary preferences, and pay invoices.
+            Review quotes, sign contracts, and manage event preferences.
           </p>
         </a>
 
@@ -595,7 +595,7 @@
           </div>
           <h3 class="text-sm font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide mt-4 group-hover:text-[#2A2521] dark:group-hover:text-zinc-300 transition-colors">Catering Operator</h3>
           <p class="text-[10px] leading-relaxed text-[#767068] dark:text-zinc-400 mt-2 font-sans">
-            Manage events, create menus, schedule staff, track kitchen stock, and run your business.
+            Organize events, schedule staff, and manage kitchen assets.
           </p>
         </button>
 
@@ -613,7 +613,7 @@
           </div>
           <h3 class="text-sm font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide mt-4 group-hover:text-[#D9A441] transition-colors">Supplier Hub</h3>
           <p class="text-[10px] leading-relaxed text-[#767068] dark:text-zinc-400 mt-2 font-sans">
-            Sell wholesale ingredients, update product catalog prices, and manage catering store orders.
+            Manage wholesale ingredient catalogs and client store orders.
           </p>
         </a>
 
@@ -631,7 +631,7 @@
           </div>
           <h3 class="text-sm font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide mt-4 group-hover:text-[#AC3B2A] transition-colors">Admin Console</h3>
           <p class="text-[10px] leading-relaxed text-[#767068] dark:text-zinc-400 mt-2 font-sans">
-            Manage global system settings, catering licenses, security audits, and system stats.
+            Configure platform settings, manage licenses, and review logs.
           </p>
         </a>
       </div>
