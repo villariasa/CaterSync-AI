@@ -2,7 +2,7 @@
   import { getCateringContext } from '$lib/states.svelte.js';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
-  import { Lock, ArrowRight, CheckCircle2, Truck, ClipboardList } from '@lucide/svelte';
+  import { Lock, ArrowRight, CheckCircle2, Truck, ClipboardList, ChevronLeft } from '@lucide/svelte';
 
   const appState = getCateringContext();
 
