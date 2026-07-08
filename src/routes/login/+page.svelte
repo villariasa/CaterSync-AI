@@ -74,6 +74,9 @@
 
         if (optRes.ok && otpData.success) {
           successMessage = 'A verification code was sent to your email!';
+          if (otpData.usingFallback && otpData.otpCode) {
+            successMessage = `[Sandbox Mode] Your verification code is: ${otpData.otpCode}`;
+          }
           step = 'otp';
           startCountdown();
           if (otpData.usingFallback && otpData.previewUrl) {
@@ -120,6 +123,9 @@
 
       if (response.ok && data.success) {
         successMessage = 'Profile registered successfully! A verification code has been dispatched to your email.';
+        if (data.usingFallback && data.otpCode) {
+          successMessage = `[Sandbox Mode] Your verification code is: ${data.otpCode}`;
+        }
         step = 'otp';
         startCountdown();
         if (data.usingFallback && data.previewUrl) {
@@ -246,6 +252,9 @@
         if (data.needsOtp) {
           customerContact = data.email;
           successMessage = 'Google account linked! We sent a 6-digit code to ' + data.email;
+          if (data.usingFallback && data.otpCode) {
+            successMessage = `[Sandbox Mode] Your verification code is: ${data.otpCode}`;
+          }
           step = 'otp';
           startCountdown();
           if (data.usingFallback && data.previewUrl) {
