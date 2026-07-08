@@ -549,32 +549,30 @@
   
   <div class="{selectedPortal === null && !showWelcomeScreen ? 'max-w-3xl' : 'max-w-md'} w-full text-center space-y-6 relative z-10 transition-all duration-300">
     
-    <div class="flex flex-col items-center">
-      <!-- Floating, glowing AI mascot companion (Sequential Video Player) -->
-      <div class="relative w-72 h-56 select-none group flex items-center justify-center">
-        <!-- Pulse glow behind -->
-        <div class="absolute inset-4 rounded-full bg-[#3E6650]/8 dark:bg-emerald-450/5 blur-2xl animate-pulse"></div>
-        <!-- Video Player -->
-        <!-- svelte-ignore a11y_media_has_caption -->
-        <video 
-          bind:this={videoElement}
-          src={currentVideoSrc}
-          autoplay
-          muted
-          playsinline
-          loop={isLooping}
-          onended={handleVideoEnded}
-          class="w-64 h-48 relative z-10 filter drop-shadow-[0_8px_16px_rgba(62,102,80,0.15)] object-contain mascot-video"
-        ></video>
-      </div>
+    <div class="relative w-full max-w-lg mx-auto flex flex-col items-center justify-center min-h-[220px] select-none">
+      <!-- Video Player in the background -->
+      <!-- svelte-ignore a11y_media_has_caption -->
+      <video 
+        bind:this={videoElement}
+        src={currentVideoSrc}
+        autoplay
+        muted
+        playsinline
+        loop={isLooping}
+        onended={handleVideoEnded}
+        class="absolute w-[280px] h-[210px] object-contain mascot-video z-0 pointer-events-none opacity-85"
+      ></video>
 
-      <span class="ticket-stamp">WELCOME</span>
-      <h1 class="text-3xl font-black tracking-tighter text-[#2A2521] dark:text-white uppercase leading-none mt-2">
-        CaterSync<span class="text-[#3E6650]">-AI</span>
-      </h1>
-      <p class="text-[10px] font-mono text-[#767068] mt-1.5 uppercase tracking-widest">
-        Your smart catering and planning companion
-      </p>
+      <!-- Text content stacked on top -->
+      <div class="relative z-10 flex flex-col items-center text-center pointer-events-none drop-shadow-[0_2px_5px_rgba(246,242,234,0.95)] dark:drop-shadow-[0_2px_5px_rgba(26,23,21,0.98)] mt-2">
+        <span class="ticket-stamp bg-white/70 dark:bg-zinc-900/60 backdrop-blur-[2px]">WELCOME</span>
+        <h1 class="text-4xl font-black tracking-tighter text-[#2A2521] dark:text-white uppercase leading-none mt-3">
+          CaterSync<span class="text-[#3E6650]">-AI</span>
+        </h1>
+        <p class="text-[9px] font-mono font-bold text-[#767068] dark:text-zinc-400 mt-2 uppercase tracking-widest bg-white/50 dark:bg-zinc-900/40 px-2 py-0.5 rounded backdrop-blur-[2px] border border-[#767068]/10">
+          Your smart catering and planning companion
+        </p>
+      </div>
     </div>
 
     {#if selectedPortal === null && !showWelcomeScreen}
