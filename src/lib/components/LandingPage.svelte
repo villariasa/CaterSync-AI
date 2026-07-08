@@ -63,9 +63,25 @@
     return 'Good evening';
   }
 
+  let consoleLines = $state([]);
+
   function triggerWelcomeRedirect(name) {
     welcomeName = name || 'Operator';
     showWelcomeScreen = true;
+    consoleLines = [];
+    const lines = [
+      '⚡ Initializing CaterSync-AI Neural Hub...',
+      '🤖 Loading predictive scheduling weights...',
+      '📈 Fetching local inventory D1 records...',
+      '🔑 Syncing namespaced security vaults...',
+      '🚀 Launching interactive dashboard!'
+    ];
+    lines.forEach((line, index) => {
+      setTimeout(() => {
+        consoleLines.push(line);
+      }, index * 500);
+    });
+
     try {
       appState.playStampSound();
     } catch (e) {
@@ -498,15 +514,15 @@
   });
 </script>
 
-<div class="min-h-screen bg-[#F6F2EA] text-[#2A2521] flex flex-col items-center justify-center p-4 md:p-6 animate-fade-in relative overflow-hidden">
+<div class="min-h-screen bg-[#F6F2EA] text-[#2A2521] dark:bg-[#1A1715] dark:text-[#EBE5DC] flex flex-col items-center justify-center p-4 md:p-6 animate-fade-in relative overflow-hidden transition-colors duration-300">
   
-  <div class="absolute inset-0 bg-[radial-gradient(#767068/10_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none opacity-40"></div>
+  <div class="absolute inset-0 bg-[radial-gradient(#767068/10_1px,transparent_1px)] dark:bg-[radial-gradient(#767068/5_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none opacity-40"></div>
   
   <div class="max-w-md w-full text-center space-y-6 relative z-10">
     
     <div>
       <span class="ticket-stamp">OPERATIONAL SYSTEM</span>
-      <h1 class="text-3xl font-black tracking-tighter text-[#2A2521] uppercase leading-none mt-2">
+      <h1 class="text-3xl font-black tracking-tighter text-[#2A2521] dark:text-white uppercase leading-none mt-2">
         CaterSync<span class="text-[#3E6650]">-AI</span>
       </h1>
       <p class="text-[10px] font-mono text-[#767068] mt-1.5 uppercase tracking-widest">
@@ -514,15 +530,15 @@
       </p>
     </div>
 
-    <div class="ticket-card bg-white p-6 md:p-8 text-left">
+    <div class="ticket-card bg-white dark:bg-[#24201E] p-6 md:p-8 text-left border border-slate-200 dark:border-zinc-800 shadow-2xl">
       
       <div class="mb-6 flex justify-between items-start">
         <div>
           <span class="ticket-stamp">SECURITY CONSOLE</span>
-          <h2 class="text-xl font-bold mt-1 text-[#2A2521]">Access Gate</h2>
+          <h2 class="text-xl font-bold mt-1 text-[#2A2521] dark:text-[#EBE5DC]">Access Gate</h2>
         </div>
-        <div class="p-2 rounded bg-slate-50 border border-slate-200">
-          <Lock size={16} class="text-[#767068]" />
+        <div class="p-2 rounded bg-slate-50 dark:bg-[#141210] border border-slate-200 dark:border-zinc-800 text-[#767068]">
+          <Lock size={16} />
         </div>
       </div>
 
@@ -539,12 +555,19 @@
           </div>
 
           <div class="space-y-2">
-            <h2 class="text-sm font-mono font-bold uppercase tracking-tight text-[#2A2521]">
+            <h2 class="text-sm font-mono font-bold uppercase tracking-tight text-[#2A2521] dark:text-[#EBE5DC]">
               {getGreeting()}, <span class="text-[#3E6650]">{welcomeName}</span>!
             </h2>
             <p class="text-[9px] text-[#767068] font-mono uppercase tracking-wider animate-pulse">
               System Access Authorized
             </p>
+          </div>
+
+          <!-- Neural Network console boot sequence -->
+          <div class="bg-slate-50 dark:bg-zinc-900/60 p-4 rounded border border-slate-200 dark:border-zinc-800 text-left font-mono text-[9px] text-[#3E6650] space-y-1 select-none max-h-36 overflow-y-auto">
+            {#each consoleLines as line}
+              <div class="animate-fade-in">{line}</div>
+            {/each}
           </div>
 
           <!-- AI Waveform Animation -->
@@ -559,6 +582,37 @@
           <p class="text-[9px] text-slate-400 font-mono">
             Loading console workspace...
           </p>
+        </div>
+      {:else if isChecking}
+        <!-- Sci-Fi AI Scanning Console -->
+        <div class="flex flex-col items-center justify-center py-8 space-y-5 animate-fade-in text-center font-mono">
+          <!-- Holographic pulsating brain/waveform visual -->
+          <div class="relative w-24 h-24 flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full border border-[#3E6650]/20 animate-ping duration-1000"></div>
+            <div class="absolute inset-2 rounded-full border border-dashed border-[#3E6650]/40 animate-spin duration-[4000ms]"></div>
+            <div class="absolute inset-4 rounded-full bg-[#3E6650]/5 border border-[#3E6650]/30 animate-pulse duration-700"></div>
+            <div class="w-10 h-10 rounded-full bg-[#3E6650] shadow-[0_0_20px_#3e6650] flex items-center justify-center text-white">
+              <span class="text-xs animate-bounce font-bold">AI</span>
+            </div>
+            <div class="absolute w-full h-[2px] bg-[#3E6650]/65 top-0 left-0 animate-[bounce_2s_infinite]"></div>
+          </div>
+          
+          <div class="space-y-1.5 w-full">
+            <span class="text-[9px] uppercase font-bold text-[#3E6650] tracking-widest block">AI Operations Scanning</span>
+            <div class="flex items-center justify-center gap-1.5 text-[9px] text-[#767068] uppercase font-mono">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+              <span>Footprint verification in progress...</span>
+            </div>
+          </div>
+
+          <!-- Neural node connections activity visual -->
+          <div class="flex gap-1 justify-center h-4 items-end pb-1 w-2/3 border-b border-[#767068]/15">
+            <div class="w-[3px] bg-[#3E6650] animate-[pulse_0.8s_infinite]" style="height: 40%"></div>
+            <div class="w-[3px] bg-[#3E6650] animate-[pulse_0.6s_infinite_100ms]" style="height: 80%"></div>
+            <div class="w-[3px] bg-[#3E6650] animate-[pulse_0.9s_infinite_200ms]" style="height: 50%"></div>
+            <div class="w-[3px] bg-[#3E6650] animate-[pulse_0.5s_infinite_300ms]" style="height: 95%"></div>
+            <div class="w-[3px] bg-[#3E6650] animate-[pulse_0.7s_infinite_400ms]" style="height: 60%"></div>
+          </div>
         </div>
       {:else if isSignupMode}
         <!-- signup card -->

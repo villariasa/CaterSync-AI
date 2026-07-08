@@ -140,30 +140,30 @@
   });
 </script>
 
-<div class="min-h-screen bg-[#141210] text-[#EBE5DC] flex flex-col items-center justify-center p-4 font-mono select-none relative overflow-hidden">
+<div class="min-h-screen bg-[#F6F2EA] text-[#2A2521] dark:bg-[#141210] dark:text-[#EBE5DC] flex flex-col items-center justify-center p-4 font-mono select-none relative overflow-hidden transition-colors duration-300">
   <!-- Glowing hacker grids -->
-  <div class="absolute inset-0 bg-[radial-gradient(#ac3b2a/5_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none opacity-30"></div>
+  <div class="absolute inset-0 bg-[radial-gradient(#ac3b2a/8_1px,transparent_1px)] dark:bg-[radial-gradient(#ac3b2a/5_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none opacity-30"></div>
   
   <div class="max-w-md w-full text-center space-y-6 relative z-10 animate-fade-in">
     <div>
       <span class="px-2 py-0.5 text-[8px] tracking-[0.2em] font-bold text-[#AC3B2A] border border-[#AC3B2A]/40 rounded bg-[#AC3B2A]/5 uppercase">SYSTEM KERNEL SECURITY</span>
-      <h1 class="text-2xl font-black tracking-tight text-[#EBE5DC] uppercase mt-2">
+      <h1 class="text-2xl font-black tracking-tight text-[#2A2521] dark:text-[#EBE5DC] uppercase mt-2">
         CATERSYNC<span class="text-[#AC3B2A]">-ADMIN</span>
       </h1>
       <p class="text-[9px] text-[#767068] uppercase tracking-widest mt-1">Platform Operations Gateway</p>
     </div>
 
-    <div class="bg-[#1F1C1A] border border-[#767068]/30 shadow-2xl p-6 md:p-8 rounded text-left relative">
+    <div class="bg-white dark:bg-[#1F1C1A] border border-[#767068]/30 shadow-2xl p-6 md:p-8 rounded text-left relative">
       <div class="absolute top-0 right-0 w-24 h-1 bg-gradient-to-r from-transparent to-[#AC3B2A]"></div>
       
       <div class="mb-6 flex justify-between items-start">
         <div>
           <span class="text-[8px] uppercase tracking-widest text-[#767068] font-bold">AUTHENTICATION</span>
-          <h2 class="text-lg font-bold mt-0.5 text-[#EBE5DC]">
+          <h2 class="text-lg font-bold mt-0.5 text-[#2A2521] dark:text-[#EBE5DC]">
             {#if step === 1}Credentials Gate{:else}2FA Security Key{/if}
           </h2>
         </div>
-        <div class="p-2 rounded bg-[#141210] border border-[#767068]/20 text-[#AC3B2A]">
+        <div class="p-2 rounded bg-slate-50 dark:bg-[#141210] border border-slate-200 dark:border-[#767068]/20 text-[#AC3B2A]">
           <Lock size={16} />
         </div>
       </div>
@@ -178,7 +178,7 @@
               type="text" 
               bind:value={identifier}
               autocomplete="off"
-              class="w-full px-3 py-2 bg-[#141210] border border-[#767068]/30 rounded text-xs text-[#EBE5DC] placeholder-zinc-700 focus:outline-none focus:border-[#AC3B2A] transition-colors"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 dark:placeholder-zinc-700 focus:outline-none focus:border-[#AC3B2A] transition-colors"
               placeholder="admin@catersync.ai"
               required
             />
@@ -190,7 +190,7 @@
               id="admin-pass"
               type="password" 
               bind:value={password}
-              class="w-full px-3 py-2 bg-[#141210] border border-[#767068]/30 rounded text-xs text-[#EBE5DC] placeholder-zinc-700 focus:outline-none focus:border-[#AC3B2A] transition-colors"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 dark:placeholder-zinc-700 focus:outline-none focus:border-[#AC3B2A] transition-colors"
               placeholder="••••••••"
               required
             />
@@ -205,7 +205,7 @@
           <button 
             type="submit"
             disabled={isChecking}
-            class="w-full py-3 rounded bg-[#AC3B2A] hover:bg-[#AC3B2A]/90 disabled:bg-[#AC3B2A]/50 text-[#F6F2EA] font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1 transition-all active:scale-[0.98]"
+            class="w-full py-3 rounded bg-[#AC3B2A] hover:bg-[#AC3B2A]/90 disabled:bg-[#AC3B2A]/50 text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1 transition-all active:scale-[0.98]"
           >
             {#if isChecking}Checking Credentials...{:else}Next Verification <ArrowRight size={13} />{/if}
           </button>
@@ -217,21 +217,21 @@
             <button 
               type="button" 
               onclick={goBack}
-              class="text-[#767068] hover:text-[#EBE5DC] transition-colors p-1"
+              class="text-[#767068] hover:text-[#2A2521] dark:hover:text-[#EBE5DC] transition-colors p-1"
             >
               <ChevronLeft size={16} />
             </button>
-            <span class="text-[10px] text-[#767068] truncate">Admin User: <span class="text-[#EBE5DC]">{identifier}</span></span>
+            <span class="text-[10px] text-[#767068] truncate">Admin User: <span class="text-[#2A2521] dark:text-[#EBE5DC]">{identifier}</span></span>
           </div>
 
           {#if availableMethods.includes('totp-setup')}
             <!-- TOTP Setup Wizard -->
-            <div class="space-y-4 p-4 rounded bg-[#141210] border border-[#767068]/20 text-center select-text">
+            <div class="space-y-4 p-4 rounded bg-slate-50 dark:bg-[#141210] border border-slate-200 dark:border-[#767068]/20 text-center select-text">
               <div class="flex justify-center mb-1">
                 {#if totpSetupQrUrl}
-                  <img src={totpSetupQrUrl} alt="2FA QR Code" class="w-40 h-40 border border-white p-2 rounded bg-white" />
+                  <img src={totpSetupQrUrl} alt="2FA QR Code" class="w-40 h-40 border border-slate-200 dark:border-white p-2 rounded bg-white" />
                 {:else}
-                  <div class="w-40 h-40 bg-[#1F1C1A] border border-[#767068]/20 flex items-center justify-center text-[#767068]">
+                  <div class="w-40 h-40 bg-slate-100 dark:bg-[#1F1C1A] border border-slate-200 dark:border-[#767068]/20 flex items-center justify-center text-[#767068]">
                     <QrCode size={40} />
                   </div>
                 {/if}
@@ -239,7 +239,7 @@
               <p class="text-[9px] leading-relaxed text-[#767068]">
                 Scan the QR code above in Google Authenticator or manual enter secret key below:
               </p>
-              <div class="bg-[#1F1C1A] py-1.5 px-3 rounded text-[10px] select-all break-all border border-[#767068]/15 text-[#AC3B2A] font-bold font-mono">
+              <div class="bg-slate-100 dark:bg-[#1F1C1A] py-1.5 px-3 rounded text-[10px] select-all break-all border border-slate-200 dark:border-[#767068]/15 text-[#AC3B2A] font-bold font-mono">
                 {totpSetupSecret}
               </div>
             </div>
@@ -255,7 +255,7 @@
               maxlength="6"
               bind:value={totpToken}
               oninput={() => { if (totpToken.trim().length === 6) handleTotpSubmit(); }}
-              class="w-full text-center text-lg font-bold tracking-[0.5em] px-3 py-2.5 bg-[#141210] border border-[#767068]/30 rounded text-[#EBE5DC] focus:outline-none focus:border-[#AC3B2A] transition-colors"
+              class="w-full text-center text-lg font-bold tracking-[0.5em] px-3 py-2.5 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-[#2A2521] dark:text-[#EBE5DC] focus:outline-none focus:border-[#AC3B2A] transition-colors"
               placeholder="000000"
               required
               autofocus
@@ -278,7 +278,7 @@
           <button 
             type="submit"
             disabled={isChecking || totpToken.trim().length !== 6}
-            class="w-full py-3 rounded bg-[#AC3B2A] hover:bg-[#AC3B2A]/90 disabled:bg-[#AC3B2A]/40 text-[#F6F2EA] font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1 transition-all active:scale-[0.98]"
+            class="w-full py-3 rounded bg-[#AC3B2A] hover:bg-[#AC3B2A]/90 disabled:bg-[#AC3B2A]/40 text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1 transition-all active:scale-[0.98]"
           >
             {#if isChecking}Verifying Key...{:else}Authorize Platform Access <KeyRound size={13} />{/if}
           </button>

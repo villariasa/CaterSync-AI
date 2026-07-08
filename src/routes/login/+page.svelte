@@ -132,19 +132,19 @@
   });
 </script>
 
-<div class="min-h-screen bg-[#F6F2EA] text-[#2A2521] flex flex-col items-center justify-center p-4 font-mono select-none relative overflow-hidden">
-  <div class="absolute inset-0 bg-[radial-gradient(#3e6650/8_1px,transparent_1px)] [background-size:18px_18px] pointer-events-none opacity-30"></div>
+<div class="min-h-screen bg-[#F6F2EA] text-[#2A2521] dark:bg-[#1F1B18] dark:text-[#F6F2EA] flex flex-col items-center justify-center p-4 font-mono select-none relative overflow-hidden transition-colors duration-300">
+  <div class="absolute inset-0 bg-[radial-gradient(#3e6650/8_1px,transparent_1px)] dark:bg-[radial-gradient(#3e6650/4_1px,transparent_1px)] [background-size:18px_18px] pointer-events-none opacity-30"></div>
   
   <div class="max-w-md w-full text-center space-y-6 relative z-10 animate-fade-in">
     <div>
       <span class="px-2 py-0.5 text-[8px] tracking-[0.2em] font-bold text-[#3E6650] border border-[#3E6650]/40 rounded bg-[#3E6650]/5 uppercase">MARKETPLACE CUSTOMER</span>
-      <h1 class="text-2xl font-black tracking-tight text-[#2A2521] uppercase mt-2">
+      <h1 class="text-2xl font-black tracking-tight text-[#2A2521] dark:text-white uppercase mt-2">
         CATERSYNC<span class="text-[#3E6650]">-MEMBER</span>
       </h1>
       <p class="text-[9px] text-[#767068] uppercase tracking-widest mt-1">Client Access Portal</p>
     </div>
 
-    <div class="bg-white border border-[#767068]/30 shadow-2xl p-6 md:p-8 rounded text-left relative">
+    <div class="bg-white dark:bg-[#24201E] border border-[#767068]/30 dark:border-zinc-800 shadow-2xl p-6 md:p-8 rounded text-left relative">
       <div class="absolute top-0 right-0 w-24 h-1 bg-gradient-to-r from-transparent to-[#3E6650]"></div>
       
       <div class="mb-6 flex justify-between items-start">
@@ -152,11 +152,11 @@
           <span class="text-[8px] uppercase tracking-widest text-[#767068] font-bold">
             {#if step === 'email'}CLIENT IDENTIFIER{:else}VERIFICATION KEY{/if}
           </span>
-          <h2 class="text-lg font-bold mt-0.5 text-[#2A2521]">
+          <h2 class="text-lg font-bold mt-0.5 text-[#2A2521] dark:text-[#F6F2EA]">
             {#if step === 'email'}Sign In to Member Portal{:else}Enter Login Code{/if}
           </h2>
         </div>
-        <div class="p-2 rounded bg-slate-50 border border-slate-200 text-[#3E6650]">
+        <div class="p-2 rounded bg-slate-50 dark:bg-[#141210] border border-slate-200 dark:border-zinc-800 text-[#3E6650] dark:text-[#F6F2EA]">
           {#if step === 'email'}<Mail size={16} />{:else}<Lock size={16} />{/if}
         </div>
       </div>
@@ -170,7 +170,7 @@
               type="email" 
               bind:value={customerContact}
               autocomplete="off"
-              class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded text-xs text-[#2A2521] placeholder-slate-400 focus:outline-none focus:border-[#3E6650] transition-colors"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-zinc-800 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 dark:placeholder-zinc-700 focus:outline-none focus:border-[#3E6650] transition-colors"
               placeholder="name@example.com"
               required
             />
@@ -196,11 +196,11 @@
             <button 
               type="button" 
               onclick={goBack}
-              class="text-[#767068] hover:text-[#2A2521] transition-colors p-1"
+              class="text-[#767068] hover:text-[#2A2521] dark:hover:text-[#F6F2EA] transition-colors p-1"
             >
               <ChevronLeft size={16} />
             </button>
-            <span class="text-[10px] text-[#767068] truncate">Email: <span class="text-[#2A2521]">{customerContact}</span></span>
+            <span class="text-[10px] text-[#767068] truncate font-sans">Email: <span class="text-[#2A2521] dark:text-[#F6F2EA]">{customerContact}</span></span>
           </div>
 
           <div>
@@ -213,7 +213,7 @@
               maxlength="6"
               bind:value={otpCode}
               oninput={() => { if (otpCode.trim().length === 6) verifyOtp(); }}
-              class="w-full text-center text-lg font-bold tracking-[0.5em] px-3 py-2.5 bg-slate-50 border border-slate-300 rounded text-[#2A2521] focus:outline-none focus:border-[#3E6650] transition-colors"
+              class="w-full text-center text-lg font-bold tracking-[0.5em] px-3 py-2.5 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-zinc-800 rounded text-[#2A2521] dark:text-[#EBE5DC] focus:outline-none focus:border-[#3E6650] transition-colors"
               placeholder="000000"
               required
               autofocus

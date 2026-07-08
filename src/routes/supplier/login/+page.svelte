@@ -116,36 +116,36 @@
   });
 </script>
 
-<div class="min-h-screen bg-[#1A1816] text-[#EBE5DC] flex flex-col items-center justify-center p-4 font-mono select-none relative overflow-hidden">
+<div class="min-h-screen bg-[#F6F2EA] text-[#2A2521] dark:bg-[#1A1816] dark:text-[#EBE5DC] flex flex-col items-center justify-center p-4 font-mono select-none relative overflow-hidden transition-colors duration-300">
   <!-- Subtle line grids -->
-  <div class="absolute inset-0 bg-[radial-gradient(#d9a441/4_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none opacity-20"></div>
+  <div class="absolute inset-0 bg-[radial-gradient(#d9a441/6_1px,transparent_1px)] dark:bg-[radial-gradient(#d9a441/4_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none opacity-20"></div>
   
   <div class="max-w-md w-full text-center space-y-6 relative z-10 animate-fade-in">
     <div>
       <span class="px-2 py-0.5 text-[8px] tracking-[0.2em] font-bold text-[#D9A441] border border-[#D9A441]/40 rounded bg-[#D9A441]/5 uppercase">SUPPLY PORTAL GATEWAY</span>
-      <h1 class="text-2xl font-black tracking-tight text-[#EBE5DC] uppercase mt-2">
+      <h1 class="text-2xl font-black tracking-tight text-[#2A2521] dark:text-[#EBE5DC] uppercase mt-2">
         CATERSYNC<span class="text-[#D9A441]">-PARTNER</span>
       </h1>
       <p class="text-[9px] text-[#767068] uppercase tracking-widest mt-1">Supplier Commerce Hub</p>
     </div>
 
     <!-- TABS -->
-    <div class="grid grid-cols-2 bg-[#25221F] p-0.5 rounded border border-[#767068]/20 text-[10px] uppercase font-bold text-center">
+    <div class="grid grid-cols-2 bg-slate-100 dark:bg-[#25221F] p-0.5 rounded border border-slate-200 dark:border-[#767068]/20 text-[10px] uppercase font-bold text-center">
       <button 
         onclick={() => { appState.playClickSound(); tab = 'login'; errorMessage = ''; successMessage = ''; }}
-        class="py-2 rounded transition-all {tab === 'login' ? 'bg-[#35302C] text-[#D9A441] shadow' : 'text-[#767068] hover:text-[#EBE5DC]'}"
+        class="py-2 rounded transition-all {tab === 'login' ? 'bg-white dark:bg-[#35302C] text-[#D9A441] shadow' : 'text-[#767068] hover:text-[#2A2521] dark:hover:text-[#EBE5DC]'}"
       >
         Sign In
       </button>
       <button 
         onclick={() => { appState.playClickSound(); tab = 'register'; errorMessage = ''; successMessage = ''; }}
-        class="py-2 rounded transition-all {tab === 'register' ? 'bg-[#35302C] text-[#D9A441] shadow' : 'text-[#767068] hover:text-[#EBE5DC]'}"
+        class="py-2 rounded transition-all {tab === 'register' ? 'bg-white dark:bg-[#35302C] text-[#D9A441] shadow' : 'text-[#767068] hover:text-[#2A2521] dark:hover:text-[#EBE5DC]'}"
       >
         Register Account
       </button>
     </div>
 
-    <div class="bg-[#1F1C1A] border border-[#767068]/30 shadow-2xl p-6 md:p-8 rounded text-left relative">
+    <div class="bg-white dark:bg-[#1F1C1A] border border-slate-200 dark:border-[#767068]/30 shadow-2xl p-6 md:p-8 rounded text-left relative">
       <div class="absolute top-0 right-0 w-24 h-1 bg-gradient-to-r from-transparent to-[#D9A441]"></div>
       
       <div class="mb-6 flex justify-between items-start">
@@ -153,11 +153,11 @@
           <span class="text-[8px] uppercase tracking-widest text-[#767068] font-bold">
             {#if tab === 'login'}PARTNER SECURE LOGIN{:else}PARTNER ENROLLMENT{/if}
           </span>
-          <h2 class="text-lg font-bold mt-0.5 text-[#EBE5DC]">
+          <h2 class="text-lg font-bold mt-0.5 text-[#2A2521] dark:text-[#EBE5DC]">
             {#if tab === 'login'}Access Commerce Workspace{:else}Merchant Signup{/if}
           </h2>
         </div>
-        <div class="p-2 rounded bg-[#141210] border border-[#767068]/20 text-[#D9A441]">
+        <div class="p-2 rounded bg-slate-50 dark:bg-[#141210] border border-slate-200 dark:border-[#767068]/20 text-[#D9A441]">
           {#if tab === 'login'}<Lock size={16} />{:else}<Truck size={16} />{/if}
         </div>
       </div>
@@ -172,7 +172,7 @@
               type="email" 
               bind:value={email}
               autocomplete="off"
-              class="w-full px-3 py-2 bg-[#141210] border border-[#767068]/30 rounded text-xs text-[#EBE5DC] placeholder-zinc-700 focus:outline-none focus:border-[#D9A441] transition-colors"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 dark:placeholder-zinc-700 focus:outline-none focus:border-[#D9A441] transition-colors"
               placeholder="partner@wholesale.com"
               required
             />
@@ -184,7 +184,7 @@
               id="supplier-pass"
               type="password" 
               bind:value={password}
-              class="w-full px-3 py-2 bg-[#141210] border border-[#767068]/30 rounded text-xs text-[#EBE5DC] placeholder-zinc-700 focus:outline-none focus:border-[#D9A441] transition-colors"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 dark:placeholder-zinc-700 focus:outline-none focus:border-[#D9A441] transition-colors"
               placeholder="••••••••"
               required
             />
@@ -205,7 +205,7 @@
           <button 
             type="submit"
             disabled={isChecking}
-            class="w-full py-3 rounded bg-[#35302C] hover:bg-[#433D38] border border-[#D9A441]/50 text-[#D9A441] font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1 transition-all active:scale-[0.98]"
+            class="w-full py-3 rounded bg-slate-100 dark:bg-[#35302C] hover:bg-slate-200 dark:hover:bg-[#433D38] border border-slate-300 dark:border-[#D9A441]/50 text-[#2A2521] dark:text-[#D9A441] font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1 transition-all active:scale-[0.98]"
           >
             {#if isChecking}Verifying...{:else}Access Hub <ArrowRight size={13} />{/if}
           </button>
@@ -220,7 +220,7 @@
               type="text" 
               bind:value={regBusinessName}
               autocomplete="off"
-              class="w-full px-3 py-2 bg-[#141210] border border-[#767068]/30 rounded text-xs text-[#EBE5DC] placeholder-zinc-700 focus:outline-none focus:border-[#D9A441] transition-colors"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 dark:placeholder-zinc-700 focus:outline-none focus:border-[#D9A441] transition-colors"
               placeholder="Metro Wholesale Foods Inc."
               required
             />
@@ -233,7 +233,7 @@
               type="email" 
               bind:value={regEmail}
               autocomplete="off"
-              class="w-full px-3 py-2 bg-[#141210] border border-[#767068]/30 rounded text-xs text-[#EBE5DC] placeholder-zinc-700 focus:outline-none focus:border-[#D9A441] transition-colors"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 dark:placeholder-zinc-700 focus:outline-none focus:border-[#D9A441] transition-colors"
               placeholder="sales@metrowholesale.com"
               required
             />
@@ -245,7 +245,7 @@
               id="reg-pass"
               type="password" 
               bind:value={regPassword}
-              class="w-full px-3 py-2 bg-[#141210] border border-[#767068]/30 rounded text-xs text-[#EBE5DC] placeholder-zinc-700 focus:outline-none focus:border-[#D9A441] transition-colors"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 dark:placeholder-zinc-700 focus:outline-none focus:border-[#D9A441] transition-colors"
               placeholder="Minimum 8 characters"
               required
             />
@@ -266,7 +266,7 @@
           <button 
             type="submit"
             disabled={isChecking}
-            class="w-full py-3 rounded bg-[#35302C] hover:bg-[#433D38] border border-[#D9A441]/50 text-[#D9A441] font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1 transition-all active:scale-[0.98]"
+            class="w-full py-3 rounded bg-slate-100 dark:bg-[#35302C] hover:bg-slate-200 dark:hover:bg-[#433D38] border border-slate-300 dark:border-[#D9A441]/50 text-[#2A2521] dark:text-[#D9A441] font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1 transition-all active:scale-[0.98]"
           >
             {#if isChecking}Submitting Signup...{:else}Enroll Merchant Catalog <ClipboardList size={13} />{/if}
           </button>
