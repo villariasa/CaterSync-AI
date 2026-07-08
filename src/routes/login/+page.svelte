@@ -19,7 +19,18 @@
   let isChecking = $state(false);
   let errorMessage = $state('');
   let successMessage = $state('');
-  let googleClientId = $state('');
+  let googleClientId = $state('371362238210-cafl8d1r115ahqiiaije33fr4r2t8rig.apps.googleusercontent.com');
+  let greetingMessage = $state('');
+  let showGreeting = $state(false);
+
+  function getGreeting(name) {
+    const hour = new Date().getHours();
+    const displayName = name?.split(' ')[0] || 'there';
+    if (hour >= 5 && hour < 12) return `Good morning, ${displayName}! ☀️`;
+    if (hour >= 12 && hour < 17) return `Good afternoon, ${displayName}! 🌤️`;
+    if (hour >= 17 && hour < 21) return `Good evening, ${displayName}! 🌇`;
+    return `Welcome back, ${displayName}! 🌙`;
+  }
 
   // Countdown timer variables
   let timerSeconds = $state(120);
@@ -166,31 +177,23 @@
 
       if (response.ok && res.success) {
         clearInterval(timerInterval);
-        // Create backend session
-        const loginRes = await fetch('/api/auth/portal-login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contact: customerContact.trim() })
-        });
-        const loginData = await loginRes.json();
-
         isChecking = false;
 
-        if (loginRes.ok && loginData.success) {
-          appState.currentUser = {
-            ...loginData.customer,
-            userType: 'subscriber'
-          };
-          appState.playStampSound();
-          successMessage = 'Session authenticated!';
-          setTimeout(() => {
-            appState.isAuthenticated = true;
-            goto('/portal');
-          }, 1200);
-        } else {
-          appState.playBuzzerSound();
-          errorMessage = loginData.error || 'Failed to initialize session.';
-        }
+        // Session cookie is now set server-side by verify-otp route
+        const customerName = res.customer?.name || customerContact;
+        appState.currentUser = {
+          ...res.customer,
+          userType: 'subscriber'
+        };
+        appState.playStampSound();
+
+        // Show time-based greeting before redirecting
+        greetingMessage = getGreeting(customerName);
+        showGreeting = true;
+        setTimeout(() => {
+          appState.isAuthenticated = true;
+          goto('/portal');
+        }, 2000);
       } else {
         isChecking = false;
         appState.playBuzzerSound();
@@ -251,7 +254,7 @@
       if (res.ok && data.success) {
         if (data.needsOtp) {
           customerContact = data.email;
-          successMessage = 'Google account linked! We sent a 6-digit code to ' + data.email;
+          successMessage = `Verification code sent to ${data.email}. Check your inbox!`;
           if (data.usingFallback && data.otpCode) {
             successMessage = `[Sandbox Mode] Your verification code is: ${data.otpCode}`;
           }
@@ -269,11 +272,12 @@
             userType: 'subscriber'
           };
           appState.playStampSound();
-          successMessage = 'Successfully signed in with Google!';
+          greetingMessage = getGreeting(data.name || data.email);
+          showGreeting = true;
           setTimeout(() => {
             appState.isAuthenticated = true;
             goto('/portal');
-          }, 1200);
+          }, 2000);
         }
       } else {
         appState.playBuzzerSound();
@@ -288,12 +292,7 @@
 
   onMount(() => {
     appState.initAudio();
-
-    // Load settings to fetch googleClientId
-    if (appState.settings && appState.settings.googleClientId) {
-      googleClientId = appState.settings.googleClientId;
-    }
-
+    // Google Client ID is hardcoded — no org settings dependency for customer auth
     if (googleClientId && typeof window !== 'undefined' && !window.google) {
       const script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
@@ -317,6 +316,22 @@
 
 <div class="min-h-screen bg-[#F6F2EA] text-[#2A2521] dark:bg-[#1F1B18] dark:text-[#F6F2EA] flex flex-col items-center justify-center p-4 font-mono select-none relative overflow-hidden transition-colors duration-300">
   <div class="absolute inset-0 bg-[radial-gradient(#3e6650/8_1px,transparent_1px)] dark:bg-[radial-gradient(#3e6650/4_1px,transparent_1px)] [background-size:18px_18px] pointer-events-none opacity-30"></div>
+
+  <!-- Greeting overlay after successful login -->
+  {#if showGreeting}
+    <div class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#F6F2EA]/95 dark:bg-[#1A1715]/95 backdrop-blur-sm animate-fade-in">
+      <div class="text-center space-y-4">
+        <div class="text-5xl mb-2 animate-bounce">🍽️</div>
+        <h2 class="text-2xl font-black text-[#3E6650] dark:text-emerald-400 tracking-tight">{greetingMessage}</h2>
+        <p class="text-[10px] text-[#767068] uppercase tracking-widest">Redirecting to your portal...</p>
+        <div class="flex justify-center gap-1 mt-4">
+          <span class="w-2 h-2 rounded-full bg-[#3E6650] animate-bounce" style="animation-delay:0ms"></span>
+          <span class="w-2 h-2 rounded-full bg-[#3E6650] animate-bounce" style="animation-delay:150ms"></span>
+          <span class="w-2 h-2 rounded-full bg-[#3E6650] animate-bounce" style="animation-delay:300ms"></span>
+        </div>
+      </div>
+    </div>
+  {/if}
   
   <div class="max-w-md w-full text-center space-y-6 relative z-10 animate-fade-in">
     <div>

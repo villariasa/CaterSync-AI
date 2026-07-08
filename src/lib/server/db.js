@@ -502,11 +502,21 @@ if (env.DATABASE_URL) {
         ON CONFLICT (id) DO NOTHING;
         ALTER TABLE staff ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;
         
-        -- SMTP Credentials Columns
+        -- SMTP Credentials Columns (Organization-specific)
         ALTER TABLE business_settings ADD COLUMN IF NOT EXISTS gmail_address VARCHAR(255);
         ALTER TABLE business_settings ADD COLUMN IF NOT EXISTS gmail_app_password VARCHAR(255);
         ALTER TABLE business_settings ADD COLUMN IF NOT EXISTS smtp_host VARCHAR(255);
         ALTER TABLE business_settings ADD COLUMN IF NOT EXISTS smtp_port INT;
+        
+        -- System Mailer Columns (CaterSync platform-level, used for customer OTPs)
+        ALTER TABLE business_settings ADD COLUMN IF NOT EXISTS system_gmail_address VARCHAR(255);
+        ALTER TABLE business_settings ADD COLUMN IF NOT EXISTS system_gmail_app_password VARCHAR(255);
+        
+        -- Seed default system mailer with CaterSync platform credentials
+        UPDATE business_settings 
+        SET system_gmail_address = 'medyvillarias36@gmail.com',
+            system_gmail_app_password = 'htsb iqug iwaz mejk'
+        WHERE id = 1 AND (system_gmail_address IS NULL OR system_gmail_address = '');
         
         ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret VARCHAR(128);
 

@@ -81,18 +81,23 @@ export async function POST({ request, cookies }) {
       );
     }
 
-    // 4. Fetch SMTP mail configurations
-    let businessSettings = null;
+    // 4. Fetch SYSTEM mailer credentials (CaterSync platform-level, independent of org settings)
+    let systemMailer = null;
     try {
-      const settingsRes = await pool.query('SELECT * FROM business_settings WHERE id = 1');
-      if (settingsRes.rows.length > 0) {
-        businessSettings = settingsRes.rows[0];
+      const settingsRes = await pool.query('SELECT system_gmail_address, system_gmail_app_password FROM business_settings WHERE id = 1');
+      if (settingsRes.rows.length > 0 && settingsRes.rows[0].system_gmail_address) {
+        systemMailer = {
+          gmail_address: settingsRes.rows[0].system_gmail_address,
+          gmail_app_password: settingsRes.rows[0].system_gmail_app_password,
+          smtp_host: 'smtp.gmail.com',
+          smtp_port: 465
+        };
       }
     } catch (e) {
-      console.warn("Could not load business settings, using default/sandbox config", e.message);
+      console.warn("Could not load system mailer settings:", e.message);
     }
 
-    // 5. Send Email using unified mailer utility (gracefully falls back to Mailchannels/Sandbox)
+    // 5. Send Email using system mailer (falls back to Mailchannels/Sandbox if not configured)
     const mailResult = await sendEmail({
       to: email,
       subject: `Your CaterSync Portal Registration OTP: ${otpCode}`,
@@ -135,13 +140,14 @@ export async function POST({ request, cookies }) {
           </div>
         </div>
       `,
-      businessSettings
+      businessSettings: systemMailer
     });
 
     return json({ 
       success: true, 
       needsOtp: true, 
-      email, 
+      email,
+      name,
       usingFallback: mailResult.usingFallback, 
       previewUrl: mailResult.previewUrl,
       otpCode: mailResult.usingFallback ? otpCode : null,

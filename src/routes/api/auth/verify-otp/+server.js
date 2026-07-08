@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import { pool } from '$lib/server/db.js';
 
-export async function POST({ request }) {
+export async function POST({ request, cookies }) {
   try {
     const { email, otpCode } = await request.json();
 
@@ -25,6 +25,14 @@ export async function POST({ request }) {
 
     // Verify status
     if (account.status === 'active' && !account.otp_code) {
+      // Already verified — just set session cookie and return
+      cookies.set('cs_customer_session', cleanEmail, {
+        path: '/',
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7 // 7 days
+      });
       return json({ success: true, message: 'Account is already verified and active.', account });
     }
 
@@ -50,10 +58,32 @@ export async function POST({ request }) {
       [account.id]
     );
 
+    // Fetch customer profile for greeting
+    let customerProfile = null;
+    try {
+      const custRes = await pool.query(
+        'SELECT id, name, email, contact FROM customers WHERE id = $1',
+        [updateRes.rows[0].customer_id]
+      );
+      if (custRes.rows.length > 0) customerProfile = custRes.rows[0];
+    } catch (e) {
+      console.warn('Could not fetch customer profile:', e.message);
+    }
+
+    // Set session cookie — customer stays logged in for 7 days
+    cookies.set('cs_customer_session', cleanEmail, {
+      path: '/',
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7
+    });
+
     return json({
       success: true,
       message: 'Account successfully verified and activated.',
-      account: updateRes.rows[0]
+      account: updateRes.rows[0],
+      customer: customerProfile
     });
   } catch (error) {
     console.error('Verify OTP error:', error);

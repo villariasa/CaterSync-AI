@@ -34,11 +34,15 @@
   let biometricUsername = $state('admin');
   let showBiometricSetup = $state(false);
 
-  // Email App configuration states
+  // Email App configuration states (Organization-level)
   let gmailAddress = $state(appState.settings.emailConfig?.gmailAddress || '');
   let gmailAppPassword = $state(appState.settings.emailConfig?.gmailAppPassword || '');
   let smtpHost = $state(appState.settings.emailConfig?.smtpHost || 'smtp.gmail.com');
   let smtpPort = $state(appState.settings.emailConfig?.smtpPort || 465);
+
+  // System Mailer configuration states (CaterSync platform-level, for customer OTPs)
+  let systemGmailAddress = $state(appState.settings.systemMailerConfig?.gmailAddress || '');
+  let systemGmailAppPassword = $state(appState.settings.systemMailerConfig?.gmailAppPassword || '');
 
   // Workers bindings
   let workerName = $state('');
@@ -93,11 +97,16 @@
       smtpPort
     };
 
+    const systemMailerConfig = {
+      gmailAddress: systemGmailAddress,
+      gmailAppPassword: systemGmailAppPassword
+    };
+
     try {
       const response = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, emailConfig, googleClientId })
+        body: JSON.stringify({ ...payload, emailConfig, systemMailerConfig, googleClientId })
       });
 
       const res = await response.json();
@@ -111,7 +120,7 @@
       }
     } catch (err) {
       console.warn("DB save failed, falling back to local state:", err);
-      appState.settings = { ...appState.settings, ...payload, emailConfig, googleClientId };
+      appState.settings = { ...appState.settings, ...payload, emailConfig, systemMailerConfig, googleClientId };
       bizMessage = `⚠️ Saved locally (DB Write failed: ${err.message})`;
       appState.showToast("⚙️ Settings saved locally");
       appState.playBuzzerSound();
@@ -349,6 +358,28 @@
                 Provide the Client ID generated in your Google Developer Console. If populated, clients will see a "Continue with Google" button to instantly sign up or log in.
               </p>
             </div>
+          </div>
+
+          <!-- System Mailer Configuration Card (CaterSync Platform OTP Sender) -->
+          <div class="border-t-2 border-dashed border-[#3E6650]/30 my-6 pt-6 animate-fade-in text-[#2A2521]">
+            <span class="ticket-stamp bg-[#3E6650]/10 text-[#3E6650] border-[#3E6650]/30">SYSTEM MAILER</span>
+            <h3 class="text-sm font-bold mt-2 mb-1">Customer OTP Sender Account</h3>
+            <p class="text-[10px] text-[#767068] font-mono mb-4 leading-relaxed">
+              📧 This Gmail account is used by CaterSync to send OTP verification codes to all customers during Google sign-in. It is <strong>independent</strong> of any catering organization's email settings.
+            </p>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">System Gmail Address</label>
+                <input type="email" bind:value={systemGmailAddress} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#3E6650]/40 focus:outline-none focus:border-[#3E6650] bg-[#3E6650]/5" placeholder="noreply@gmail.com" />
+              </div>
+              <div>
+                <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1">App-Specific Password</label>
+                <input type="password" bind:value={systemGmailAppPassword} autocomplete="off" class="w-full px-3 py-2 rounded border border-[#3E6650]/40 focus:outline-none focus:border-[#3E6650] bg-[#3E6650]/5" placeholder="•••• •••• •••• ••••" />
+              </div>
+            </div>
+            <p class="text-[9px] text-[#767068] mt-2 font-mono leading-relaxed">
+              ✅ Enable Gmail "App Passwords" in your Google Account security settings. This is a separate credential from your catering business's SMTP configuration above.
+            </p>
           </div>
 
           <!-- Biometric & Passkey Registration Card -->
