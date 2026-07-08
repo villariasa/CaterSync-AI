@@ -2,6 +2,8 @@
   import { getCateringContext } from '$lib/states.svelte.js';
   import BiometricScanner from './BiometricScanner.svelte';
   import mascot from '$lib/assets/catersync_ai_mascot.png';
+  import helloVideo from '../../assets/hello.mp4';
+  import idleVideo from '../../assets/iddle.mp4';
   import { goto } from '$app/navigation';
   import { onMount, onDestroy } from 'svelte';
   import { 
@@ -497,56 +499,20 @@
     }
   });
 
-  let removeRiveListener = null;
+  let currentVideoSrc = $state(helloVideo);
+  let isLooping = $state(false);
+  let videoElement;
 
-  function loadRiveScript(callback) {
-    if (typeof window === 'undefined') return;
-    if (window.rive) {
-      callback();
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = "https://unpkg.com/@rive-app/canvas@2.7.0";
-    script.async = true;
-    script.onload = callback;
-    document.head.appendChild(script);
-  }
-
-  function initRive() {
-    if (typeof window === 'undefined' || !window.rive) return;
-    const canvas = document.getElementById("rumplelookscanvas");
-    if (!canvas) return;
-
-    try {
-      const riveInstance = new window.rive.Rive({
-        src: "https://ucarecdn.com/d2e95826-37c2-4c9d-af6c-e96e00a232f6/rumplelooks.riv",
-        canvas: canvas,
-        autoplay: true,
-        artboard: "New Artboard",
-        stateMachines: ["State Machine 1"],
-        onLoad: () => {
-          riveInstance.resizeDrawingSurfaceToCanvas();
-          const inputs = riveInstance.stateMachineInputs("State Machine 1");
-          if (!inputs) return;
-
-          const xInput = inputs.find((input) => input.name === "xAxis");
-          const yInput = inputs.find((input) => input.name === "yAxis");
-
-          const handleMouseMove = (e) => {
-            const maxWidth = window.innerWidth;
-            const maxHeight = window.innerHeight;
-            if (xInput) xInput.value = (e.clientX / maxWidth) * 100;
-            if (yInput) yInput.value = 100 - (e.clientY / maxHeight) * 100;
-          };
-
-          window.addEventListener("mousemove", handleMouseMove);
-          removeRiveListener = () => {
-            window.removeEventListener("mousemove", handleMouseMove);
-          };
+  function handleVideoEnded() {
+    if (currentVideoSrc === helloVideo) {
+      currentVideoSrc = idleVideo;
+      isLooping = true;
+      setTimeout(() => {
+        if (videoElement) {
+          videoElement.loop = true;
+          videoElement.play().catch(err => console.warn("Video autoplay failed:", err));
         }
-      });
-    } catch (err) {
-      console.warn("Rive initialization bypassed:", err.message);
+      }, 50);
     }
   }
 
@@ -574,15 +540,6 @@
         console.warn("WebAuthn platform check bypassed:", err);
       }
     }
-
-    // 3. Load Rive Script and initialize interactive mascot
-    loadRiveScript(() => {
-      initRive();
-    });
-  });
-
-  onDestroy(() => {
-    if (removeRiveListener) removeRiveListener();
   });
 </script>
 
@@ -593,12 +550,22 @@
   <div class="{selectedPortal === null && !showWelcomeScreen ? 'max-w-3xl' : 'max-w-md'} w-full text-center space-y-6 relative z-10 transition-all duration-300">
     
     <div class="flex flex-col items-center">
-      <!-- Floating, glowing AI mascot companion (Rive Interactive Canvas) -->
+      <!-- Floating, glowing AI mascot companion (Sequential Video Player) -->
       <div class="relative w-40 h-40 mb-2 select-none group flex items-center justify-center">
         <!-- Pulse glow behind -->
         <div class="absolute inset-4 rounded-full bg-[#3E6650]/10 dark:bg-emerald-450/5 blur-xl animate-pulse"></div>
-        <!-- Interactive Rive Canvas -->
-        <canvas id="rumplelookscanvas" width="250" height="250" class="w-36 h-36 relative z-10 filter drop-shadow-[0_8px_16px_rgba(62,102,80,0.2)]"></canvas>
+        <!-- Video Player -->
+        <!-- svelte-ignore a11y_media_has_caption -->
+        <video 
+          bind:this={videoElement}
+          src={currentVideoSrc}
+          autoplay
+          muted
+          playsinline
+          loop={isLooping}
+          onended={handleVideoEnded}
+          class="w-36 h-36 relative z-10 filter drop-shadow-[0_8px_16px_rgba(62,102,80,0.2)] object-contain"
+        ></video>
       </div>
 
       <span class="ticket-stamp">WELCOME</span>
