@@ -2,7 +2,6 @@
   import { getCateringContext } from '$lib/states.svelte.js';
   import BiometricScanner from './BiometricScanner.svelte';
   import mascot from '$lib/assets/catersync_ai_mascot.png';
-  import helloVideo from '../../assets/hello.mp4';
   import idleVideo from '../../assets/iddle.mp4';
   import { goto } from '$app/navigation';
   import { onMount, onDestroy } from 'svelte';
@@ -499,22 +498,6 @@
     }
   });
 
-  let currentVideoSrc = $state(helloVideo);
-  let isLooping = $state(false);
-  let videoElement;
-
-  function handleVideoEnded() {
-    if (currentVideoSrc === helloVideo) {
-      currentVideoSrc = idleVideo;
-      isLooping = true;
-      setTimeout(() => {
-        if (videoElement) {
-          videoElement.loop = true;
-          videoElement.play().catch(err => console.warn("Video autoplay failed:", err));
-        }
-      }, 50);
-    }
-  }
 
   onMount(async () => {
     // 1. Fetch settings to see if Google Client ID is configured
@@ -561,20 +544,18 @@
         </p>
       </div>
 
-      <!-- Large sequential video player positioned below -->
+      <!-- Large idle video player positioned below -->
       <div class="relative w-[380px] h-[280px] mt-4 mb-2 select-none group flex items-center justify-center">
         <!-- Pulse glow behind -->
         <div class="absolute inset-4 rounded-full bg-[#3E6650]/8 dark:bg-emerald-450/5 blur-2xl animate-pulse"></div>
         <!-- Video Player -->
         <!-- svelte-ignore a11y_media_has_caption -->
         <video 
-          bind:this={videoElement}
-          src={currentVideoSrc}
+          src={idleVideo}
           autoplay
           muted
           playsinline
-          loop={isLooping}
-          onended={handleVideoEnded}
+          loop
           class="w-full h-full relative z-10 filter drop-shadow-[0_8px_16px_rgba(62,102,80,0.15)] object-contain mascot-video"
         ></video>
       </div>
