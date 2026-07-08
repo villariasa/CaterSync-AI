@@ -526,7 +526,7 @@
   });
 </script>
 
-<div class="min-h-screen bg-[#F6F2EA] text-[#2A2521] dark:bg-[#1A1715] dark:text-[#EBE5DC] flex flex-col items-center justify-center p-4 md:p-6 animate-fade-in relative overflow-hidden transition-colors duration-300">
+<div class="min-h-screen bg-[#dadad4] text-[#2A2521] dark:bg-[#1A1715] dark:text-[#EBE5DC] flex flex-col items-center justify-center p-4 md:p-6 animate-fade-in relative overflow-hidden transition-colors duration-300">
   
   <div class="absolute inset-0 bg-[radial-gradient(#767068/10_1px,transparent_1px)] dark:bg-[radial-gradient(#767068/5_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none opacity-40"></div>
   
