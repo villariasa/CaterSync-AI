@@ -1,8 +1,11 @@
 <script>
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
+  import { getCateringContext } from '$lib/states.svelte.js';
   import { FileText, Calendar, Sparkles, MapPin, Receipt, Star, CheckCircle, PenTool, LogOut, Info, ShieldAlert, KeyRound, ChevronLeft, ArrowRight, Lock } from '@lucide/svelte';
   import { encryptSessionWithPIN, decryptSessionWithPIN, hasSecureSessionStored, wipeSecureSession } from '$lib/crypto.js';
+
+  const appState = getCateringContext();
 
   // Auth flow states
   let portalLoginStep = $state('email'); // 'email', 'otp', 'pin', 'setup_pin'
@@ -376,6 +379,8 @@
     }
     await wipeSecureSession();
     isAuthenticated = false;
+    appState.isAuthenticated = false;
+    appState.currentUser = null;
     customer = null;
     event = null;
     portalLoginStep = 'email';
