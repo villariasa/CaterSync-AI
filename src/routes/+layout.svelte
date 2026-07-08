@@ -1,6 +1,6 @@
 <script>
   import './layout.css';
-  import favicon from '$lib/assets/favicon.svg';
+  import favicon from '$lib/assets/favicon.png';
   import LandingPage from '$lib/components/LandingPage.svelte';
   import AnimatedProfileIcon from '$lib/components/AnimatedProfileIcon.svelte';
   import { onMount } from 'svelte';
@@ -483,7 +483,7 @@
                           reg.showNotification("🚀 CaterSync Upgrade Ready", {
                             body: "An update is ready. Click Update to apply the latest console features.",
                             icon: "/icon-192.png",
-                            badge: "/favicon.svg",
+                            badge: "/favicon.png",
                             tag: "catersync-update",
                             renotify: true,
                             actions: [
