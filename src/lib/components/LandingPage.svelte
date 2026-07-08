@@ -1136,10 +1136,14 @@
 <style>
   .mascot-video {
     mix-blend-mode: multiply;
+    -webkit-mask-image: radial-gradient(ellipse, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%);
+    mask-image: radial-gradient(ellipse, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%);
   }
   :global(.dark) .mascot-video {
     filter: invert(0.92) contrast(1.1) brightness(1.1) hue-rotate(180deg);
     mix-blend-mode: screen;
+    -webkit-mask-image: radial-gradient(ellipse, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%);
+    mask-image: radial-gradient(ellipse, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%);
   }
 
   @keyframes float {
