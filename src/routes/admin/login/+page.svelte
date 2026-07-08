@@ -154,6 +154,14 @@
     </div>
 
     <div class="bg-white dark:bg-[#1F1C1A] border border-[#767068]/30 shadow-2xl p-6 md:p-8 rounded text-left relative">
+      <!-- Back to selection button -->
+      <a 
+        href="/"
+        onclick={() => appState.playClickSound()}
+        class="absolute -top-10 left-0 text-[10px] font-mono font-bold uppercase tracking-wider text-[#767068] hover:text-[#2A2521] dark:hover:text-[#EBE5DC] flex items-center gap-1 transition-colors bg-white/60 dark:bg-[#1F1C1A]/60 py-1.5 px-3 rounded border border-[#767068]/20 no-underline"
+      >
+        <ChevronLeft size={14} /> Back to Portals
+      </a>
       <div class="absolute top-0 right-0 w-24 h-1 bg-gradient-to-r from-transparent to-[#AC3B2A]"></div>
       
       <div class="mb-6 flex justify-between items-start">

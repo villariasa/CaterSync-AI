@@ -14,11 +14,14 @@
     X,
     Fingerprint,
     KeyRound,
-    CheckCircle2
+    CheckCircle2,
+    ChefHat,
+    Truck
   } from '@lucide/svelte';
 
   const appState = getCateringContext();
 
+  let selectedPortal = $state(null); // null = Card selection, 'operator' = Operator login
   let step = $state(1); // 1 = Operator ID, 2 = Authentication Challenge
   let username = $state('');
   let password = $state('');
@@ -247,7 +250,7 @@
     isChecking = true;
     loginMessage = '';
 
-    if (appState.usingMockData || totpSetupSecret === 'OFFLINETOTPSECRET') {
+    if (appState.usingMockData) {
       isChecking = false;
       if (totpToken.trim().length === 6 && !isNaN(totpToken.trim())) {
         // Keep profile picture and name if they were pre-fetched by Google login
@@ -518,7 +521,7 @@
   
   <div class="absolute inset-0 bg-[radial-gradient(#767068/10_1px,transparent_1px)] dark:bg-[radial-gradient(#767068/5_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none opacity-40"></div>
   
-  <div class="max-w-md w-full text-center space-y-6 relative z-10">
+  <div class="{selectedPortal === null && !showWelcomeScreen ? 'max-w-3xl' : 'max-w-md'} w-full text-center space-y-6 relative z-10 transition-all duration-300">
     
     <div>
       <span class="ticket-stamp">OPERATIONAL SYSTEM</span>
@@ -530,17 +533,103 @@
       </p>
     </div>
 
-    <div class="ticket-card bg-white dark:bg-[#24201E] p-6 md:p-8 text-left border border-slate-200 dark:border-zinc-800 shadow-2xl">
-      
-      <div class="mb-6 flex justify-between items-start">
-        <div>
-          <span class="ticket-stamp">SECURITY CONSOLE</span>
-          <h2 class="text-xl font-bold mt-1 text-[#2A2521] dark:text-[#EBE5DC]">Access Gate</h2>
-        </div>
-        <div class="p-2 rounded bg-slate-50 dark:bg-[#141210] border border-slate-200 dark:border-zinc-800 text-[#767068]">
-          <Lock size={16} />
-        </div>
+    {#if selectedPortal === null && !showWelcomeScreen}
+      <!-- 4 PORTAL CARDS SELECTION -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left animate-fade-in">
+        <!-- 1. Customer Card -->
+        <a 
+          href="/login" 
+          onclick={() => appState.playClickSound()}
+          class="group p-6 bg-white dark:bg-[#24201E] border border-slate-200 dark:border-zinc-800 rounded-lg shadow-md hover:shadow-xl hover:border-[#3E6650]/40 transition-all select-none no-underline block transform hover:-translate-y-0.5"
+        >
+          <div class="flex items-start justify-between">
+            <div class="p-2.5 rounded bg-[#3E6650]/10 text-[#3E6650] dark:bg-[#3E6650]/20 dark:text-emerald-400 group-hover:scale-105 transition-transform">
+              <Users size={20} />
+            </div>
+            <span class="text-[8px] uppercase tracking-widest text-[#767068] font-bold">CLIENT ENTRY</span>
+          </div>
+          <h3 class="text-sm font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide mt-4 group-hover:text-[#3E6650] transition-colors">Customer Portal</h3>
+          <p class="text-[10px] leading-relaxed text-[#767068] dark:text-zinc-400 mt-2 font-sans">
+            Request quotes, review event contracts, sign agreements, specify dietary preferences, and pay invoices.
+          </p>
+        </a>
+
+        <!-- 2. Operator Card -->
+        <button 
+          onclick={() => { appState.playClickSound(); selectedPortal = 'operator'; }}
+          class="group p-6 bg-white dark:bg-[#24201E] border border-slate-200 dark:border-zinc-800 rounded-lg shadow-md hover:shadow-xl hover:border-[#2A2521]/40 dark:hover:border-zinc-650 transition-all text-left select-none block transform hover:-translate-y-0.5"
+        >
+          <div class="flex items-start justify-between">
+            <div class="p-2.5 rounded bg-slate-100 text-[#2A2521] dark:bg-zinc-800 dark:text-[#EBE5DC] group-hover:scale-105 transition-transform">
+              <ChefHat size={20} />
+            </div>
+            <span class="text-[8px] uppercase tracking-widest text-[#767068] font-bold">STAFF ENTRY</span>
+          </div>
+          <h3 class="text-sm font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide mt-4 group-hover:text-[#2A2521] dark:group-hover:text-zinc-300 transition-colors">Organization Operator</h3>
+          <p class="text-[10px] leading-relaxed text-[#767068] dark:text-zinc-400 mt-2 font-sans">
+            Configure catering events, build menu packages, track predictive kitchen inventory, and run scheduling audits.
+          </p>
+        </button>
+
+        <!-- 3. Supplier Card -->
+        <a 
+          href="/supplier/login" 
+          onclick={() => appState.playClickSound()}
+          class="group p-6 bg-white dark:bg-[#24201E] border border-slate-200 dark:border-zinc-800 rounded-lg shadow-md hover:shadow-xl hover:border-[#D9A441]/40 transition-all select-none no-underline block transform hover:-translate-y-0.5"
+        >
+          <div class="flex items-start justify-between">
+            <div class="p-2.5 rounded bg-[#D9A441]/10 text-[#D9A441] dark:bg-[#D9A441]/20 dark:text-amber-400 group-hover:scale-105 transition-transform">
+              <Truck size={20} />
+            </div>
+            <span class="text-[8px] uppercase tracking-widest text-[#767068] font-bold">MERCHANT ENTRY</span>
+          </div>
+          <h3 class="text-sm font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide mt-4 group-hover:text-[#D9A441] transition-colors">Supplier Commerce</h3>
+          <p class="text-[10px] leading-relaxed text-[#767068] dark:text-zinc-400 mt-2 font-sans">
+            Manage product catalog pricing, fulfill wholesale purchasing orders, and track fulfillment metrics.
+          </p>
+        </a>
+
+        <!-- 4. Admin Card -->
+        <a 
+          href="/admin/login" 
+          onclick={() => appState.playClickSound()}
+          class="group p-6 bg-white dark:bg-[#24201E] border border-slate-200 dark:border-zinc-800 rounded-lg shadow-md hover:shadow-xl hover:border-[#AC3B2A]/40 transition-all select-none no-underline block transform hover:-translate-y-0.5"
+        >
+          <div class="flex items-start justify-between">
+            <div class="p-2.5 rounded bg-[#AC3B2A]/10 text-[#AC3B2A] dark:bg-[#AC3B2A]/20 dark:text-red-400 group-hover:scale-105 transition-transform">
+              <Lock size={20} />
+            </div>
+            <span class="text-[8px] uppercase tracking-widest text-[#767068] font-bold">SYSTEM GATEWAY</span>
+          </div>
+          <h3 class="text-sm font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide mt-4 group-hover:text-[#AC3B2A] transition-colors">Platform Admin</h3>
+          <p class="text-[10px] leading-relaxed text-[#767068] dark:text-zinc-400 mt-2 font-sans">
+            Access platform analytics, manage tenant licenses, alter database schemas, and inspect audit trails.
+          </p>
+        </a>
       </div>
+    {:else}
+      <!-- Ticket Card (Standard Operator Login) -->
+      <div class="ticket-card bg-white dark:bg-[#24201E] p-6 md:p-8 text-left border border-slate-200 dark:border-zinc-800 shadow-2xl relative">
+        {#if !showWelcomeScreen}
+          <!-- Back to selection button -->
+          <button 
+            type="button"
+            onclick={() => { appState.playClickSound(); selectedPortal = null; goBackToIdentifier(); }}
+            class="absolute -top-10 left-0 text-[10px] font-mono font-bold uppercase tracking-wider text-[#767068] hover:text-[#2A2521] dark:hover:text-[#EBE5DC] flex items-center gap-1 transition-colors bg-white/60 dark:bg-[#24201E]/60 py-1.5 px-3 rounded border border-[#767068]/20"
+          >
+            <ChevronLeft size={14} /> Back to Portals
+          </button>
+        {/if}
+        
+        <div class="mb-6 flex justify-between items-start">
+          <div>
+            <span class="ticket-stamp">SECURITY CONSOLE</span>
+            <h2 class="text-xl font-bold mt-1 text-[#2A2521] dark:text-[#EBE5DC]">Access Gate</h2>
+          </div>
+          <div class="p-2 rounded bg-slate-50 dark:bg-[#141210] border border-slate-200 dark:border-zinc-800 text-[#767068]">
+            <Lock size={16} />
+          </div>
+        </div>
 
       {#if showWelcomeScreen}
         <!-- Welcome Screen -->
@@ -943,6 +1032,7 @@
       </p>
 
     </div>
+    {/if}
 
     <!-- Clean Sound Toggle and Install App Button -->
     <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
