@@ -855,6 +855,34 @@
         {/if}
       {/if}
 
+      <!-- Alternate Portal Switcher -->
+      <div class="mt-6 border-t border-dashed border-[#767068]/30 pt-5">
+        <span class="block text-[9px] uppercase font-bold text-[#767068] tracking-widest mb-3 font-mono">Or Access Alternate Portals</span>
+        <div class="grid grid-cols-3 gap-2 text-center text-[9px] font-bold font-mono">
+          <a 
+            href="/login" 
+            onclick={() => appState.playClickSound()} 
+            class="py-2 px-1 border border-[#3E6650]/30 rounded bg-[#3E6650]/5 hover:bg-[#3E6650]/15 text-[#3E6650] no-underline transition-all active:scale-[0.98]"
+          >
+            Customer Gate
+          </a>
+          <a 
+            href="/supplier/login" 
+            onclick={() => appState.playClickSound()} 
+            class="py-2 px-1 border border-[#D9A441]/30 rounded bg-[#D9A441]/5 hover:bg-[#D9A441]/15 text-[#D9A441] no-underline transition-all active:scale-[0.98]"
+          >
+            Supplier Hub
+          </a>
+          <a 
+            href="/admin/login" 
+            onclick={() => appState.playClickSound()} 
+            class="py-2 px-1 border border-[#AC3B2A]/30 rounded bg-[#AC3B2A]/5 hover:bg-[#AC3B2A]/15 text-[#AC3B2A] no-underline transition-all active:scale-[0.98]"
+          >
+            Admin System
+          </a>
+        </div>
+      </div>
+
       <div class="ticket-divider my-6"></div>
       <p class="text-[9px] font-mono text-slate-400 text-center uppercase tracking-widest">
         Secure Core Security Protocol v3.12
