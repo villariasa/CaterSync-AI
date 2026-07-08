@@ -3,7 +3,7 @@
   "short_name": "CaterSync",
   "description": "AI-Powered Catering Operations & Predictive Forecasting Console",
   "start_url": "/",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "any",
   "theme_color": "#2A2521",
   "background_color": "#F6F2EA",
