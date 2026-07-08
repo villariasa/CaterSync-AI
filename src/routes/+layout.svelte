@@ -31,11 +31,13 @@
     User,
     Search,
     Truck,
-    Trash2
+    Trash2,
+    RefreshCw
   } from '@lucide/svelte';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { CateringState, setCateringContext } from '$lib/states.svelte.js';
+  import VideoLoader from '$lib/components/VideoLoader.svelte';
 
   let { data, children } = $props();
 
@@ -57,6 +59,24 @@
   let showMobileMenu = $state(false);
   let showNotificationsDropdown = $state(false);
   let shouldReloadOnControllerChange = false;
+  let isRefreshing = $state(false);
+
+  async function handleCustomRefresh() {
+    appState.playClickSound();
+    isRefreshing = true;
+    try {
+      // Trigger a clean operations data sync from database/filesystem
+      await appState.loadDataFromFile();
+      // Short delay so the user sees the beautiful loader video animation fully
+      await new Promise(resolve => setTimeout(resolve, 1500));
+    } catch (err) {
+      console.warn("Refresh failed:", err);
+    } finally {
+      isRefreshing = false;
+      appState.showToast("🔄 Operations roster refreshed");
+      appState.playStampSound();
+    }
+  }
 
   // Global Search states
   let globalSearchQuery = $state('');
@@ -754,6 +774,18 @@
           <!-- Notification Bell with Dropdown -->
           <div class="relative">
             <button 
+              onclick={handleCustomRefresh}
+              class="btn-interactive p-1.5 rounded hover:bg-white/50 dark:hover:bg-zinc-800/30 border border-transparent hover:border-[#767068]/20 flex items-center gap-1 text-[#767068] dark:text-zinc-400"
+              title="Refresh Operations"
+            >
+              <RefreshCw size={13} class={isRefreshing ? 'animate-spin' : ''} />
+              <span class="hidden lg:inline text-[9px]">REFRESH</span>
+            </button>
+          </div>
+
+          <!-- Notification Bell with Dropdown -->
+          <div class="relative">
+            <button 
               onclick={() => {
                 appState.playClickSound();
                 showNotificationsDropdown = !showNotificationsDropdown;
@@ -1417,3 +1449,8 @@
     </div>
   </div>
 {/if}
+
+{#if isRefreshing}
+  <VideoLoader message="Synchronizing roster..." />
+{/if}
+

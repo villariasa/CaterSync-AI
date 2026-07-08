@@ -19,7 +19,7 @@ export class CateringState {
   activeEventForAnalysis = $state(null);
   anomalyReport = $state(null);
   usingMockData = $state(false);
-  version = '1.5.8';
+  version = '1.5.9';
   isDataLoaded = $state(false);
 
   // Authentication & PWA variables
@@ -221,7 +221,11 @@ export class CateringState {
 
   isPwaStandalone() {
     if (typeof window === 'undefined') return false;
-    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    return (
+      window.matchMedia('(display-mode: standalone)').matches || 
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      window.navigator.standalone === true
+    );
   }
 
   getPwaInstallPlatform() {
