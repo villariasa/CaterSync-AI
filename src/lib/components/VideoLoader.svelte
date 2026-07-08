@@ -15,7 +15,7 @@
     muted
     loop
     playsinline
-    style="width: 200px; height: 200px; object-fit: contain; display: block; mix-blend-mode: multiply; border-radius: 50%; overflow: hidden;"
+    style="width: 200px; height: 200px; object-fit: contain; display: block; mix-blend-mode: multiply; -webkit-mask-image: radial-gradient(circle, black 52%, transparent 68%); mask-image: radial-gradient(circle, black 52%, transparent 68%); overflow: hidden;"
   >
     <source src="/loader.mp4" type="video/mp4" />
   </video>
