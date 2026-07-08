@@ -17,7 +17,9 @@ export async function GET({ locals }) {
       gmail_app_password: null,
       smtp_host: 'smtp.gmail.com',
       smtp_port: 465,
-      google_client_id: null
+      google_client_id: null,
+      system_gmail_address: null,
+      system_gmail_app_password: null
     };
 
     const googleClientId = settings.google_client_id || '';

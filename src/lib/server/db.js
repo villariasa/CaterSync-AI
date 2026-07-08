@@ -455,6 +455,34 @@ export const pool = {
           return await runQueryFn();
         }
 
+        if (err.message && (
+          err.message.includes('no column named system_gmail_address') ||
+          err.message.includes('no column named system_gmail_app_password') ||
+          err.message.includes('column "system_gmail_address" does not exist') ||
+          err.message.includes('column "system_gmail_app_password" does not exist') ||
+          (err.message.includes('SQLITE_ERROR') && err.message.includes('system_gmail_address')) ||
+          (err.message.includes('SQLITE_ERROR') && err.message.includes('system_gmail_app_password'))
+        )) {
+          console.warn('⚠️ Detected missing system mailer columns. Running automatic migration...');
+          try {
+            // D1 (SQLite) does not support IF NOT EXISTS on ALTER TABLE ADD COLUMN in older versions
+            const isD1 = platform && platform.env && platform.env.DB;
+            await runQueryFn('ALTER TABLE business_settings ADD COLUMN system_gmail_address TEXT');
+            await runQueryFn('ALTER TABLE business_settings ADD COLUMN system_gmail_app_password TEXT');
+            // Seed default system mailer credentials
+            await runQueryFn(
+              "UPDATE business_settings SET system_gmail_address = 'medyvillarias36@gmail.com', system_gmail_app_password = 'htsb iqug iwaz mejk' WHERE id = 1"
+            );
+            console.log('✅ System mailer columns migrated and seeded successfully. Retrying original query...');
+          } catch (migrationErr) {
+            // If column already exists, SQLite throws "duplicate column name" — safe to ignore
+            if (!migrationErr.message.includes('duplicate column name')) {
+              console.error('❌ System mailer column migration failed:', migrationErr.message);
+            }
+          }
+          return await runQueryFn();
+        }
+
         throw err;
       }
     };
