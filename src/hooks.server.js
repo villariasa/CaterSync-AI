@@ -17,7 +17,7 @@ export async function handle({ event, resolve }) {
       event.locals.tenantId = null;
     } else if (sessionOrg) {
       try {
-        const res = await pool.query('SELECT organization_id, role FROM users WHERE username = $1', [sessionOrg]);
+        const res = await pool.query('SELECT organization_id, role FROM users WHERE LOWER(username) = LOWER($1)', [sessionOrg]);
         if (res.rows.length > 0) {
           event.locals.user = {
             username: sessionOrg,
@@ -36,7 +36,7 @@ export async function handle({ event, resolve }) {
         const isNumeric = /^\d+$/.test(sessionCustomer);
         const queryStr = isNumeric 
           ? 'SELECT id, id as customer_id, email, contact as phone FROM customers WHERE id = $1'
-          : 'SELECT id, customer_id, email, phone FROM subscriber_accounts WHERE email = $1 OR phone = $1';
+          : 'SELECT id, customer_id, email, phone FROM subscriber_accounts WHERE LOWER(email) = LOWER($1) OR phone = $1';
         const res = await pool.query(queryStr, [isNumeric ? parseInt(sessionCustomer, 10) : sessionCustomer]);
         if (res.rows.length > 0) {
           event.locals.user = {
@@ -53,7 +53,7 @@ export async function handle({ event, resolve }) {
       }
     } else if (sessionSupplier) {
       try {
-        const res = await pool.query('SELECT id, supplier_id, email FROM supplier_accounts WHERE email = $1', [sessionSupplier]);
+        const res = await pool.query('SELECT id, supplier_id, email FROM supplier_accounts WHERE LOWER(email) = LOWER($1)', [sessionSupplier]);
         if (res.rows.length > 0) {
           event.locals.user = {
             username: sessionSupplier,
