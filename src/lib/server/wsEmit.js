@@ -24,21 +24,27 @@ const SOCKET_SERVER_URL = process.env.SOCKET_SERVER_URL || 'http://127.0.0.1:400
  * @param {object} payload
  */
 export async function emitSocketEvent(eventType, payload) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 2000);
+
   try {
     const res = await fetch(`${SOCKET_SERVER_URL}/internal/emit-event`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: eventType, payload }),
-      signal: AbortSignal.timeout(2000)
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!res.ok) {
       const body = await res.text();
       console.warn(`⚡ Socket.IO emit "${eventType}" failed (${res.status}):`, body);
     }
   } catch (err) {
+    clearTimeout(timeoutId);
     // Socket.IO server may not be running — this is non-critical, REST still works
-    if (!err.message?.includes('ECONNREFUSED') && !err.message?.includes('TimeoutError')) {
+    if (!err.message?.includes('ECONNREFUSED') && !err.message?.includes('TimeoutError') && err.name !== 'AbortError') {
       console.warn(`⚡ Socket.IO emit "${eventType}" error:`, err.message);
     }
   }

@@ -13,7 +13,6 @@
  */
 
 import { json } from '@sveltejs/kit';
-import crypto from 'node:crypto';
 
 const SOCKET_SERVER_URL = process.env.SOCKET_SERVER_URL || 'http://127.0.0.1:4001';
 
@@ -56,10 +55,15 @@ export async function GET({ locals }) {
     return json({ error: 'Unknown user type' }, { status: 401 });
   }
 
-  // Generate a cryptographically random one-time token
-  const token = crypto.randomBytes(32).toString('hex');
+  // Generate a cryptographically random one-time token using standard Web Crypto API
+  const tokenArray = new Uint8Array(32);
+  crypto.getRandomValues(tokenArray);
+  const token = Array.from(tokenArray, byte => byte.toString(16).padStart(2, '0')).join('');
 
   const userPayload = { userId, username, organizationId, role, userType };
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3000);
 
   try {
     // Register token with the Socket server's in-memory store
@@ -67,8 +71,10 @@ export async function GET({ locals }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, user: userPayload }),
-      signal: AbortSignal.timeout(3000)
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!regRes.ok) {
       const errBody = await regRes.text();
@@ -76,6 +82,7 @@ export async function GET({ locals }) {
       return json({ error: 'Socket server unavailable' }, { status: 503 });
     }
   } catch (err) {
+    clearTimeout(timeoutId);
     // Socket server is not running
     console.warn('⚠️ Socket.IO server unreachable — real-time features disabled:', err.message);
     return json({
