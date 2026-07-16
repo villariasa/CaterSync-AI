@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { pool } from '$lib/server/db.js';
+import { emitWsEvent } from '$lib/server/wsEmit.js';
 
 export async function GET({ locals }) {
   try {
@@ -56,7 +57,7 @@ export async function GET({ locals }) {
   }
 }
 
-export async function POST({ request }) {
+export async function POST({ request, locals }) {
   try {
     const body = await request.json();
     const {
@@ -130,6 +131,10 @@ export async function POST({ request }) {
       gmailAppPassword: settings.system_gmail_app_password || ''
     };
     settings.googleClientId = settings.google_client_id || '';
+
+    // Notify all connected org users that settings changed
+    const organizationId = locals?.tenantId || locals?.user?.organization_id || 1;
+    emitWsEvent('organization.updated', { organizationId, field: 'settings' });
 
     return json({ success: true, settings });
   } catch (error) {

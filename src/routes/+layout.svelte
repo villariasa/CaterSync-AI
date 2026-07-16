@@ -32,11 +32,15 @@
     Search,
     Truck,
     Trash2,
-    RefreshCw
+    RefreshCw,
+    Wifi,
+    WifiOff
   } from '@lucide/svelte';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { CateringState, setCateringContext } from '$lib/states.svelte.js';
+  import { createSocketService } from '$lib/socket/connection.js';
+  import { notificationsStore, onlineUsersStore, bookingsStore, inventoryStore, dashboardStore, chatStore } from '$lib/socket/stores.js';
   import VideoLoader from '$lib/components/VideoLoader.svelte';
 
   let { data, children } = $props();
@@ -44,6 +48,16 @@
   // Create the shared Svelte 5 context state
   const appState = new CateringState(data);
   setCateringContext(appState);
+
+  // Initialize Socket.IO connection service (shared singleton via Svelte context)
+  const socketService = createSocketService();
+
+  // Sync Socket connection status to appState
+  $effect(() => {
+    appState.wsConnected = socketService.connected;
+    appState.wsStatus = socketService.status;
+  });
+
 
   // Persist notifications on change
   $effect(() => {
@@ -596,6 +610,170 @@
     };
     window.addEventListener('keydown', handleKeyDown);
 
+    // ── Socket.IO real-time integration ──────────────────────────────────────
+    // Only connect when user is authenticated
+    if (appState.isAuthenticated) {
+      socketService.connect();
+    }
+
+    // Re-connect Socket when user authenticates
+    const unwatchAuth = $effect.root(() => {
+      $effect(() => {
+        if (appState.isAuthenticated && !socketService.connected && socketService.status === 'disconnected') {
+          socketService.connect();
+        }
+      });
+      return () => {};
+    });
+
+    // ── Booking events ────────────────────────────────────────────────────────
+    const onBookingCreated = (payload) => {
+      bookingsStore.logUpdate(payload.bookingId, payload.status || 'Created', `New booking created for ${payload.clientName || 'Client'}`);
+      appState.showToast(`📅 New booking created: ${payload.clientName || 'Client'}`, 'success');
+    };
+    const onBookingUpdated = (payload) => {
+      bookingsStore.logUpdate(payload.bookingId, payload.status, `Booking updated`);
+      // Update matching event in state
+      appState.events = appState.events.map(e =>
+        e.id === payload.bookingId ? { ...e, status: payload.status } : e
+      );
+      appState.showToast(`📝 Booking #${payload.bookingId} updated: ${payload.status}`, 'info');
+    };
+    const onBookingConfirmed = (payload) => {
+      bookingsStore.logUpdate(payload.bookingId, 'Confirmed', `Booking confirmed`);
+      appState.events = appState.events.map(e =>
+        e.id === payload.bookingId ? { ...e, status: 'Confirmed' } : e
+      );
+      appState.showToast(`✅ Booking #${payload.bookingId} confirmed!`, 'success');
+    };
+    const onBookingRejected = (payload) => {
+      bookingsStore.logUpdate(payload.bookingId, 'Rejected', `Booking rejected: ${payload.reason || ''}`);
+      appState.events = appState.events.map(e =>
+        e.id === payload.bookingId ? { ...e, status: 'Rejected' } : e
+      );
+      appState.showToast(`❌ Booking #${payload.bookingId} was rejected`, 'error');
+    };
+    const onBookingCompleted = (payload) => {
+      bookingsStore.logUpdate(payload.bookingId, 'Completed', `Booking completed`);
+      appState.events = appState.events.map(e =>
+        e.id === payload.bookingId ? { ...e, status: 'Completed' } : e
+      );
+      appState.showToast(`🏁 Booking #${payload.bookingId} completed`, 'success');
+    };
+    const onBookingCanceled = (payload) => {
+      bookingsStore.logUpdate(payload.bookingId, 'Cancelled', `Booking cancelled`);
+      appState.events = appState.events.map(e =>
+        e.id === payload.bookingId ? { ...e, status: 'Canceled' } : e
+      );
+      appState.showToast(`❌ Booking #${payload.bookingId} was canceled`, 'error');
+    };
+
+    // ── Notification events ───────────────────────────────────────────────────
+    const onNotificationCreated = (payload) => {
+      notificationsStore.add(payload);
+      appState.showToast(payload.message, payload.type || 'info');
+    };
+    const onNotificationRead = (payload) => {
+      notificationsStore.markRead(payload.notificationId);
+    };
+    const onNotificationDeleted = (payload) => {
+      notificationsStore.delete(payload.notificationId);
+    };
+
+    // ── Payment events ────────────────────────────────────────────────────────
+    const onPaymentReceived = (payload) => {
+      appState.showToast(`💰 Payment received for booking #${payload.bookingId}: ₱${payload.amount?.toLocaleString()}`, 'success');
+    };
+    const onPaymentUpdated = (payload) => {
+      appState.showToast(`💰 Payment updated for booking #${payload.bookingId}: status ${payload.status}`, 'info');
+    };
+    const onPaymentFailed = (payload) => {
+      appState.showToast(`❗ Payment failed for booking #${payload.bookingId}: ${payload.reason}`, 'error');
+    };
+
+    // ── Inventory events ──────────────────────────────────────────────────────
+    const onInventoryUpdated = (payload) => {
+      appState.ingredients = appState.ingredients.map(i =>
+        i.id === payload.ingredientId ? { ...i, stock_quantity: payload.quantity } : i
+      );
+      inventoryStore.removeAlert(payload.ingredientId);
+    };
+    const onInventoryLowStock = (payload) => {
+      inventoryStore.addAlert(payload.ingredientId, payload.name, payload.quantity, payload.threshold);
+      appState.showToast(`⚠️ Low stock: ${payload.name} (${payload.quantity} left)`, 'warning');
+      appState.triggerSystemNotification('⚠️ Low Stock Alert', `${payload.name} supply is below threshold!`);
+    };
+    const onInventoryOutOfStock = (payload) => {
+      inventoryStore.addAlert(payload.ingredientId, payload.name, 0, 0);
+      appState.showToast(`🚨 Out of stock: ${payload.name}`, 'error');
+      appState.triggerSystemNotification('🚨 Out of Stock Alert', `${payload.name} is completely out of stock!`);
+    };
+
+    // ── Dashboard stats events ────────────────────────────────────────────────
+    const onDashboardStatsUpdated = (payload) => {
+      dashboardStore.update(payload);
+      appState.dashboardStats = {
+        totalRevenue: payload.totalRevenue ?? appState.dashboardStats.totalRevenue,
+        todaySales: payload.todaySales ?? appState.dashboardStats.todaySales,
+        pendingBookings: payload.pendingBookings ?? appState.dashboardStats.pendingBookings,
+        activeEvents: payload.activeEvents ?? appState.dashboardStats.activeEvents
+      };
+    };
+
+    // ── User presence events ──────────────────────────────────────────────────
+    const onUserOnlineList = (payload) => {
+      onlineUsersStore.setList(payload.users);
+      appState.onlineUsers = payload.users;
+    };
+    const onUserOnline = (payload) => {
+      onlineUsersStore.add(payload);
+      if (!appState.onlineUsers.find(u => u.userId === payload.userId)) {
+        appState.onlineUsers = [...appState.onlineUsers, payload];
+      }
+    };
+    const onUserOffline = (payload) => {
+      onlineUsersStore.remove(payload.userId);
+      appState.onlineUsers = appState.onlineUsers.filter(u => u.userId !== payload.userId);
+    };
+
+    // ── Organization events ───────────────────────────────────────────────────
+    const onOrgUpdated = () => {
+      // Trigger a settings refresh
+      fetch('/api/settings').then(r => r.json()).then(d => {
+        if (d.success && d.settings) {
+          appState.settings = { ...appState.settings, ...d.settings };
+        }
+      }).catch(() => {});
+    };
+
+    // Register all Socket.IO event handlers
+    socketService.on('booking.created', onBookingCreated);
+    socketService.on('booking.updated', onBookingUpdated);
+    socketService.on('booking.confirmed', onBookingConfirmed);
+    socketService.on('booking.rejected', onBookingRejected);
+    socketService.on('booking.completed', onBookingCompleted);
+    socketService.on('booking.cancelled', onBookingCanceled);
+
+    socketService.on('notification.created', onNotificationCreated);
+    socketService.on('notification.read', onNotificationRead);
+    socketService.on('notification.deleted', onNotificationDeleted);
+
+    socketService.on('payment.received', onPaymentReceived);
+    socketService.on('payment.updated', onPaymentUpdated);
+    socketService.on('payment.failed', onPaymentFailed);
+
+    socketService.on('inventory.updated', onInventoryUpdated);
+    socketService.on('inventory.low_stock', onInventoryLowStock);
+    socketService.on('inventory.out_of_stock', onInventoryOutOfStock);
+
+    socketService.on('dashboard.stats.updated', onDashboardStatsUpdated);
+
+    socketService.on('user.online_list', onUserOnlineList);
+    socketService.on('user.online', onUserOnline);
+    socketService.on('user.offline', onUserOffline);
+
+    socketService.on('organization.updated', onOrgUpdated);
+
     return () => {
       clearInterval(notificationInterval);
       window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
@@ -609,6 +787,35 @@
         standaloneQuery.removeListener(syncInstallState);
       }
       window.removeEventListener('keydown', handleKeyDown);
+
+      // Socket.IO cleanup
+      socketService.off('booking.created', onBookingCreated);
+      socketService.off('booking.updated', onBookingUpdated);
+      socketService.off('booking.confirmed', onBookingConfirmed);
+      socketService.off('booking.rejected', onBookingRejected);
+      socketService.off('booking.completed', onBookingCompleted);
+      socketService.off('booking.cancelled', onBookingCanceled);
+
+      socketService.off('notification.created', onNotificationCreated);
+      socketService.off('notification.read', onNotificationRead);
+      socketService.off('notification.deleted', onNotificationDeleted);
+
+      socketService.off('payment.received', onPaymentReceived);
+      socketService.off('payment.updated', onPaymentUpdated);
+      socketService.off('payment.failed', onPaymentFailed);
+
+      socketService.off('inventory.updated', onInventoryUpdated);
+      socketService.off('inventory.low_stock', onInventoryLowStock);
+      socketService.off('inventory.out_of_stock', onInventoryOutOfStock);
+
+      socketService.off('dashboard.stats.updated', onDashboardStatsUpdated);
+
+      socketService.off('user.online_list', onUserOnlineList);
+      socketService.off('user.online', onUserOnline);
+      socketService.off('user.offline', onUserOffline);
+
+      socketService.off('organization.updated', onOrgUpdated);
+      unwatchAuth();
     };
   });
 
@@ -768,6 +975,25 @@
               <Download size={12} />
               <span class="hidden sm:inline">Install</span>
             </button>
+          {/if}
+
+          <!-- Socket.IO Connection Status Indicator -->
+          {#if socketService.socketAvailable}
+            <div 
+              class="hidden sm:flex items-center gap-1 px-1.5 py-1 rounded text-[8px] font-mono font-bold select-none"
+              title="Real-time connection: {socketService.status}"
+            >
+              {#if socketService.status === 'authenticated'}
+                <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-sm shadow-emerald-400/50"></div>
+                <span class="text-emerald-600 dark:text-emerald-400 hidden lg:inline">LIVE</span>
+              {:else if socketService.status === 'connecting' || socketService.status === 'authenticating'}
+                <div class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></div>
+                <span class="text-amber-500 hidden lg:inline">SYNC</span>
+              {:else}
+                <div class="w-1.5 h-1.5 rounded-full bg-red-400/70"></div>
+                <span class="text-[#767068] hidden lg:inline">OFF</span>
+              {/if}
+            </div>
           {/if}
 
 

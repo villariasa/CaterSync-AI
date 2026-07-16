@@ -1,7 +1,8 @@
 import { json } from '@sveltejs/kit';
 import { pool } from '$lib/server/db.js';
+import { emitWsEvent } from '$lib/server/wsEmit.js';
 
-export async function POST({ request }) {
+export async function POST({ request, locals }) {
   try {
     const { customer_id, event_type, guest_count, event_date, budget, theme, venue_type, is_outdoor } = await request.json();
 
@@ -25,9 +26,21 @@ export async function POST({ request }) {
           is_outdoor === true
         ]
       );
-      
-      console.log('✅ Event created in DB:', result.rows[0]);
-      return json({ success: true, event: result.rows[0] });
+
+      const newEvent = result.rows[0];
+      console.log('✅ Event created in DB:', newEvent);
+
+      // Emit real-time WebSocket event (fire-and-forget)
+      const organizationId = locals?.tenantId || locals?.user?.organization_id || 1;
+      emitWsEvent('booking.created', {
+        bookingId: newEvent.id,
+        organizationId,
+        clientName: newEvent.client || theme,
+        status: newEvent.status,
+        eventDate: newEvent.event_date
+      });
+
+      return json({ success: true, event: newEvent });
     } catch (dbErr) {
       console.error('❌ Database insert failed:', dbErr);
       return json({ error: 'Database write failed: ' + dbErr.message }, { status: 500 });
@@ -36,6 +49,7 @@ export async function POST({ request }) {
     return json({ error: err.message }, { status: 500 });
   }
 }
+
 
 export async function GET() {
   try {

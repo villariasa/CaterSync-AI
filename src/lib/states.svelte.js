@@ -22,6 +22,17 @@ export class CateringState {
   version = '1.5.9';
   isDataLoaded = $state(false);
 
+  // WebSocket real-time state
+  wsConnected = $state(false);
+  wsStatus = $state('disconnected');
+  onlineUsers = $state([]);
+  dashboardStats = $state({
+    totalRevenue: 0,
+    todaySales: 0,
+    pendingBookings: 0,
+    activeEvents: 0
+  });
+
   // Authentication & PWA variables
   _isAuthenticated = $state(false);
   _currentUser = $state(null);

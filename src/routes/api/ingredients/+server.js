@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { pool } from '$lib/server/db.js';
+import { emitWsEvent } from '$lib/server/wsEmit.js';
 
 export async function GET() {
   try {
@@ -25,7 +26,7 @@ export async function POST({ request }) {
   }
 }
 
-export async function PATCH({ request }) {
+export async function PATCH({ request, locals }) {
   try {
     const { id, name, unit, current_stock, reorder_point, shelf_life_days } = await request.json();
     const query = `
@@ -38,7 +39,32 @@ export async function PATCH({ request }) {
     if (res.rows.length === 0) {
       return json({ success: false, error: 'Ingredient not found' }, { status: 404 });
     }
-    return json({ success: true, ingredient: res.rows[0] });
+
+    const updated = res.rows[0];
+    const organizationId = locals?.tenantId || locals?.user?.organization_id || 1;
+
+    // Emit inventory.updated for real-time sync across all tabs/users
+    emitWsEvent('inventory.updated', {
+      ingredientId: updated.id,
+      organizationId,
+      quantity: updated.current_stock,
+      unit: updated.unit
+    });
+
+    // Emit inventory.low_stock if stock crossed the reorder threshold
+    const stockNum = parseFloat(updated.current_stock);
+    const reorderNum = parseFloat(updated.reorder_point);
+    if (!isNaN(stockNum) && !isNaN(reorderNum) && stockNum <= reorderNum) {
+      emitWsEvent('inventory.low_stock', {
+        ingredientId: updated.id,
+        organizationId,
+        name: updated.name,
+        quantity: stockNum,
+        threshold: reorderNum
+      });
+    }
+
+    return json({ success: true, ingredient: updated });
   } catch (error) {
     return json({ success: false, error: error.message }, { status: 500 });
   }
