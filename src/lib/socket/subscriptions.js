@@ -4,7 +4,7 @@
  * Provides type-safe and composable subscription APIs matching Socket.IO client specifications.
  */
 
-import { socket } from './socket.js';
+import { socketService } from './connection.js';
 
 /**
  * Subscribe to a Socket.IO event.
@@ -12,7 +12,7 @@ import { socket } from './socket.js';
  * @param {Function} handler
  */
 export function subscribe(event, handler) {
-  socket.on(event, handler);
+  socketService.on(event, handler);
 }
 
 /**
@@ -21,7 +21,7 @@ export function subscribe(event, handler) {
  * @param {Function} handler
  */
 export function unsubscribe(event, handler) {
-  socket.off(event, handler);
+  socketService.off(event, handler);
 }
 
 /**
@@ -30,7 +30,10 @@ export function unsubscribe(event, handler) {
  * @param {Function} handler
  */
 export function subscribeOnce(event, handler) {
-  socket.once(event, handler);
+  socketService.on(event, function wrapper(payload) {
+    handler(payload);
+    socketService.off(event, wrapper);
+  });
 }
 
 /**
@@ -39,7 +42,7 @@ export function subscribeOnce(event, handler) {
  * @param {object} payload
  */
 export function emit(event, payload) {
-  socket.emit(event, payload);
+  socketService.emit(event, payload);
 }
 
 /**
@@ -47,7 +50,7 @@ export function emit(event, payload) {
  * @param {string} room
  */
 export function joinRoom(room) {
-  socket.emit('room.join', { room });
+  socketService.joinRoom(room);
 }
 
 /**
@@ -55,5 +58,6 @@ export function joinRoom(room) {
  * @param {string} room
  */
 export function leaveRoom(room) {
-  socket.emit('room.leave', { room });
+  socketService.leaveRoom(room);
 }
+
