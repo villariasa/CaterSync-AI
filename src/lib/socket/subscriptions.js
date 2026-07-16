@@ -4,7 +4,7 @@
  * Provides type-safe and composable subscription APIs matching Socket.IO client specifications.
  */
 
-import { socketService } from './connection.js';
+import { socketService } from './connection.svelte.js';
 
 /**
  * Subscribe to a Socket.IO event.

@@ -39,8 +39,8 @@
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { CateringState, setCateringContext } from '$lib/states.svelte.js';
-  import { createSocketService } from '$lib/socket/connection.js';
-  import { notificationsStore, onlineUsersStore, bookingsStore, inventoryStore, dashboardStore, chatStore } from '$lib/socket/stores.js';
+  import { createSocketService } from '$lib/socket/connection.svelte.js';
+  import { notificationsStore, onlineUsersStore, bookingsStore, inventoryStore, dashboardStore, chatStore } from '$lib/socket/stores.svelte.js';
   import VideoLoader from '$lib/components/VideoLoader.svelte';
 
   let { data, children } = $props();
