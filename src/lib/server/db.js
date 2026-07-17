@@ -47,7 +47,7 @@ async function executeD1Query(db, sql, params) {
 
     // Format D1 results to match PG query format
     const arrayColumns = ['allergies', 'dietary_prefs', 'cuisine_tags', 'ingredients_json'];
-    const booleanColumns = ['is_outdoor', 'low_stock_alerts_enabled', 'sound_enabled_default', 'is_active'];
+    const booleanColumns = ['is_outdoor', 'low_stock_alerts_enabled', 'sound_enabled_default', 'is_active', 'is_trusted'];
 
     const rows = (res.results || []).map(row => {
       const formatted = { ...row };

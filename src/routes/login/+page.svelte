@@ -16,6 +16,7 @@
   let regPhone = $state('');
   
   let otpCode = $state('');
+  let trustDevice = $state(false); // Trust this device checkbox
 
   let isChecking = $state(false);
   let errorMessage = $state('');
@@ -33,13 +34,13 @@
     return `Welcome back, ${displayName}! 🌙`;
   }
 
-  // Countdown timer variables
-  let timerSeconds = $state(120);
+  // Countdown timer variables (10 minutes = 600 seconds)
+  let timerSeconds = $state(600);
   let timerInterval = null;
 
   function startCountdown() {
     clearInterval(timerInterval);
-    timerSeconds = 120;
+    timerSeconds = 600;
     timerInterval = setInterval(() => {
       if (timerSeconds > 0) {
         timerSeconds--;
@@ -180,7 +181,15 @@
         clearInterval(timerInterval);
         isChecking = false;
 
-        // Session cookie is now set server-side by verify-otp route
+        // Trust device if checkbox was selected
+        if (trustDevice) {
+          fetch('/api/auth/devices', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'trust', deviceId: res.isNewDevice ? null : undefined })
+          }).catch(() => {});
+        }
+
         const customerName = res.customer?.name || customerContact;
         appState.currentUser = {
           ...res.customer,
@@ -188,7 +197,6 @@
         };
         appState.playStampSound();
 
-        // Show time-based greeting before redirecting
         greetingMessage = getGreeting(customerName);
         showGreeting = true;
         setTimeout(() => {
