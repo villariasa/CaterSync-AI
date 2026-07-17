@@ -57,7 +57,118 @@ export async function sendEmail({ to, subject, text, html, businessSettings = nu
     }
   }
 
-  // 3. Fallback to Mailchannels HTTP REST API (Ideal for Cloudflare Workers / Serverless)
+  // 3. Cloudflare Workers Direct SMTP Socket (works in Cloudflare Pages/Worker environment)
+  let connectFn = null;
+  try {
+    const socketsModule = await import(/* @vite-ignore */ 'cloudflare:sockets');
+    connectFn = socketsModule.connect;
+  } catch (e) {
+    // Non-cloudflare environment
+  }
+
+  if (connectFn && hasUserSmtp) {
+    try {
+      console.log(`🔌 [Cloudflare Sockets] Direct secure SMTP connection to ${smtpHost}:${smtpPort}...`);
+      const socket = connectFn(`${smtpHost}:${smtpPort}`, { secureTransport: 'on' });
+      
+      const reader = socket.readable.getReader();
+      const writer = socket.writable.getWriter();
+      const encoder = new TextEncoder();
+      const decoder = new TextDecoder();
+      let socketBuffer = '';
+
+      const readResponse = async () => {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          socketBuffer += decoder.decode(value);
+          const lines = socketBuffer.split('\r\n');
+          if (lines.length > 1) {
+            const lastLine = lines[lines.length - 2];
+            const match = lastLine.match(/^(\d{3})(?:[^\-]|$)/);
+            if (match) {
+              const fullResponse = socketBuffer;
+              socketBuffer = '';
+              return { code: parseInt(match[1], 10), text: fullResponse };
+            }
+          }
+        }
+        throw new Error('SMTP connection closed unexpectedly');
+      };
+
+      try {
+        // greeting
+        let resp = await readResponse();
+        if (resp.code !== 220) throw new Error(`Invalid greeting: ${resp.text}`);
+
+        // EHLO
+        await writer.write(encoder.encode(`EHLO localhost\r\n`));
+        resp = await readResponse();
+        if (resp.code !== 250) throw new Error(`EHLO failed: ${resp.text}`);
+
+        // AUTH PLAIN
+        const authString = `\0${gmailAddress}\0${gmailAppPassword}`;
+        const base64Auth = btoa(authString);
+        await writer.write(encoder.encode(`AUTH PLAIN ${base64Auth}\r\n`));
+        resp = await readResponse();
+        if (resp.code !== 235) throw new Error(`Auth failed: ${resp.text}`);
+
+        // MAIL FROM
+        await writer.write(encoder.encode(`MAIL FROM:<${gmailAddress}>\r\n`));
+        resp = await readResponse();
+        if (resp.code !== 250) throw new Error(`MAIL FROM failed: ${resp.text}`);
+
+        // RCPT TO
+        await writer.write(encoder.encode(`RCPT TO:<${to}>\r\n`));
+        resp = await readResponse();
+        if (resp.code !== 250) throw new Error(`RCPT TO failed: ${resp.text}`);
+
+        // DATA
+        await writer.write(encoder.encode(`DATA\r\n`));
+        resp = await readResponse();
+        if (resp.code !== 354) throw new Error(`DATA failed: ${resp.text}`);
+
+        // MIME
+        const mimeData = [
+          `From: "CaterSync Support" <${gmailAddress}>`,
+          `To: ${to}`,
+          `Subject: ${subject}`,
+          `MIME-Version: 1.0`,
+          `Content-Type: text/html; charset=utf-8`,
+          `Content-Transfer-Encoding: 7bit`,
+          `Date: ${new Date().toUTCString()}`,
+          `Message-ID: <${Date.now()}-${Math.random().toString(36).substr(2, 9)}@catersync.ai>`,
+          ``,
+          html || text,
+          `.`,
+          ``
+        ].join('\r\n');
+
+        await writer.write(encoder.encode(mimeData));
+        resp = await readResponse();
+        if (resp.code !== 250) throw new Error(`Delivery failed: ${resp.text}`);
+
+        // QUIT
+        await writer.write(encoder.encode(`QUIT\r\n`));
+        await readResponse().catch(() => {});
+
+        console.log(`✉️ Email successfully sent to ${to} via direct Cloudflare secure socket!`);
+        return { success: true, usingFallback: false, method: 'cloudflare-socket' };
+      } catch (innerErr) {
+        console.warn("Cloudflare socket SMTP transfer failed:", innerErr.message);
+        mailSendError = innerErr.message;
+      } finally {
+        try { writer.releaseLock(); } catch {}
+        try { reader.releaseLock(); } catch {}
+        try { socket.close(); } catch {}
+      }
+    } catch (cfErr) {
+      console.warn("Cloudflare socket SMTP connect failed:", cfErr.message);
+      mailSendError = cfErr.message;
+    }
+  }
+
+  // 4. Fallback to Mailchannels HTTP REST API (Ideal for Cloudflare Workers / Serverless)
   try {
     console.log(`📡 Attempting Mailchannels HTTP API dispatch to ${to}...`);
     const response = await fetch('https://api.mailchannels.net/tx/v1/send', {
@@ -98,7 +209,7 @@ export async function sendEmail({ to, subject, text, html, businessSettings = nu
     mailSendError = mailSendError || mcErr.message;
   }
 
-  // 4. Try Ethereal sandbox test account (only works in Node.js local environments)
+  // 5. Try Ethereal sandbox test account (only works in Node.js local environments)
   try {
     console.log("🛠️ Attempting Ethereal Sandbox mailer setup...");
     const testAccount = await nodemailer.createTestAccount();
@@ -129,7 +240,7 @@ export async function sendEmail({ to, subject, text, html, businessSettings = nu
     mailSendError = mailSendError || ethErr.message;
   }
 
-  // 5. Hard fallback to Console Log (No SMTP and No HTTP mailer works)
+  // 6. Hard fallback to Console Log (No SMTP and No HTTP mailer works)
   console.warn(`🚨 ALL MAILERS FAILED. Console sandbox code for ${to} is active.`);
   return { 
     success: true, 
@@ -138,3 +249,4 @@ export async function sendEmail({ to, subject, text, html, businessSettings = nu
     mailSendError: mailSendError || "All SMTP and HTTP relay mechanisms failed"
   };
 }
+
