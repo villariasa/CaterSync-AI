@@ -1,9 +1,17 @@
 import { json } from '@sveltejs/kit';
 import { pool } from '$lib/server/db.js';
 
-export async function GET({ cookies }) {
+export async function GET({ cookies, locals }) {
   try {
-    const customerId = cookies.get('portal_customer_id');
+    let customerId = locals.user?.customer_id;
+
+    if (!customerId) {
+      const legacyCookie = cookies.get('portal_customer_id');
+      if (legacyCookie) {
+        customerId = parseInt(legacyCookie, 10);
+      }
+    }
+
     if (!customerId) {
       return json({ success: false, error: 'No active session' });
     }
