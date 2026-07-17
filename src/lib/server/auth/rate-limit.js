@@ -55,7 +55,7 @@ export async function checkRateLimit(type, identifier) {
       // If window has expired, reset
       if (windowAge > config.windowMs) {
         await pool.query(
-          `UPDATE auth_rate_limits SET attempts = 1, blocked_until = NULL, last_attempt_at = NOW() WHERE key = $1`,
+          `UPDATE auth_rate_limits SET attempts = 1, blocked_until = NULL, last_attempt_at = CURRENT_TIMESTAMP WHERE key = $1`,
           [key]
         );
         return { allowed: true, remaining: config.max - 1, retryAfterMs: 0 };
@@ -70,7 +70,7 @@ export async function checkRateLimit(type, identifier) {
       }
 
       await pool.query(
-        `UPDATE auth_rate_limits SET attempts = $1, blocked_until = $2, last_attempt_at = NOW() WHERE key = $3`,
+        `UPDATE auth_rate_limits SET attempts = $1, blocked_until = $2, last_attempt_at = CURRENT_TIMESTAMP WHERE key = $3`,
         [newAttempts, newBlockedUntil, key]
       );
 
@@ -83,8 +83,8 @@ export async function checkRateLimit(type, identifier) {
 
     // First attempt — insert
     await pool.query(
-      `INSERT INTO auth_rate_limits (key, attempts, last_attempt_at) VALUES ($1, 1, NOW())
-       ON CONFLICT (key) DO UPDATE SET attempts = auth_rate_limits.attempts + 1, last_attempt_at = NOW()`,
+      `INSERT INTO auth_rate_limits (key, attempts, last_attempt_at) VALUES ($1, 1, CURRENT_TIMESTAMP)
+       ON CONFLICT (key) DO UPDATE SET attempts = auth_rate_limits.attempts + 1, last_attempt_at = CURRENT_TIMESTAMP`,
       [key]
     );
 

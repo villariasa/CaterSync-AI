@@ -42,7 +42,7 @@ export async function createSession({ userId, userRole, deviceId, ipAddress, use
     const res = await pool.query(
       `INSERT INTO sessions 
         (user_id, user_role, access_token_hash, refresh_token_hash, device_id, ip_address, user_agent, expires_at, last_active_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
        RETURNING id`,
       [userId, userRole, accessHash, refreshHash, deviceId || null, ipAddress || null, userAgent || null, expiresAt]
     );
@@ -69,7 +69,7 @@ export async function validateAccessToken(accessToken) {
        FROM sessions
        WHERE access_token_hash = $1
          AND revoked_at IS NULL
-         AND expires_at > NOW()
+         AND expires_at > CURRENT_TIMESTAMP
        LIMIT 1`,
       [hash]
     );
@@ -79,7 +79,7 @@ export async function validateAccessToken(accessToken) {
     const session = res.rows[0];
 
     // Silently update last_active_at (non-blocking)
-    pool.query('UPDATE sessions SET last_active_at = NOW() WHERE id = $1', [session.id]).catch(() => {});
+    pool.query('UPDATE sessions SET last_active_at = CURRENT_TIMESTAMP WHERE id = $1', [session.id]).catch(() => {});
 
     return session;
   } catch (err) {
@@ -116,7 +116,7 @@ export async function refreshSession(refreshToken, newIpAddress) {
     // Check if revoked or expired
     if (session.revoked_at || new Date(session.expires_at) < new Date()) {
       // Clean up stale session
-      await pool.query('UPDATE sessions SET revoked_at = NOW(), revoke_reason = $1 WHERE id = $2', 
+      await pool.query('UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP, revoke_reason = $1 WHERE id = $2', 
         ['expired', session.id]);
       return null;
     }
@@ -132,7 +132,7 @@ export async function refreshSession(refreshToken, newIpAddress) {
       `UPDATE sessions SET
          access_token_hash = $1,
          refresh_token_hash = $2,
-         last_active_at = NOW(),
+         last_active_at = CURRENT_TIMESTAMP,
          ip_address = COALESCE($3, ip_address)
        WHERE id = $4`,
       [newAccessHash, newRefreshHash, newIpAddress || null, session.id]
@@ -154,7 +154,7 @@ export async function refreshSession(refreshToken, newIpAddress) {
 export async function revokeSession(sessionId, userId, reason = 'user_logout') {
   try {
     await pool.query(
-      `UPDATE sessions SET revoked_at = NOW(), revoke_reason = $1
+      `UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP, revoke_reason = $1
        WHERE id = $2 AND user_id = $3 AND revoked_at IS NULL`,
       [reason, sessionId, userId]
     );
@@ -172,7 +172,7 @@ export async function revokeSession(sessionId, userId, reason = 'user_logout') {
 export async function revokeAllSessions(userId, userRole, exceptSessionId) {
   try {
     await pool.query(
-      `UPDATE sessions SET revoked_at = NOW(), revoke_reason = 'logout_all'
+      `UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP, revoke_reason = 'logout_all'
        WHERE user_id = $1 AND user_role = $2 AND revoked_at IS NULL
        ${exceptSessionId ? 'AND id != $3' : ''}`,
       exceptSessionId ? [userId, userRole, exceptSessionId] : [userId, userRole]
@@ -191,7 +191,7 @@ export async function revokeByRefreshToken(refreshToken) {
   try {
     const hash = hashToken(refreshToken);
     await pool.query(
-      `UPDATE sessions SET revoked_at = NOW(), revoke_reason = 'user_logout'
+      `UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP, revoke_reason = 'user_logout'
        WHERE refresh_token_hash = $1 AND revoked_at IS NULL`,
       [hash]
     );
@@ -214,7 +214,7 @@ export async function getActiveSessions(userId, userRole) {
        FROM sessions s
        LEFT JOIN user_devices d ON d.id = s.device_id
        WHERE s.user_id = $1 AND s.user_role = $2
-         AND s.revoked_at IS NULL AND s.expires_at > NOW()
+         AND s.revoked_at IS NULL AND s.expires_at > CURRENT_TIMESTAMP
        ORDER BY s.last_active_at DESC`,
       [userId, userRole]
     );

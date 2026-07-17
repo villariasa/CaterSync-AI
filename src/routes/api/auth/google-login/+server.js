@@ -130,7 +130,7 @@ export async function POST({ request, cookies }) {
       // Upsert subscriber account
       if (subRes.rows.length > 0) {
         await pool.query(
-          `UPDATE subscriber_accounts SET last_login_at = NOW() WHERE LOWER(email) = $1`,
+          `UPDATE subscriber_accounts SET last_login_at = CURRENT_TIMESTAMP WHERE LOWER(email) = $1`,
           [cleanEmail]
         );
         subscriberAccountId = subRes.rows[0].id;

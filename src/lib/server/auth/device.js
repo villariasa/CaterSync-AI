@@ -86,7 +86,7 @@ export async function getOrCreateDevice({ deviceId, userId, userRole, userAgent,
     if (existing.rows.length > 0) {
       // Update last active info
       await pool.query(
-        `UPDATE user_devices SET last_ip = $1, last_active_at = NOW(), 
+        `UPDATE user_devices SET last_ip = $1, last_active_at = CURRENT_TIMESTAMP, 
          browser = $2, platform = $3, os = $4, device_name = $5
          WHERE id = $6`,
         [ipAddress, browser, platform, os, deviceName, id]
@@ -118,7 +118,7 @@ export async function getOrCreateDevice({ deviceId, userId, userRole, userAgent,
 export async function trustDevice(deviceId, userId, userRole) {
   try {
     await pool.query(
-      `UPDATE user_devices SET is_trusted = TRUE, trusted_at = NOW()
+      `UPDATE user_devices SET is_trusted = TRUE, trusted_at = CURRENT_TIMESTAMP
        WHERE id = $1 AND user_id = $2 AND user_role = $3`,
       [deviceId, userId, userRole]
     );

@@ -121,7 +121,7 @@ export async function POST({ request, cookies }) {
     });
 
     // Update last_login_at
-    pool.query('UPDATE supplier_accounts SET last_login_at = NOW() WHERE id = $1', [supplier.id]).catch(() => {});
+    pool.query('UPDATE supplier_accounts SET last_login_at = CURRENT_TIMESTAMP WHERE id = $1', [supplier.id]).catch(() => {});
 
     return json({
       success: true,

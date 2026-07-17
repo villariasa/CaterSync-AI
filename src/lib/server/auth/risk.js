@@ -80,12 +80,13 @@ export async function computeRiskScore({ userId, userRole, deviceId, isDeviceTru
     }
 
     // 3. Check for recent failed attempts
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const recentFails = await pool.query(
       `SELECT COUNT(*) as count FROM login_history
        WHERE user_id = $1 AND user_role = $2 
          AND event_type = 'login_failed'
-         AND created_at > NOW() - INTERVAL '1 hour'`,
-      [userId, userRole]
+         AND created_at > $3`,
+      [userId, userRole, oneHourAgo]
     );
     const failCount = parseInt(recentFails.rows[0].count, 10);
     if (failCount >= 3) {

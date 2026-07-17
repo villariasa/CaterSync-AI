@@ -119,7 +119,7 @@ export async function POST({ request, cookies }) {
       userAgent
     });
 
-    pool.query('UPDATE platform_admins SET last_login_at = NOW() WHERE id = $1', [admin.id]).catch(() => {});
+    pool.query('UPDATE platform_admins SET last_login_at = CURRENT_TIMESTAMP WHERE id = $1', [admin.id]).catch(() => {});
 
     return json({
       success: true,

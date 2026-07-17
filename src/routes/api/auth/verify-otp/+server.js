@@ -96,7 +96,7 @@ export async function POST({ request, cookies }) {
            otp_hash = NULL,
            otp_expires_at = NULL,
            otp_attempts = 0,
-           last_login_at = NOW()
+           last_login_at = CURRENT_TIMESTAMP
        WHERE id = $1
        RETURNING id, customer_id, email, status`,
       [account.id]

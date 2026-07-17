@@ -116,7 +116,7 @@ export async function POST({ request, cookies }) {
       if (verified && verificationResult.authenticationInfo) {
         // Update sign count (clone detection)
         await pool.query(
-          'UPDATE webauthn_credentials SET counter = $1, last_used_at = NOW() WHERE id = $2',
+          'UPDATE webauthn_credentials SET counter = $1, last_used_at = CURRENT_TIMESTAMP WHERE id = $2',
           [verificationResult.authenticationInfo.newCounter, storedCred.id]
         );
       }
