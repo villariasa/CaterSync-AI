@@ -1,1016 +1,331 @@
 <script>
   import { getCateringContext } from '$lib/states.svelte.js';
-  import BiometricScanner from './BiometricScanner.svelte';
-  import mascot from '$lib/assets/catersync_ai_mascot.png';
-  import idleVideo from '../../assets/iddle.mp4';
   import { goto } from '$app/navigation';
-  import { onMount, onDestroy } from 'svelte';
-  import { 
-    Lock, 
-    UserPlus, 
-    ChevronRight, 
-    ChevronLeft,
-    Volume2,
-    Users,
-    Download,
-    X,
-    Fingerprint,
-    KeyRound,
-    CheckCircle2,
-    ChefHat,
-    Truck,
-    RefreshCw
-  } from '@lucide/svelte';
+  import { onMount } from 'svelte';
+  import logoImg from '../../assets/catersync.png';
+  import { fade, fly } from 'svelte/transition';
+  import { cubicOut } from 'svelte/easing';
+
+  // ── Reduced-motion guard ──────────────────────────────────────────────────
+  const reduceMotion =
+    typeof window !== 'undefined'
+      ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      : false;
+  function dur(ms) { return reduceMotion ? 1 : ms; }
+  function dly(ms) { return reduceMotion ? 0 : ms; }
 
   const appState = getCateringContext();
 
-  let selectedPortal = $state(null); // null = Card selection, 'operator' = Operator login
-  let step = $state(1); // 1 = Operator ID, 2 = Authentication Challenge
-  let username = $state('');
-  let password = $state('');
-  let isChecking = $state(false);
-  let availableMethods = $state(['password']);
-  let selectedMethod = $state('password'); // password, biometric, totp, totp-setup
-
-  // Signup fields
-  let tab = $state('login'); // 'login' = login, 'register' = signup
-  let isSignupMode = $derived(tab === 'register');
-  let regName = $state('');
-  let regMessage = $state('');
-  let loginMessage = $state('');
-
-  // Operator Step 3 profile form fields
-  let opProfileName  = $state('');
-  let opProfilePhone = $state('');
-  let opProfilePos   = $state('');
-  let biometricAvailable = $state(false);
-  let showInstallHelp = $state(false);
-  let installHelp = $derived(appState.getPwaInstallHelp());
-
-  // OTP Authenticator states
-  let totpToken = $state('');
-  let timerSeconds = $state(600);
-  let timerInterval = null;
-  let debugOtpCode = $state('');
-
-  function startCountdown() {
-    clearInterval(timerInterval);
-    timerSeconds = 600;
-    timerInterval = setInterval(() => {
-      if (timerSeconds > 0) {
-        timerSeconds--;
-      } else {
-        clearInterval(timerInterval);
-        appState.playBuzzerSound?.();
-        loginMessage = '❌ Verification code has expired. Please go back.';
-      }
-    }, 1000);
-  }
-
-  onDestroy(() => {
-    clearInterval(timerInterval);
-  });
-
-  // Biometric setup states after first login
-  let showBiometricSetupPrompt = $state(false);
-  let showBiometricRegisterScanner = $state(false);
-
-  // Welcome screen animation states
-  let showWelcomeScreen = $state(false);
-  let welcomeName = $state('');
-
-  function getSafeUsername() {
-    if (appState.currentUser && appState.currentUser.username) {
-      return appState.currentUser.username;
-    }
-    return username || 'Operator';
-  }
-
-  function getGreeting() {
-    const hr = new Date().getHours();
-    if (hr >= 5 && hr < 12) return 'Good morning';
-    if (hr >= 12 && hr < 18) return 'Good afternoon';
-    return 'Good evening';
-  }
-
-  let consoleLines = $state([]);
-
-  function triggerWelcomeRedirect(name) {
-    welcomeName = name || 'Operator';
-    showWelcomeScreen = true;
-    consoleLines = [];
-    const lines = [
-      '⚡ Initializing CaterSync-AI Neural Hub...',
-      '🤖 Loading predictive scheduling weights...',
-      '📈 Fetching local inventory D1 records...',
-      '🔑 Syncing namespaced security vaults...',
-      '🚀 Launching interactive dashboard!'
-    ];
-    lines.forEach((line, index) => {
-      setTimeout(() => {
-        consoleLines.push(line);
-      }, index * 500);
-    });
-
-    try {
-      appState.playStampSound();
-    } catch (e) {
-      console.warn("Welcome sound error:", e);
-    }
-    setTimeout(() => {
-      appState.isAuthenticated = true;
-      goto('/');
-    }, 3200);
-  }
-
-  function startBiometricRegistration() {
-    try {
-      appState.playClickSound();
-    } catch (e) {
-      console.warn("Click sound error:", e);
-    }
-    showBiometricSetupPrompt = false;
-    showBiometricRegisterScanner = true;
-  }
-
-  function skipBiometricRegistration() {
-    try {
-      appState.playClickSound();
-    } catch (e) {
-      console.warn("Click sound error:", e);
-    }
-    showBiometricSetupPrompt = false;
-    showBiometricRegisterScanner = false;
-    
-    let safeName = 'Operator';
-    try {
-      const u = getSafeUsername();
-      safeName = appState.currentUser?.name || (u ? u.trim().split('@')[0] : 'Operator');
-    } catch (e) {
-      console.warn("Operator name resolve error:", e);
-    }
-    triggerWelcomeRedirect(safeName);
-  }
-
-  $effect(() => {
-    if (totpToken && totpToken.trim().length === 6 && !isChecking) {
-      handleTotpSubmit();
-    }
-  });
-
-  async function handleIdentifierSubmit(e) {
-    if (e) e.preventDefault();
-    const email = username.trim().toLowerCase();
-    if (!email) return;
-
-    appState.playClickSound();
-    isChecking = true;
-    loginMessage = '';
-    totpToken = '';
-
-    try {
-      let response;
-      if (tab === 'register') {
-        response = await fetch('/api/auth/register-operator', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, name: regName.trim(), phone: opProfilePhone.trim() })
-        });
-        // Pre-fill Step 3 form with what was entered
-        opProfileName = regName.trim();
-      } else {
-        response = await fetch('/api/auth/send-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, accountType: 'org_user' })
-        });
-      }
-
-      const data = await response.json();
-      isChecking = false;
-
-      if (response.ok && data.success) {
-        step = 2;
-        debugOtpCode = data.otpCode || '';
-        startCountdown();
-      } else {
-        loginMessage = `❌ ${data.error || 'Failed to dispatch code.'}`;
-        appState.playBuzzerSound();
-      }
-    } catch (err) {
-      isChecking = false;
-      loginMessage = `❌ Connection Error: ${err.message}`;
-      appState.playBuzzerSound();
-    }
-  }
-
-  async function handlePasswordLogin(e) {
-    e.preventDefault();
-  }
-
-  async function handleTotpSubmit(e) {
-    if (e) e.preventDefault();
-    const code = totpToken.trim();
-    if (!code || code.length !== 6) return;
-    if (timerSeconds <= 0) {
-      loginMessage = '❌ Verification code has expired. Please go back.';
-      appState.playBuzzerSound();
-      return;
-    }
-
-    isChecking = true;
-    loginMessage = '';
-
-    try {
-      const response = await fetch('/api/auth/verify-email-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: username.trim().toLowerCase(),
-          otp: code,
-          accountType: 'org_user'
-        })
-      });
-      const data = await response.json();
-      isChecking = false;
-
-      if (response.ok && data.success) {
-        clearInterval(timerInterval);
-        appState.currentUser = { ...data.user, userType: 'org_user' };
-
-        // New registration → Step 3 profile form
-        if (data.needsProfile && tab === 'register') {
-          step = 3;
-          loginMessage = '';
-        } else {
-          triggerWelcomeRedirect(data.user.name || username.trim().split('@')[0]);
-        }
-      } else {
-        loginMessage = `❌ ${data.error || 'Verification failed.'}`;
-        appState.playBuzzerSound();
-      }
-    } catch (err) {
-      isChecking = false;
-      loginMessage = `❌ Connection error: ${err.message}`;
-      appState.playBuzzerSound();
-    }
-  }
-
-  function handleBiometricsSuccess() {
-    triggerWelcomeRedirect(username.trim().split('@')[0]);
-  }
-
-  async function handleRegister(e) {
-    if (e) e.preventDefault();
-  }
-
-  async function submitOperatorProfile(e) {
-    if (e) e.preventDefault();
-    if (!opProfileName.trim() || !opProfilePhone.trim()) return;
-    isChecking = true;
-    loginMessage = '';
-    try {
-      const res = await fetch('/api/auth/complete-profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          accountType: 'operator',
-          email: username.trim().toLowerCase(),
-          fullName:  opProfileName.trim(),
-          phone:     opProfilePhone.trim(),
-          position:  opProfilePos.trim() || null
-        })
-      });
-      const data = await res.json();
-      isChecking = false;
-      if (res.ok && data.success) {
-        appState.currentUser = { ...appState.currentUser, name: opProfileName.trim() };
-        triggerWelcomeRedirect(opProfileName.trim().split(' ')[0]);
-      } else {
-        loginMessage = `❌ ${data.error || 'Profile submission failed.'}`;
-        appState.playBuzzerSound();
-      }
-    } catch (err) {
-      isChecking = false;
-      loginMessage = `❌ Connection error: ${err.message}`;
-      appState.playBuzzerSound();
-    }
-  }
-
-  function goBackToIdentifier() {
-    appState.playClickSound();
-    step = 1;
-    loginMessage = '';
-    password = '';
-    inputPIN = '';
-    debugOtpCode = '';
-  }
-
-  async function handleInstallClick() {
-    const installedPromptOpened = await appState.executeAppInstall();
-    if (!appState.pwaInstalled) {
-      showInstallHelp = true;
-    }
-  }
-
-  let googleClientId = $state('');
-
-  // Dynamic Google identity script loader
-  function loadGoogleScript() {
-    if (typeof window === 'undefined') return;
-    if (document.getElementById('google-gsi-client-operator')) {
-      initializeGoogleButton();
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.id = 'google-gsi-client-operator';
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      initializeGoogleButton();
-    };
-    document.head.appendChild(script);
-  }
-
-  function initializeGoogleButton() {
-    if (typeof window === 'undefined' || !window.google || !googleClientId) return;
-
-    try {
-      window.google.accounts.id.initialize({
-        client_id: googleClientId,
-        callback: handleGoogleCredentialResponse,
-        auto_select: false,
-        cancel_on_tap_outside: true
-      });
-
-      const parentDiv = document.getElementById('google-btn-operator');
-      if (parentDiv) {
-        window.google.accounts.id.renderButton(
-          parentDiv,
-          { theme: 'outline', size: 'large', width: parentDiv.offsetWidth, text: isSignupMode ? 'signup_with' : 'signin_with' }
-        );
-      }
-    } catch (err) {
-      console.error("Google Identity Operator initialization error:", err);
-    }
-  }
-
-  async function handleGoogleCredentialResponse(response) {
-    isChecking = true;
-    loginMessage = '';
-    regMessage = '';
-
-    try {
-      const res = await fetch('/api/auth/google-operator-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential: response.credential })
-      });
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        username = data.user.email || data.user.username;
-        appState.currentUser = data.user;
-
-        // Auto-send OTP to this operator's Google email
-        const otpRes = await fetch('/api/auth/send-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: username, accountType: 'org_user' })
-        });
-        const otpData = await otpRes.json();
-        isChecking = false;
-
-        if (otpRes.ok && otpData.success) {
-          step = 2;
-          startCountdown();
-        } else {
-          loginMessage = `❌ ${otpData.error || 'Failed to dispatch code to your Google email.'}`;
-          appState.playBuzzerSound();
-        }
-      } else {
-        isChecking = false;
-        const errMsg = data.error || 'Google Authentication failed.';
-        if (isSignupMode) regMessage = errMsg;
-        else loginMessage = errMsg;
-        appState.playBuzzerSound();
-      }
-    } catch (err) {
-      isChecking = false;
-      const errMsg = 'Google auth error: ' + err.message;
-      if (isSignupMode) regMessage = errMsg;
-      else loginMessage = errMsg;
-      appState.playBuzzerSound();
-    }
-  }
-
-  $effect(() => {
-    if (selectedPortal === 'operator' && googleClientId) {
-      setTimeout(initializeGoogleButton, 80);
-    }
-  });
-
-  $effect(() => {
-    if (isSignupMode !== undefined && selectedPortal === 'operator' && googleClientId) {
-      setTimeout(initializeGoogleButton, 80);
-    }
-  });
-
-  $effect(() => {
-    if (step === 1 && selectedPortal === 'operator' && googleClientId) {
-      setTimeout(initializeGoogleButton, 80);
-    }
-  });
-
+  let mounted = $state(false);
+  let visible = $state(false);
 
   onMount(async () => {
-    // Facebook-style silent persistent session check for operators
+    mounted = true;
+
+    // Silent persistent session check — if already logged in, route straight to dashboard
     try {
       const res = await fetch('/api/auth/session');
       const data = await res.json();
-      if (data.authenticated && data.user?.type === 'org_user') {
-        appState.currentUser = { ...data.user, userType: 'org_user' };
+      if (data.authenticated && data.user) {
+        appState.currentUser = data.user;
         appState.isAuthenticated = true;
-        goto('/');
+        goto(data.redirect || '/');
         return;
       }
     } catch (e) {
-      console.warn("Silent session check failed:", e.message);
+      console.warn('Silent session check failed:', e.message);
     }
 
-    // 1. Fetch settings to see if Google Client ID is configured
-    try {
-      const res = await fetch('/api/settings');
-      const data = await res.json();
-      if (res.ok && data.success) {
-        googleClientId = data.settings.googleClientId || '';
-        if (googleClientId) {
-          loadGoogleScript();
-        }
-      }
-    } catch (e) {
-      console.warn("Could not load settings in LandingPage:", e.message);
-    }
-
-    // 2. Check if biometric authentication is available
-    if (window.PublicKeyCredential && 
-        typeof window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function') {
-      try {
-        biometricAvailable = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-      } catch (err) {
-        console.warn("WebAuthn platform check bypassed:", err);
-      }
-    }
+    // Staggered entrance
+    setTimeout(() => { visible = true; }, 60);
   });
+
+  function handleContinue() {
+    appState.playClickSound?.();
+    goto('/login');
+  }
 </script>
 
-<div class="min-h-screen bg-[#dadad4] text-[#2A2521] dark:bg-[#1A1715] dark:text-[#EBE5DC] flex flex-col items-center justify-center p-4 md:p-6 animate-fade-in relative overflow-hidden transition-colors duration-300">
-  
-  <div class="absolute inset-0 bg-[radial-gradient(#767068/10_1px,transparent_1px)] dark:bg-[radial-gradient(#767068/5_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none opacity-40"></div>
-  
-  <div class="{selectedPortal === null && !showWelcomeScreen ? 'max-w-5xl' : 'max-w-md'} w-full text-center space-y-6 relative z-10 transition-all duration-300">
-    
-    <div class="flex flex-col items-center">
-      <!-- Text header remains intact at the top -->
-      <div>
-        <span class="ticket-stamp">WELCOME</span>
-        <h1 class="text-3xl font-black tracking-tighter text-[#2A2521] dark:text-white uppercase leading-none mt-2">
-          CaterSync<span class="text-[#3E6650]">-AI</span>
-        </h1>
-        <p class="text-[10px] font-mono text-[#767068] mt-1.5 uppercase tracking-widest">
-          Your smart catering and planning companion
-        </p>
+<svelte:head>
+  <title>CaterSync — Welcome</title>
+  <meta name="description" content="CaterSync AI — your smart catering operations platform. Sign in to manage events, menus, inventory, and staff." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+</svelte:head>
+
+<!-- Full-screen dark canvas -->
+<div class="landing-root">
+  <!-- Subtle ambient glow -->
+  <div class="ambient-glow"></div>
+
+  <!-- Centered content -->
+  <div class="landing-card">
+    {#if visible}
+      <!-- Logo mark -->
+      <div 
+        class="logo-wrap"
+        in:fly={{ y: dur(10), duration: dur(250), easing: cubicOut, delay: dly(0) }}
+      >
+        <div class="logo-icon flex items-center justify-center">
+          <img src={logoImg} alt="CaterSync Logo" class="w-20 h-20 object-contain" />
+        </div>
+        <div class="logo-glow"></div>
       </div>
 
-      <!-- Large idle video player positioned below -->
-      <div class="relative w-[380px] h-[280px] mt-4 mb-2 select-none group flex items-center justify-center">
-        <!-- Pulse glow behind -->
-        <div class="absolute inset-4 rounded-full bg-[#3E6650]/8 dark:bg-emerald-450/5 blur-2xl animate-pulse"></div>
-        <!-- Video Player -->
-        <!-- svelte-ignore a11y_media_has_caption -->
-        <video 
-          src={idleVideo}
-          autoplay
-          muted
-          playsinline
-          loop
-          class="w-full h-full relative z-10 filter drop-shadow-[0_8px_16px_rgba(62,102,80,0.15)] object-contain mascot-video"
-        ></video>
-      </div>
-    </div>
-
-    {#if selectedPortal === null && !showWelcomeScreen}
-      <!-- 4 PORTAL CARDS SELECTION (SSS Style: Horizontal Layout, Small, 4 Columns) -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-left animate-fade-in w-full">
-        <!-- 1. Customer Card -->
-        <a 
-          href="/login" 
-          onclick={() => appState.playClickSound()}
-          class="group p-4 bg-white dark:bg-[#24201E] border border-slate-200 dark:border-zinc-800 rounded-lg shadow-sm hover:shadow-md hover:border-[#3E6650]/40 transition-all select-none no-underline flex items-center gap-3 transform hover:-translate-y-0.5"
-        >
-          <div class="p-2 shrink-0 rounded bg-[#3E6650]/10 text-[#3E6650] dark:bg-[#3E6650]/20 dark:text-emerald-400 group-hover:scale-105 transition-transform">
-            <Users size={18} />
-          </div>
-          <div class="min-w-0">
-            <h4 class="text-xs font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide group-hover:text-[#3E6650] transition-colors leading-tight">Customer Portal</h4>
-            <p class="text-[9px] text-[#767068] dark:text-zinc-400 mt-0.5 font-sans leading-tight">
-              Review quotes & preferences.
-            </p>
-          </div>
-        </a>
-
-        <!-- 2. Operator Card -->
-        <button 
-          onclick={() => { appState.playClickSound(); selectedPortal = 'operator'; }}
-          class="group p-4 bg-white dark:bg-[#24201E] border border-slate-200 dark:border-zinc-800 rounded-lg shadow-sm hover:shadow-md hover:border-[#2A2521]/40 dark:hover:border-zinc-650 transition-all text-left select-none flex items-center gap-3 transform hover:-translate-y-0.5 cursor-pointer w-full"
-        >
-          <div class="p-2 shrink-0 rounded bg-slate-100 text-[#2A2521] dark:bg-zinc-800 dark:text-[#EBE5DC] group-hover:scale-105 transition-transform">
-            <ChefHat size={18} />
-          </div>
-          <div class="min-w-0">
-            <h4 class="text-xs font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide group-hover:text-[#2A2521] dark:group-hover:text-zinc-300 transition-colors leading-tight">Catering Operator</h4>
-            <p class="text-[9px] text-[#767068] dark:text-zinc-400 mt-0.5 font-sans leading-tight">
-              Organize events & staff.
-            </p>
-          </div>
-        </button>
-
-        <!-- 3. Supplier Card -->
-        <a 
-          href="/supplier/login" 
-          onclick={() => appState.playClickSound()}
-          class="group p-4 bg-white dark:bg-[#24201E] border border-slate-200 dark:border-zinc-800 rounded-lg shadow-sm hover:shadow-md hover:border-[#D9A441]/40 transition-all select-none no-underline flex items-center gap-3 transform hover:-translate-y-0.5"
-        >
-          <div class="p-2 shrink-0 rounded bg-[#D9A441]/10 text-[#D9A441] dark:bg-[#D9A441]/20 dark:text-amber-400 group-hover:scale-105 transition-transform">
-            <Truck size={18} />
-          </div>
-          <div class="min-w-0">
-            <h4 class="text-xs font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide group-hover:text-[#D9A441] transition-colors leading-tight">Supplier Hub</h4>
-            <p class="text-[9px] text-[#767068] dark:text-zinc-400 mt-0.5 font-sans leading-tight">
-              Manage ingredient orders.
-            </p>
-          </div>
-        </a>
-
-        <!-- 4. Admin Card -->
-        <a 
-          href="/admin/login" 
-          onclick={() => appState.playClickSound()}
-          class="group p-4 bg-white dark:bg-[#24201E] border border-slate-200 dark:border-zinc-800 rounded-lg shadow-sm hover:shadow-md hover:border-[#AC3B2A]/40 transition-all select-none no-underline flex items-center gap-3 transform hover:-translate-y-0.5"
-        >
-          <div class="p-2 shrink-0 rounded bg-[#AC3B2A]/10 text-[#AC3B2A] dark:bg-[#AC3B2A]/20 dark:text-red-400 group-hover:scale-105 transition-transform">
-            <Lock size={18} />
-          </div>
-          <div class="min-w-0">
-            <h4 class="text-xs font-black text-[#2A2521] dark:text-[#EBE5DC] uppercase tracking-wide group-hover:text-[#AC3B2A] transition-colors leading-tight">Admin Console</h4>
-            <p class="text-[9px] text-[#767068] dark:text-zinc-400 mt-0.5 font-sans leading-tight">
-              Manage system settings.
-            </p>
-          </div>
-        </a>
-      </div>
-    {:else}
-      <!-- Ticket Card (Standard Operator Login) -->
-      <div class="ticket-card bg-white dark:bg-[#24201E] p-6 md:p-8 text-left border border-slate-200 dark:border-zinc-800 shadow-2xl relative">
-        {#if !showWelcomeScreen}
-          <!-- Back to selection button inside card -->
-          <button 
-            type="button"
-            onclick={() => { appState.playClickSound(); selectedPortal = null; goBackToIdentifier(); }}
-            class="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-[#767068] hover:text-[#2A2521] dark:hover:text-[#F6F2EA] transition-colors mb-4 bg-slate-50 dark:bg-zinc-800/60 py-1 px-2 rounded border border-[#767068]/20"
-          >
-            <ChevronLeft size={12} /> Back to portals
-          </button>
-        {/if}
-        
-        <div class="mb-6 flex justify-between items-start">
-          <div>
-            <span class="ticket-stamp">OPERATOR LOGIN</span>
-            <h2 class="text-xl font-bold mt-1 text-[#2A2521] dark:text-[#EBE5DC]">Staff Access Hub</h2>
-          </div>
-          <div class="p-2 rounded bg-slate-50 dark:bg-[#141210] border border-slate-200 dark:border-zinc-800 text-[#767068]">
-            <Lock size={16} />
-          </div>
-        </div>
-
-      {#if showWelcomeScreen}
-        <!-- Welcome Screen -->
-        <div class="space-y-6 text-center py-6 animate-fade-in">
-          <!-- Holographic pulse circle -->
-          <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
-            <div class="absolute inset-0 rounded-full bg-[#3E6650]/10 animate-ping"></div>
-            <div class="absolute inset-2 rounded-full bg-[#3E6650]/20 animate-pulse"></div>
-            <div class="w-12 h-12 rounded-full bg-[#3E6650] text-[#F6F2EA] flex items-center justify-center shadow-lg transform scale-110">
-              <CheckCircle2 size={24} />
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <h2 class="text-sm font-mono font-bold uppercase tracking-tight text-[#2A2521] dark:text-[#EBE5DC]">
-              {getGreeting()}, <span class="text-[#3E6650]">{welcomeName}</span>!
-            </h2>
-            <p class="text-[9px] text-[#767068] font-mono uppercase tracking-wider animate-pulse">
-              System Access Authorized
-            </p>
-          </div>
-
-          <!-- Neural Network console boot sequence -->
-          <div class="bg-slate-50 dark:bg-zinc-900/60 p-4 rounded border border-slate-200 dark:border-zinc-800 text-left font-mono text-[9px] text-[#3E6650] space-y-1 select-none max-h-36 overflow-y-auto">
-            {#each consoleLines as line}
-              <div class="animate-fade-in">{line}</div>
-            {/each}
-          </div>
-
-          <!-- AI Waveform Animation -->
-          <div class="flex items-center justify-center gap-1.5 h-6">
-            <div class="w-1 bg-[#3E6650] rounded-full animate-[bounce_1s_infinite_100ms]" style="height: 12px"></div>
-            <div class="w-1 bg-[#3E6650] rounded-full animate-[bounce_1s_infinite_200ms]" style="height: 20px"></div>
-            <div class="w-1 bg-[#3E6650] rounded-full animate-[bounce_1s_infinite_300ms]" style="height: 16px"></div>
-            <div class="w-1 bg-[#3E6650] rounded-full animate-[bounce_1s_infinite_400ms]" style="height: 24px"></div>
-            <div class="w-1 bg-[#3E6650] rounded-full animate-[bounce_1s_infinite_500ms]" style="height: 14px"></div>
-          </div>
-
-          <p class="text-[9px] text-slate-400 font-mono">
-            Loading console workspace...
-          </p>
-        </div>
-      {:else if isChecking}
-        <!-- Inline loading spinner (replaces AI scanning) -->
-        <div class="flex flex-col items-center justify-center py-10 gap-4 animate-fade-in">
-          <div class="w-10 h-10 border-4 border-[#3E6650]/20 border-t-[#3E6650] rounded-full animate-spin"></div>
-          <span class="text-[10px] font-mono uppercase tracking-widest text-[#767068]">Processing...</span>
-        </div>
-      {:else if step === 1}
-        <!-- Tabs: Login vs Register -->
-        <div class="flex border-b border-[#767068]/15 mb-4">
-          <button 
-            type="button"
-            onclick={() => { appState.playClickSound?.(); tab = 'login'; loginMessage = ''; }}
-            class="flex-1 py-2 text-center text-[10px] font-bold uppercase tracking-wider transition-all border-b-2 font-mono {tab === 'login' ? 'border-[#3E6650] text-[#3E6650]' : 'border-transparent text-[#767068] hover:text-[#2A2521]'}"
-          >
-            Sign In
-          </button>
-          <button 
-            type="button"
-            onclick={() => { appState.playClickSound?.(); tab = 'register'; loginMessage = ''; }}
-            class="flex-1 py-2 text-center text-[10px] font-bold uppercase tracking-wider transition-all border-b-2 font-mono {tab === 'register' ? 'border-[#3E6650] text-[#3E6650]' : 'border-transparent text-[#767068] hover:text-[#2A2521]'}"
-          >
-            Sign Up
-          </button>
-        </div>
-
-        <form onsubmit={handleIdentifierSubmit} class="space-y-4 text-left">
-          {#if tab === 'register'}
-            <div>
-              <label class="block text-[10px] font-mono font-bold text-[#767068] uppercase mb-1" for="reg-name">
-                Full Name <span class="text-[#AC3B2A]">*</span>
-              </label>
-              <input 
-                id="reg-name"
-                type="text" 
-                bind:value={regName} 
-                autocomplete="off"
-                class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white dark:bg-[#141210] text-xs focus:outline-none focus:border-[#3E6650]" 
-                placeholder="e.g. Juan dela Cruz"
-                required 
-              />
-            </div>
-            <div>
-              <label class="block text-[10px] font-mono font-bold text-[#767068] uppercase mb-1" for="reg-op-phone">
-                Phone Number <span class="text-[#AC3B2A]">*</span>
-              </label>
-              <input
-                id="reg-op-phone"
-                type="tel"
-                bind:value={opProfilePhone}
-                autocomplete="off"
-                class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white dark:bg-[#141210] text-xs focus:outline-none focus:border-[#3E6650]"
-                placeholder="09171234567"
-                required
-              />
-            </div>
-          {/if}
-
-          <div>
-            <label class="block text-[10px] font-mono font-bold text-[#767068] uppercase mb-1" for="login-username">
-              Gmail Address {#if tab === 'register'}<span class="text-[#AC3B2A]">*</span>{/if}
-            </label>
-            <input 
-              id="login-username"
-              type="email" 
-              bind:value={username} 
-              autocomplete="off"
-              class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white dark:bg-[#141210] text-xs focus:outline-none focus:border-[#3E6650]" 
-              placeholder="e.g. operator@gmail.com"
-              required 
-            />
-          </div>
-
-          <button 
-            type="submit" 
-            disabled={isChecking}
-            class="w-full bg-[#2A2521] hover:bg-slate-800 disabled:bg-slate-300 text-[#F6F2EA] font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1.5"
-          >
-            {#if isChecking}
-              Sending Code...
-            {:else}
-              Send Verification Code <ChevronRight size={14} />
-            {/if}
-          </button>
-
-          {#if googleClientId}
-            <div class="border-t border-[#767068]/15 pt-3 my-1 text-center">
-              <span class="text-[9px] uppercase text-[#767068] font-bold block mb-2 font-mono">Or connect with Google</span>
-              <div id="google-btn-operator" class="w-full flex justify-center min-h-[45px]"></div>
-            </div>
-          {/if}
-
-          {#if loginMessage}
-            <p class="text-xs font-mono text-[#AC3B2A] text-center mt-2">{loginMessage}</p>
-          {/if}
-        </form>
-      {:else if step === 3}
-        <!-- ══ STEP 3: OPERATOR PROFILE FORM ═════════════════════════════════════ -->
-        <!-- Progress steps -->
-        <div class="flex items-center gap-2 mb-5">
-          <div class="flex items-center gap-1 text-[9px] text-[#767068] uppercase font-bold">
-            <span class="w-5 h-5 rounded-full bg-[#3E6650]/20 border border-[#3E6650] flex items-center justify-center text-[8px] font-black text-[#3E6650]">✓</span>
-            Email
-          </div>
-          <div class="flex-1 h-px bg-[#3E6650]/40"></div>
-          <div class="flex items-center gap-1 text-[9px] text-[#767068] uppercase font-bold">
-            <span class="w-5 h-5 rounded-full bg-[#3E6650]/20 border border-[#3E6650] flex items-center justify-center text-[8px] font-black text-[#3E6650]">✓</span>
-            Verified
-          </div>
-          <div class="flex-1 h-px bg-[#3E6650]/40"></div>
-          <div class="flex items-center gap-1 text-[9px] text-[#3E6650] uppercase font-bold">
-            <span class="w-5 h-5 rounded-full bg-[#3E6650] flex items-center justify-center text-[8px] font-black text-white">3</span>
-            Profile
-          </div>
-        </div>
-
-        <p class="text-[10px] text-[#767068] mb-4 leading-relaxed font-mono">
-          Almost done! Fill in your operator details to activate your account.
-        </p>
-
-        <form onsubmit={submitOperatorProfile} class="space-y-4">
-          <div>
-            <label class="block text-[10px] font-mono font-bold text-[#767068] uppercase mb-1" for="op-name">
-              Full Name <span class="text-[#AC3B2A]">*</span>
-            </label>
-            <input
-              id="op-name"
-              type="text"
-              bind:value={opProfileName}
-              placeholder="e.g. Juan Dela Cruz"
-              class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white dark:bg-[#141210] text-xs focus:outline-none focus:border-[#3E6650]"
-              required
-            />
-          </div>
-
-          <div>
-            <label class="block text-[10px] font-mono font-bold text-[#767068] uppercase mb-1" for="op-phone">
-              Phone Number <span class="text-[#AC3B2A]">*</span>
-            </label>
-            <input
-              id="op-phone"
-              type="tel"
-              bind:value={opProfilePhone}
-              placeholder="e.g. 09171234567"
-              class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white dark:bg-[#141210] text-xs focus:outline-none focus:border-[#3E6650]"
-              required
-            />
-          </div>
-
-          <div>
-            <label class="block text-[10px] font-mono font-bold text-[#767068] uppercase mb-1" for="op-pos">
-              Position / Job Title
-            </label>
-            <input
-              id="op-pos"
-              type="text"
-              bind:value={opProfilePos}
-              placeholder="e.g. Head Chef, Catering Manager (optional)"
-              class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white dark:bg-[#141210] text-xs focus:outline-none focus:border-[#3E6650]"
-            />
-          </div>
-
-          {#if loginMessage}
-            <p class="text-xs font-mono text-[#AC3B2A]">{loginMessage}</p>
-          {/if}
-
-          <button
-            id="btn-op-complete-profile"
-            type="submit"
-            disabled={isChecking || !opProfileName.trim() || !opProfilePhone.trim()}
-            class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 disabled:bg-slate-300 text-white font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all flex items-center justify-center gap-1.5"
-          >
-            {#if isChecking}Saving Profile...{:else}Activate Operator Account <ChevronRight size={14} />{/if}
-          </button>
-        </form>
-      {:else}
-        <!-- Step 2: Email OTP Verification Challenge -->
-        <div class="space-y-4">
-          <div class="flex items-center gap-2 border-b border-[#767068]/10 pb-3">
-            <button 
-              onclick={goBackToIdentifier}
-              class="text-[#767068] hover:text-[#2A2521] transition-all p-1 hover:bg-[#F6F2EA] rounded-full"
-              title="Change ID"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <span class="text-xs font-mono font-bold text-[#767068] truncate">Active ID: <span class="text-[#2A2521]">{username}</span></span>
-          </div>
-
-          <form onsubmit={handleTotpSubmit} class="space-y-4">
-            {#if debugOtpCode}
-              <div class="p-3 mb-2 rounded bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 text-center animate-pulse">
-                <span class="text-[10px] font-mono font-bold text-amber-800 dark:text-amber-300">
-                  ⚠️ SIMULATION MODE: Use OTP Code <span class="bg-amber-100 dark:bg-amber-900 px-2 py-0.5 rounded text-sm font-black border border-amber-300 dark:border-amber-800 select-all">{debugOtpCode}</span> to verify.
-                </span>
-              </div>
-            {/if}
-
-            <div>
-              <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1.5 text-center" for="otp-code">
-                Enter the 6-digit code sent to your Gmail
-              </label>
-              <input 
-                id="otp-code"
-                type="text" 
-                pattern="[0-9]*"
-                inputmode="numeric"
-                maxlength="6"
-                bind:value={totpToken} 
-                oninput={() => { if (totpToken.trim().length === 6 && timerSeconds > 0) handleTotpSubmit(); }}
-                class="w-full px-3 py-2.5 rounded border border-[#767068]/30 bg-white text-base text-center font-bold tracking-[0.5em] focus:outline-none focus:border-[#3E6650]" 
-                placeholder="000000"
-                required 
-                autofocus
-              />
-            </div>
-
-            <!-- Countdown -->
-            <div class="flex justify-between items-center bg-slate-50 dark:bg-zinc-800/40 p-2.5 rounded border border-[#767068]/15 text-[10px] uppercase font-bold font-mono">
-              <span class="text-[#767068]">Code expires in:</span>
-              {#if timerSeconds > 0}
-                <span class="text-[#3E6650] animate-pulse">{Math.floor(timerSeconds / 60)}:{(timerSeconds % 60).toString().padStart(2, '0')}</span>
-              {:else}
-                <span class="text-[#AC3B2A]">Expired</span>
-              {/if}
-            </div>
-
-            <button 
-              type="submit" 
-              disabled={isChecking || totpToken.trim().length !== 6 || timerSeconds <= 0}
-              class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-white font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1.5 disabled:bg-slate-350 disabled:text-slate-500"
-            >
-              {#if isChecking}Verifying...{:else}Verify & Log In <ChevronRight size={14} />{/if}
-            </button>
-
-            <button
-              type="button"
-              onclick={handleIdentifierSubmit}
-              class="w-full text-center text-[10px] text-[#767068] hover:text-[#3E6650] uppercase font-bold transition-colors flex items-center justify-center gap-1"
-            >
-              <RefreshCw size={11} /> Resend Code
-            </button>
-          </form>
-
-          {#if loginMessage}
-            <p class="text-xs font-mono text-[#AC3B2A] text-center mt-2">{loginMessage}</p>
-          {/if}
-        </div>
-      {/if}
-
-      <!-- Alternate Portal Switcher -->
-      <div class="mt-6 border-t border-dashed border-[#767068]/30 pt-5">
-        <span class="block text-[9px] uppercase font-bold text-[#767068] tracking-widest mb-3 font-mono">Or Access Alternate Portals</span>
-        <div class="grid grid-cols-3 gap-2 text-center text-[9px] font-bold font-mono">
-          <a 
-            href="/login" 
-            onclick={() => appState.playClickSound()} 
-            class="py-2 px-1 border border-[#3E6650]/30 rounded bg-[#3E6650]/5 hover:bg-[#3E6650]/15 text-[#3E6650] no-underline transition-all active:scale-[0.98]"
-          >
-            Customer Gate
-          </a>
-          <a 
-            href="/supplier/login" 
-            onclick={() => appState.playClickSound()} 
-            class="py-2 px-1 border border-[#D9A441]/30 rounded bg-[#D9A441]/5 hover:bg-[#D9A441]/15 text-[#D9A441] no-underline transition-all active:scale-[0.98]"
-          >
-            Supplier Hub
-          </a>
-          <a 
-            href="/admin/login" 
-            onclick={() => appState.playClickSound()} 
-            class="py-2 px-1 border border-[#AC3B2A]/30 rounded bg-[#AC3B2A]/5 hover:bg-[#AC3B2A]/15 text-[#AC3B2A] no-underline transition-all active:scale-[0.98]"
-          >
-            Admin System
-          </a>
-        </div>
-      </div>
-
-      <div class="ticket-divider my-6"></div>
-      <p class="text-[9px] font-mono text-slate-400 text-center uppercase tracking-widest">
-        Secure Core Security Protocol v3.12
+      <!-- Headline -->
+      <h1 
+        class="headline"
+        in:fly={{ y: dur(10), duration: dur(250), easing: cubicOut, delay: dly(50) }}
+      >
+        Welcome to CaterSync
+      </h1>
+      <p 
+        class="subline"
+        in:fly={{ y: dur(10), duration: dur(250), easing: cubicOut, delay: dly(100) }}
+      >
+        Smart catering operations, powered by AI
       </p>
 
-    </div>
-    {/if}
-
-    <!-- Clean Sound Toggle and Install App Button -->
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
-      <button 
-        onclick={() => appState.toggleAudio()} 
-        class="text-[10px] font-mono text-[#767068] hover:text-[#2A2521] flex items-center gap-1 bg-white/60 hover:bg-white px-2.5 py-1.5 rounded border border-[#767068]/20 transition-all btn-interactive"
+      <!-- Primary CTA -->
+      <button
+        id="landing-continue-btn"
+        class="continue-btn"
+        onclick={handleContinue}
+        in:fly={{ y: dur(10), duration: dur(250), easing: cubicOut, delay: dly(160) }}
       >
-        <Volume2 size={12} class={appState.audioEnabled ? 'text-[#3E6650]' : ''} />
-        <span>Sound Effects: {appState.audioEnabled ? 'Active' : 'Muted'}</span>
+        Continue
+        <span class="btn-arrow">↵</span>
       </button>
 
-      {#if appState.pwaInstallable}
-        <button 
-          onclick={handleInstallClick} 
-          class="text-[10px] font-mono text-[#F6F2EA] bg-[#3E6650] hover:bg-[#3E6650]/90 flex items-center gap-1 px-2.5 py-1.5 rounded border border-transparent shadow-sm transition-all btn-interactive"
-          title="Install CaterSync on this device"
-        >
-          <Download size={12} />
-          <span>Install App</span>
-        </button>
-      {/if}
-    </div>
-
-    <div class="text-center mt-3 text-[10px] font-mono text-[#767068] opacity-75">
-      Catersync Console v{appState.version}
-    </div>
-
+      <!-- Divider hint -->
+      <p 
+        class="trouble-link"
+        in:fly={{ y: dur(10), duration: dur(250), easing: cubicOut, delay: dly(210) }}
+      >
+        <a href="mailto:support@catersync.ai" id="landing-trouble-link">
+          Having trouble? Let us know
+        </a>
+      </p>
+    {/if}
   </div>
 
-  {#if showInstallHelp}
-    <div class="fixed inset-0 z-50 bg-[#2A2521]/55 backdrop-blur-sm flex items-end sm:items-center justify-center p-3">
-      <div class="w-full max-w-sm bg-white rounded-lg border border-[#767068]/25 shadow-2xl overflow-hidden text-left animate-fade-in">
-        <div class="flex items-start justify-between gap-3 px-5 py-4 border-b border-[#767068]/15">
-          <div>
-            <span class="ticket-stamp">PHONE INSTALL</span>
-            <h3 class="text-base font-black text-[#2A2521] mt-1">{installHelp.title}</h3>
-          </div>
-          <button
-            onclick={() => showInstallHelp = false}
-            class="shrink-0 p-1.5 rounded hover:bg-[#F6F2EA] text-[#767068] transition-all"
-            title="Close install instructions"
-          >
-            <X size={16} />
-          </button>
-        </div>
-
-        <div class="px-5 py-4 space-y-4">
-          <p class="text-xs leading-relaxed text-[#767068]">{installHelp.detail}</p>
-          <ol class="space-y-2">
-            {#each installHelp.steps as step, index}
-              <li class="flex gap-2 text-xs text-[#2A2521] leading-relaxed">
-                <span class="shrink-0 w-5 h-5 rounded bg-[#3E6650] text-[#F6F2EA] font-mono text-[10px] flex items-center justify-center">{index + 1}</span>
-                <span>{step}</span>
-              </li>
-            {/each}
-          </ol>
-
-          {#if installHelp.platform.startsWith('android') && appState.pwaInstallPromptAvailable}
-            <button
-              onclick={handleInstallClick}
-              class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1.5"
-            >
-              <Download size={14} />
-              Install Now
-            </button>
-          {/if}
-        </div>
-      </div>
-    </div>
-  {/if}
+  <!-- Bottom wordmark -->
+  <p class="bottom-mark">CaterSync Operations Inc.</p>
 </div>
 
 <style>
-  .mascot-video {
-    mix-blend-mode: multiply;
-    -webkit-mask-image: radial-gradient(ellipse, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%);
-    mask-image: radial-gradient(ellipse, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%);
-  }
-  :global(.dark) .mascot-video {
-    filter: invert(0.92) contrast(1.1) brightness(1.1) hue-rotate(180deg);
-    mix-blend-mode: screen;
-    -webkit-mask-image: radial-gradient(ellipse, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%);
-    mask-image: radial-gradient(ellipse, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%);
+  :global(body) {
+    margin: 0;
+    padding: 0;
   }
 
-  @keyframes float {
+  /* ── Theme tokens: light default, dark override ──
+     The existing app toggles document.documentElement.classList('dark').
+     These vars slot into that system with zero extra JS. -- */
+  :root {
+    --lp-bg:        #F6F2EA;
+    --lp-glow:      rgba(62, 102, 80, 0.05);
+    --lp-headline:  #2A2521;
+    --lp-sub:       #767068;
+    --lp-btn-bg:    #FFFFFF;
+    --lp-btn-bdr:   #D6D0C8;
+    --lp-btn-txt:   #4c3227;
+    --lp-btn-arr:   #b0a898;
+    --lp-btn-hover-bg:   #F0EBE3;
+    --lp-btn-hover-bdr:  #b0a898;
+    --lp-btn-hover-txt:  #2A2521;
+    --lp-trouble:   #b0a898;
+    --lp-trouble-h: #767068;
+    --lp-mark:      #D6D0C8;
+  }
+  :root.dark {
+    --lp-bg:        #111110;
+    --lp-glow:      rgba(62, 102, 80, 0.07);
+    --lp-headline:  #ede9e3;
+    --lp-sub:       #5a5752;
+    --lp-btn-bg:    #222220;
+    --lp-btn-bdr:   #2e2e2b;
+    --lp-btn-txt:   #c9c4bc;
+    --lp-btn-arr:   #4a4a47;
+    --lp-btn-hover-bg:   #2a2a27;
+    --lp-btn-hover-bdr:  #3e3e3a;
+    --lp-btn-hover-txt:  #ede9e3;
+    --lp-trouble:   #3d3d3a;
+    --lp-trouble-h: #6b6b68;
+    --lp-mark:      #282826;
+  }
+
+  .landing-root {
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100svh;
+    background: var(--lp-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    transition: background 0.2s;
+  }
+
+  .ambient-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 40% at 50% 50%, var(--lp-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ── Card ── */
+  .landing-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0;
+    position: relative;
+    z-index: 10;
+    padding: 0 24px;
+  }
+
+  /* ── Logo ── */
+  .logo-wrap {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .logo-icon {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 0 10px rgba(110, 231, 183, 0.25));
+    animation: logo-float 4s ease-in-out infinite;
+  }
+
+  .logo-glow {
+    position: absolute;
+    inset: -8px;
+    background: radial-gradient(circle, rgba(62, 102, 80, 0.18) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: logo-pulse 3.5s ease-in-out infinite;
+  }
+
+  @keyframes logo-pulse {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.12); }
+  }
+
+  @keyframes logo-float {
     0%, 100% {
-      transform: translateY(0px);
+      transform: translateY(0);
+      opacity: 0.94;
     }
     50% {
-      transform: translateY(-8px);
+      transform: translateY(-3px);
+      opacity: 1;
     }
+  }
+
+  /* ── Text ── */
+  .headline {
+    margin: 0 0 8px;
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    color: var(--lp-headline);
+    line-height: 1.2;
+  }
+
+  .subline {
+    margin: 0 0 28px;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--lp-sub);
+    letter-spacing: 0.01em;
+  }
+
+  /* ── Continue button ── */
+  .continue-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 20px;
+    background: var(--lp-btn-bg);
+    border: 1px solid var(--lp-btn-bdr);
+    border-radius: 8px;
+    color: var(--lp-btn-txt);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+    outline: none;
+    margin-bottom: 20px;
+  }
+
+  .continue-btn:hover {
+    background: var(--lp-btn-hover-bg);
+    border-color: var(--lp-btn-hover-bdr);
+    color: var(--lp-btn-hover-txt);
+    transform: translateY(-1px);
+  }
+
+  .continue-btn:active {
+    transform: translateY(0);
+    background: var(--lp-btn-bg);
+  }
+
+  .btn-arrow {
+    font-size: 12px;
+    color: var(--lp-btn-arr);
+    font-family: monospace;
+    transition: color 0.15s;
+  }
+
+  .continue-btn:hover .btn-arrow {
+    color: var(--lp-trouble-h);
+  }
+
+  /* ── Trouble link ── */
+  .trouble-link {
+    margin: 0;
+    font-size: 11px;
+    color: var(--lp-trouble);
+  }
+
+  .trouble-link a {
+    color: var(--lp-trouble);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-color: var(--lp-btn-bdr);
+    transition: color 0.15s, text-decoration-color 0.15s;
+  }
+
+  .trouble-link a:hover {
+    color: var(--lp-trouble-h);
+    text-decoration-color: var(--lp-trouble);
+  }
+
+  .bottom-mark {
+    position: absolute;
+    bottom: 24px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 10px;
+    color: var(--lp-mark);
+    letter-spacing: 0.08em;
+    font-weight: 400;
+    pointer-events: none;
+    user-select: none;
   }
 </style>
