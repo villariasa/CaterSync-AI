@@ -16,11 +16,11 @@ const memoryStore = new Map();
  * key format: "type:identifier" — e.g. "otp_send:user@example.com"
  */
 const LIMITS = {
-  otp_send:     { max: 5,  windowMs: 10 * 60 * 1000, blockMs: 30 * 60 * 1000 },  // 5 per 10 min → block 30 min
-  otp_verify:   { max: 5,  windowMs: 10 * 60 * 1000, blockMs: 30 * 60 * 1000 },  // 5 tries per 10 min
-  login:        { max: 10, windowMs: 15 * 60 * 1000, blockMs: 15 * 60 * 1000 },  // 10 per 15 min
-  google:       { max: 20, windowMs:  5 * 60 * 1000, blockMs: 10 * 60 * 1000 },  // 20 per 5 min
-  global_ip:    { max: 100, windowMs: 60 * 60 * 1000, blockMs: 60 * 60 * 1000 }, // 100 per hour (hard)
+  otp_send:     { max: 30, windowMs: 10 * 60 * 1000, blockMs:  5 * 60 * 1000 },  // 30 per 10 min → block 5 min
+  otp_verify:   { max: 30, windowMs: 10 * 60 * 1000, blockMs:  5 * 60 * 1000 },  // 30 tries per 10 min
+  login:        { max: 40, windowMs: 15 * 60 * 1000, blockMs:  5 * 60 * 1000 },  // 40 per 15 min
+  google:       { max: 50, windowMs:  5 * 60 * 1000, blockMs:  5 * 60 * 1000 },  // 50 per 5 min
+  global_ip:    { max: 500, windowMs: 60 * 60 * 1000, blockMs: 60 * 60 * 1000 }, // 500 per hour
 };
 
 /**
