@@ -41,10 +41,28 @@
   let showInstallHelp = $state(false);
   let installHelp = $derived(appState.getPwaInstallHelp());
 
-  // TOTP Authenticator states
+  // OTP Authenticator states
   let totpToken = $state('');
-  let totpSetupSecret = $state('');
-  let totpSetupQrUrl = $state('');
+  let timerSeconds = $state(600);
+  let timerInterval = null;
+
+  function startCountdown() {
+    clearInterval(timerInterval);
+    timerSeconds = 600;
+    timerInterval = setInterval(() => {
+      if (timerSeconds > 0) {
+        timerSeconds--;
+      } else {
+        clearInterval(timerInterval);
+        appState.playBuzzerSound?.();
+        loginMessage = '❌ Verification code has expired. Please go back.';
+      }
+    }, 1000);
+  }
+
+  onDestroy(() => {
+    clearInterval(timerInterval);
+  });
 
   // Biometric setup states after first login
   let showBiometricSetupPrompt = $state(false);
@@ -135,176 +153,74 @@
 
   async function handleIdentifierSubmit(e) {
     if (e) e.preventDefault();
-    if (!username.trim()) return;
+    const email = username.trim().toLowerCase();
+    if (!email) return;
 
     appState.playClickSound();
     isChecking = true;
     loginMessage = '';
     totpToken = '';
 
-    if (appState.usingMockData) {
+    try {
+      const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, accountType: 'org_user' })
+      });
+      const data = await response.json();
       isChecking = false;
-      const isRegistered = appState.currentUser && appState.currentUser.username === username.trim();
-      const isLinkAdmin = username.trim().toLowerCase() === 'admin';
-      availableMethods = isRegistered ? (isLinkAdmin ? ['password'] : ['totp']) : (isLinkAdmin ? ['password'] : ['totp-setup']);
-      
-      if (!isLinkAdmin && !isRegistered) {
-        totpSetupSecret = 'OFFLINETOTPSECRET';
-        totpSetupQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth%3A%2F%2Ftotp%2FCaterSync-AI%3Aoffline%3Fsecret%3DOFFLINETOTPSECRET%26issuer%3DCaterSync-AI';
-      } else {
-        totpSetupSecret = '';
-        totpSetupQrUrl = '';
-      }
-      
-      selectedMethod = availableMethods[0] || 'totp';
-      step = 2;
-    } else {
-      try {
-        const response = await fetch('/api/auth/pre-auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: username.trim() })
-        });
-        const res = await response.json();
-        isChecking = false;
-        if (response.ok && res.success) {
-          const isLinkAdmin = username.trim().toLowerCase() === 'admin';
-          availableMethods = [...res.methods];
-          if (!isLinkAdmin) {
-            availableMethods = availableMethods.filter(m => m !== 'password');
-          }
-          if (res.totpSetup) {
-            totpSetupSecret = res.totpSetup.secret;
-            totpSetupQrUrl = res.totpSetup.qrCodeUrl;
-          } else {
-            totpSetupSecret = '';
-            totpSetupQrUrl = '';
-          }
-          selectedMethod = availableMethods[0] || 'totp';
-          step = 2;
-        } else {
-          loginMessage = `❌ ${res.error || 'User not found or inactive.'}`;
-          appState.playBuzzerSound();
-        }
-      } catch (err) {
-        isChecking = false;
-        console.warn("Pre-auth check fallback to local check:", err.message);
-        const isLinkAdmin = username.trim().toLowerCase() === 'admin';
-        availableMethods = isLinkAdmin ? ['password'] : ['totp-setup'];
-        if (!isLinkAdmin) {
-          totpSetupSecret = 'OFFLINETOTPSECRET';
-          totpSetupQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth%3A%2F%2Ftotp%2FCaterSync-AI%3Aoffline%3Fsecret%3DOFFLINETOTPSECRET%26issuer%3DCaterSync-AI';
-        } else {
-          totpSetupSecret = '';
-          totpSetupQrUrl = '';
-        }
-        selectedMethod = availableMethods[0] || 'totp';
+
+      if (response.ok && data.success) {
         step = 2;
+        startCountdown();
+      } else {
+        loginMessage = `❌ ${data.error || 'Failed to dispatch code.'}`;
+        appState.playBuzzerSound();
       }
+    } catch (err) {
+      isChecking = false;
+      loginMessage = `❌ Connection Error: ${err.message}`;
+      appState.playBuzzerSound();
     }
   }
 
   async function handlePasswordLogin(e) {
     e.preventDefault();
-    appState.playClickSound();
-
-    if (appState.usingMockData) {
-      const user = appState.currentUser || { username: 'admin', password: 'admin' };
-      if (username.trim() === user.username && password === user.password) {
-        triggerWelcomeRedirect(username.trim().split('@')[0]);
-      } else {
-        loginMessage = '❌ Invalid credentials.';
-        appState.playBuzzerSound();
-      }
-    } else {
-      try {
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: username.trim(), password })
-        });
-        const res = await response.json();
-        if (response.ok && res.success) {
-          triggerWelcomeRedirect(username.trim().split('@')[0]);
-        } else {
-          if (response.status === 503 || res.offlineFallback) {
-            const user = appState.currentUser || { username: 'admin', password: 'admin' };
-            if (username.trim() === user.username && password === user.password) {
-              triggerWelcomeRedirect(username.trim().split('@')[0]);
-            } else {
-              loginMessage = '❌ Invalid credentials (Offline Mode).';
-              appState.playBuzzerSound();
-            }
-          } else {
-            loginMessage = `❌ ${res.error || 'Invalid credentials'}`;
-            appState.playBuzzerSound();
-          }
-        }
-      } catch (err) {
-        loginMessage = `❌ Connection Error: ${err.message}`;
-        appState.playBuzzerSound();
-      }
-    }
   }
 
   async function handleTotpSubmit(e) {
     if (e) e.preventDefault();
-    isChecking = true;
-    loginMessage = '';
-
-    if (appState.usingMockData) {
-      isChecking = false;
-      if (totpToken.trim().length === 6 && !isNaN(totpToken.trim())) {
-        // Keep profile picture and name if they were pre-fetched by Google login
-        appState.currentUser = { 
-          username: username.trim(), 
-          role: 'Operator',
-          name: appState.currentUser?.name || username.trim().split('@')[0],
-          picture: appState.currentUser?.picture || null
-        };
-        appState.playStampSound();
-        
-        if (biometricAvailable) {
-          showBiometricSetupPrompt = true;
-        } else {
-          appState.isAuthenticated = true;
-          goto('/');
-        }
-      } else {
-        loginMessage = '❌ Invalid code (Offline simulation requires 6 digits).';
-        appState.playBuzzerSound();
-      }
+    const code = totpToken.trim();
+    if (!code || code.length !== 6) return;
+    if (timerSeconds <= 0) {
+      loginMessage = '❌ Verification code has expired. Please go back.';
+      appState.playBuzzerSound();
       return;
     }
 
+    isChecking = true;
+    loginMessage = '';
+
     try {
-      const response = await fetch('/api/auth/verify-totp', {
+      const response = await fetch('/api/auth/verify-email-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: username.trim(),
-          token: totpToken.trim(),
-          setupSecret: selectedMethod === 'totp-setup' ? totpSetupSecret : undefined
+          email: username.trim().toLowerCase(),
+          otp: code,
+          accountType: 'org_user'
         })
       });
       const data = await response.json();
       isChecking = false;
 
       if (response.ok && data.success) {
-        // Merge the profile picture/name from Google OAuth if we had them!
+        clearInterval(timerInterval);
         appState.currentUser = {
           ...data.user,
-          name: appState.currentUser?.name || data.user.name || username.trim().split('@')[0],
-          picture: appState.currentUser?.picture || data.user.picture || null
+          userType: 'org_user'
         };
-        appState.playStampSound();
-        
-        if (biometricAvailable && !data.hasBiometrics) {
-          showBiometricSetupPrompt = true;
-        } else {
-          appState.isAuthenticated = true;
-          goto('/');
-        }
+        triggerWelcomeRedirect(data.user.name || username.trim().split('@')[0]);
       } else {
         loginMessage = `❌ ${data.error || 'Verification failed.'}`;
         appState.playBuzzerSound();
@@ -500,6 +416,20 @@
 
 
   onMount(async () => {
+    // Facebook-style silent persistent session check for operators
+    try {
+      const res = await fetch('/api/auth/session');
+      const data = await res.json();
+      if (data.authenticated && data.user?.type === 'org_user') {
+        appState.currentUser = { ...data.user, userType: 'org_user' };
+        appState.isAuthenticated = true;
+        goto('/');
+        return;
+      }
+    } catch (e) {
+      console.warn("Silent session check failed:", e.message);
+    }
+
     // 1. Fetch settings to see if Google Client ID is configured
     try {
       const res = await fetch('/api/settings');
@@ -829,197 +759,70 @@
           {/if}
         </form>
       {:else}
-        {#if showBiometricRegisterScanner}
-          <div class="space-y-4">
-            <h2 class="text-xs font-mono font-bold uppercase tracking-tight text-[#767068] text-center">Registering Device Biometrics</h2>
-            <BiometricScanner
-              action="register"
-              username={getSafeUsername()}
-              email={getSafeUsername()}
-              accountType="operator"
-              onsuccess={() => {
-                showBiometricRegisterScanner = false;
-                let safeName = 'Operator';
-                try {
-                  const u = getSafeUsername();
-                  safeName = appState.currentUser?.name || (u ? u.trim().split('@')[0] : 'Operator');
-                } catch (e) {
-                  console.warn("Operator name resolve error:", e);
-                }
-                triggerWelcomeRedirect(safeName);
-              }}
-              oncancel={skipBiometricRegistration}
-            />
+        <!-- Step 2: Email OTP Verification Challenge -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-2 border-b border-[#767068]/10 pb-3">
+            <button 
+              onclick={goBackToIdentifier}
+              class="text-[#767068] hover:text-[#2A2521] transition-all p-1 hover:bg-[#F6F2EA] rounded-full"
+              title="Change ID"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span class="text-xs font-mono font-bold text-[#767068] truncate">Active ID: <span class="text-[#2A2521]">{username}</span></span>
           </div>
-        {:else if showBiometricSetupPrompt}
-          <div class="space-y-4 text-center">
-            <div class="w-12 h-12 rounded-full bg-[#3E6650]/10 text-[#3E6650] flex items-center justify-center mx-auto mb-2 animate-bounce">
-              <Fingerprint size={28} />
-            </div>
-            <h2 class="text-sm font-mono font-bold uppercase tracking-tight text-[#2A2521]">Enable Biometric Login?</h2>
-            <p class="text-[11px] text-[#767068] leading-relaxed">
-              Would you like to register your device's biometrics or device password lock for faster secure login next time?
-            </p>
 
-            <div class="flex flex-col gap-2 pt-2">
-              <button
-                type="button"
-                onclick={startBiometricRegistration}
-                class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-white font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive"
-              >
-                Allow Biometrics
-              </button>
-              <button
-                type="button"
-                onclick={skipBiometricRegistration}
-                class="w-full border border-[#767068]/30 hover:bg-[#767068]/5 text-[#767068] font-bold font-mono text-xs py-2.5 rounded uppercase tracking-wider transition-all btn-interactive"
-              >
-                Skip for Now
-              </button>
-            </div>
-          </div>
-        {:else}
-          <!-- Step 2: Progressive disclosure based on available options -->
-          <div class="space-y-4">
-            <div class="flex items-center gap-2 border-b border-[#767068]/10 pb-3">
-              <button 
-                onclick={goBackToIdentifier}
-                class="text-[#767068] hover:text-[#2A2521] transition-all p-1 hover:bg-[#F6F2EA] rounded-full"
-                title="Change ID"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <span class="text-xs font-mono font-bold text-[#767068] truncate">Active ID: <span class="text-[#2A2521]">{username}</span></span>
+          <form onsubmit={handleTotpSubmit} class="space-y-4">
+            <div>
+              <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1.5 text-center" for="otp-code">
+                Enter the 6-digit code sent to your Gmail
+              </label>
+              <input 
+                id="otp-code"
+                type="text" 
+                pattern="[0-9]*"
+                inputmode="numeric"
+                maxlength="6"
+                bind:value={totpToken} 
+                oninput={() => { if (totpToken.trim().length === 6 && timerSeconds > 0) handleTotpSubmit(); }}
+                class="w-full px-3 py-2.5 rounded border border-[#767068]/30 bg-white text-base text-center font-bold tracking-[0.5em] focus:outline-none focus:border-[#3E6650]" 
+                placeholder="000000"
+                required 
+                autofocus
+              />
             </div>
 
-            <!-- Tabs to swap methods contextually if multiple are registered -->
-            {#if availableMethods.length > 1}
-              <div class="grid gap-1 bg-[#F6F2EA] p-0.5 rounded border border-[#767068]/20 font-mono text-[8px] uppercase tracking-tighter"
-                   style="grid-template-columns: repeat({availableMethods.length}, minmax(0, 1fr));">
-                {#each availableMethods as method}
-                  <button
-                    type="button"
-                    onclick={() => { appState.playClickSound(); selectedMethod = method; loginMessage = ''; totpToken = ''; }}
-                    class="py-1 rounded text-center transition-all {selectedMethod === method ? 'bg-white text-[#2A2521] font-bold shadow-sm' : 'text-[#767068] hover:text-[#2A2521]'}"
-                  >
-                    {method === 'totp' ? 'Authenticator' : method === 'totp-setup' ? 'Setup 2FA' : method === 'biometric' ? 'Biometrics' : method}
-                  </button>
-                {/each}
-              </div>
-            {/if}
+            <!-- Countdown -->
+            <div class="flex justify-between items-center bg-slate-50 dark:bg-zinc-800/40 p-2.5 rounded border border-[#767068]/15 text-[10px] uppercase font-bold font-mono">
+              <span class="text-[#767068]">Code expires in:</span>
+              {#if timerSeconds > 0}
+                <span class="text-[#3E6650] animate-pulse">{Math.floor(timerSeconds / 60)}:{(timerSeconds % 60).toString().padStart(2, '0')}</span>
+              {:else}
+                <span class="text-[#AC3B2A]">Expired</span>
+              {/if}
+            </div>
 
-          <!-- Method inputs -->
-          {#if selectedMethod === 'password'}
-            <form onsubmit={handlePasswordLogin} class="space-y-4">
-              <div>
-                <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="login-password">Password</label>
-                <input 
-                  id="login-password"
-                  type="password" 
-                  bind:value={password} 
-                  class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs focus:outline-none focus:border-[#3E6650]" 
-                  placeholder="•••••••• (default: admin)"
-                  required 
-                  autofocus
-                />
-              </div>
+            <button 
+              type="submit" 
+              disabled={isChecking || totpToken.trim().length !== 6 || timerSeconds <= 0}
+              class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-white font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1.5 disabled:bg-slate-350 disabled:text-slate-500"
+            >
+              Verify & Log In <ChevronRight size={14} />
+            </button>
 
-              <button 
-                type="submit" 
-                class="w-full bg-[#2A2521] hover:bg-slate-800 text-[#F6F2EA] font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1"
-              >
-                Sign In <ChevronRight size={14} />
-              </button>
-            </form>
-          {/if}
-
-
-
-          {#if selectedMethod === 'biometric'}
-            <BiometricScanner 
-              onsuccess={handleBiometricsSuccess} 
-              oncancel={goBackToIdentifier} 
-            />
-          {/if}
-
-          {#if selectedMethod === 'totp'}
-            <form onsubmit={handleTotpSubmit} class="space-y-4">
-              <div>
-                <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="totp-code">Google Authenticator Code</label>
-                <input 
-                  id="totp-code"
-                  type="text" 
-                  pattern="[0-9]*"
-                  inputmode="numeric"
-                  maxlength="6"
-                  bind:value={totpToken} 
-                  class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs text-center font-bold tracking-[1em] focus:outline-none focus:border-[#3E6650]" 
-                  placeholder="000000"
-                  required 
-                  autofocus
-                />
-              </div>
-
-              <button 
-                type="submit" 
-                class="w-full bg-[#2A2521] hover:bg-slate-800 text-[#F6F2EA] font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1"
-              >
-                Verify Code <ChevronRight size={14} />
-              </button>
-            </form>
-          {/if}
-
-          {#if selectedMethod === 'totp-setup'}
-            <form onsubmit={handleTotpSubmit} class="space-y-4 text-center">
-              <div class="space-y-2">
-                <label class="block text-xs font-mono font-bold text-[#767068] uppercase text-left">Setup Google Authenticator</label>
-                <p class="text-[10px] text-[#767068] leading-relaxed text-left">
-                  Scan the QR code with your Google Authenticator or generic TOTP app, then enter the 6-digit verification code below.
-                </p>
-                
-                <div class="flex justify-center bg-white p-3 rounded border border-[#767068]/20 w-fit mx-auto shadow-sm">
-                  {#if totpSetupQrUrl}
-                    <img src={totpSetupQrUrl} alt="Google Authenticator QR Code" class="w-40 h-40 object-contain" />
-                  {:else}
-                    <div class="w-40 h-40 flex items-center justify-center text-xs font-mono text-slate-400">Loading QR...</div>
-                  {/if}
-                </div>
-
-                <div class="bg-[#F6F2EA] px-2 py-1.5 rounded border border-[#767068]/10 text-center">
-                  <span class="text-[8px] uppercase tracking-wider text-[#767068] block">Manual Key</span>
-                  <code class="text-xs font-mono font-bold tracking-wider text-[#2A2521] select-all">{totpSetupSecret}</code>
-                </div>
-
-                <div class="text-left pt-2">
-                  <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="totp-setup-code">Verification Code</label>
-                  <input 
-                    id="totp-setup-code"
-                    type="text" 
-                    pattern="[0-9]*"
-                    inputmode="numeric"
-                    maxlength="6"
-                    bind:value={totpToken} 
-                    class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs text-center font-bold tracking-[1em] focus:outline-none focus:border-[#3E6650]" 
-                    placeholder="000000"
-                    required 
-                  />
-                </div>
-              </div>
-
-              <button 
-                type="submit" 
-                class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-white font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1"
-              >
-                Verify & Enable 2FA <ChevronRight size={14} />
-              </button>
-            </form>
-          {/if}
+            <button
+              type="button"
+              onclick={handleIdentifierSubmit}
+              class="w-full text-center text-[10px] text-[#767068] hover:text-[#3E6650] uppercase font-bold transition-colors flex items-center justify-center gap-1"
+            >
+              <RefreshCw size={11} /> Resend Code
+            </button>
+          </form>
 
           {#if loginMessage}
             <p class="text-xs font-mono text-[#AC3B2A] text-center mt-2">{loginMessage}</p>
           {/if}
         </div>
-        {/if}
       {/if}
 
       <!-- Alternate Portal Switcher -->
