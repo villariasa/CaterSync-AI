@@ -1,25 +1,41 @@
 /**
- * GET  /api/auth/session  → Current session info
- * GET  /api/auth/devices  → All active sessions/devices for current user
- * POST /api/auth/devices/trust   → Trust current device
- * POST /api/auth/devices/logout  → Logout a specific device by session ID
- * POST /api/auth/devices/logout-all → Logout all devices
+ * GET /api/auth/session
+ *
+ * Universal session check endpoint used by all four login pages
+ * to detect an active session and skip straight to the dashboard
+ * (Facebook-style persistent login).
+ *
+ * Returns:
+ *   { authenticated: true,  user: {...}, redirect: '/portal' | '/' | '/supplier' | '/admin' }
+ *   { authenticated: false }
  */
 
 import { json } from '@sveltejs/kit';
 
-// GET /api/auth/session
+const REDIRECT_BY_ROLE = {
+  subscriber:     '/portal',
+  org_user:       '/',
+  supplier:       '/supplier',
+  platform_admin: '/admin'
+};
+
 export async function GET({ locals }) {
   if (!locals.user) {
     return json({ authenticated: false }, { status: 401 });
   }
 
+  const userType = locals.user.type;
+  const redirect = REDIRECT_BY_ROLE[userType] || '/';
+
   return json({
     authenticated: true,
+    redirect,
     user: {
       id: locals.user.id,
       username: locals.user.username,
-      type: locals.user.type,
+      name: locals.user.name || locals.user.username,
+      email: locals.user.username,
+      type: userType,
       role: locals.user.role,
       organization_id: locals.user.organization_id,
       customer_id: locals.user.customer_id,

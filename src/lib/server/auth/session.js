@@ -11,9 +11,16 @@ import { generateAccessToken, generateRefreshToken, hashToken } from './tokens.j
 
 // Access token lifetime: 15 minutes
 const ACCESS_TOKEN_TTL_MS = 15 * 60 * 1000;
-// Refresh token lifetime: 60 days (extended to 90 days for trusted devices)
-const REFRESH_TOKEN_TTL_DAYS = 60;
-const REFRESH_TOKEN_TTL_TRUSTED_DAYS = 90;
+
+// Per-role refresh token lifetime (Facebook-style persistent sessions)
+const REFRESH_TTL_BY_ROLE = {
+  subscriber:     90,  // Customers — stay logged in 90 days
+  supplier:       60,  // Suppliers — 60 days
+  org_user:       30,  // Operators — 30 days
+  platform_admin: 14   // Admins — 14 days (security-sensitive)
+};
+const REFRESH_TOKEN_TTL_DEFAULT_DAYS = 60;
+
 
 /**
  * Create a new session and return the raw (unhashed) token pair.
@@ -34,7 +41,8 @@ export async function createSession({ userId, userRole, deviceId, ipAddress, use
   const accessHash = hashToken(accessToken);
   const refreshHash = hashToken(refreshToken);
 
-  const refreshDays = isTrusted ? REFRESH_TOKEN_TTL_TRUSTED_DAYS : REFRESH_TOKEN_TTL_DAYS;
+  // Use per-role refresh TTL — role determines how long the session persists
+  const refreshDays = REFRESH_TTL_BY_ROLE[userRole] ?? REFRESH_TOKEN_TTL_DEFAULT_DAYS;
   const expiresAt = new Date(Date.now() + refreshDays * 24 * 60 * 60 * 1000).toISOString();
   const accessExpiresAt = new Date(Date.now() + ACCESS_TOKEN_TTL_MS).toISOString();
 

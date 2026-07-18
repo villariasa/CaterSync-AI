@@ -69,14 +69,32 @@ export function generateMagicLinkToken() {
 }
 
 /**
+ * Per-role refresh cookie lifetime — mirrors session.js TTLs exactly.
+ * The cookie must outlive the session or the browser will discard it first.
+ */
+const COOKIE_REFRESH_DAYS_BY_ROLE = {
+  subscriber:     90,
+  supplier:       60,
+  org_user:       30,
+  platform_admin: 14
+};
+
+/**
  * Set access + refresh token cookies on the response.
  * @param {import('@sveltejs/kit').Cookies} cookies
  * @param {string} accessToken
  * @param {string} refreshToken
- * @param {boolean} isTrusted - trusted devices get longer refresh token lifetime
+ * @param {string|boolean} [roleOrTrusted] - user role string (preferred) or legacy boolean isTrusted
  */
-export function setAuthCookies(cookies, accessToken, refreshToken, isTrusted = false) {
-  const refreshDays = isTrusted ? 90 : 60;
+export function setAuthCookies(cookies, accessToken, refreshToken, roleOrTrusted = false) {
+  // Support both new role-string and legacy boolean isTrusted calls
+  let refreshDays;
+  if (typeof roleOrTrusted === 'string') {
+    refreshDays = COOKIE_REFRESH_DAYS_BY_ROLE[roleOrTrusted] ?? 60;
+  } else {
+    // Legacy: isTrusted=true → 90 days, false → 60 days
+    refreshDays = roleOrTrusted ? 90 : 60;
+  }
 
   cookies.set('cs_access_token', accessToken, {
     path: '/',
@@ -94,6 +112,7 @@ export function setAuthCookies(cookies, accessToken, refreshToken, isTrusted = f
     maxAge: 60 * 60 * 24 * refreshDays
   });
 }
+
 
 /**
  * Clear all auth cookies (used on logout).
