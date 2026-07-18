@@ -51,6 +51,7 @@
   let totpToken = $state('');
   let timerSeconds = $state(600);
   let timerInterval = null;
+  let debugOtpCode = $state('');
 
   function startCountdown() {
     clearInterval(timerInterval);
@@ -190,6 +191,7 @@
 
       if (response.ok && data.success) {
         step = 2;
+        debugOtpCode = data.otpCode || '';
         startCountdown();
       } else {
         loginMessage = `❌ ${data.error || 'Failed to dispatch code.'}`;
@@ -301,6 +303,7 @@
     loginMessage = '';
     password = '';
     inputPIN = '';
+    debugOtpCode = '';
   }
 
   async function handleInstallClick() {
@@ -822,6 +825,14 @@
           </div>
 
           <form onsubmit={handleTotpSubmit} class="space-y-4">
+            {#if debugOtpCode}
+              <div class="p-3 mb-2 rounded bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 text-center animate-pulse">
+                <span class="text-[10px] font-mono font-bold text-amber-800 dark:text-amber-300">
+                  ⚠️ SIMULATION MODE: Use OTP Code <span class="bg-amber-100 dark:bg-amber-900 px-2 py-0.5 rounded text-sm font-black border border-amber-300 dark:border-amber-800 select-all">{debugOtpCode}</span> to verify.
+                </span>
+              </div>
+            {/if}
+
             <div>
               <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1.5 text-center" for="otp-code">
                 Enter the 6-digit code sent to your Gmail

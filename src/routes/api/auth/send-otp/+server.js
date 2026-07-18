@@ -171,8 +171,13 @@ export async function POST({ request, cookies }) {
       businessSettings
     });
 
-    return json({ success: true, message: 'If an account exists for this email, a code has been sent.' });
-
+    return json({
+      success: true,
+      message: 'If an account exists for this email, a code has been sent.',
+      usingFallback: mailResult.usingFallback || false,
+      previewUrl: mailResult.previewUrl || null,
+      otpCode: mailResult.usingFallback ? code : null
+    });
   } catch (err) {
     console.error('[send-otp] Error:', err.message);
     return json({ success: false, error: 'Failed to send verification code. Please try again.' }, { status: 500 });

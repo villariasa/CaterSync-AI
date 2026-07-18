@@ -38,6 +38,7 @@
   let isRedirecting = $state(false);
   let errorMessage = $state('');
   let successMessage = $state('');
+  let debugOtpCode = $state('');
   let greetingMessage = $state('');
   let showGreeting = $state(false);
   let googleClientId = $state('');
@@ -189,6 +190,7 @@
         }
         // OTP already sent by register-subscriber — go straight to OTP step
         successMessage = `Verification code sent to ${email}. Check your inbox!`;
+        debugOtpCode = regData.otpCode || '';
         step = 'otp';
         startCountdown();
         setTimeout(() => successMessage = '', 4000);
@@ -205,6 +207,7 @@
 
       if (otpData.success) {
         successMessage = `Verification code sent to ${email}. Check your inbox!`;
+        debugOtpCode = otpData.otpCode || '';
         step = 'otp';
         startCountdown();
         setTimeout(() => successMessage = '', 4000);
@@ -288,6 +291,7 @@
     clearInterval(timerInterval);
     step = 'email';
     otpCode = '';
+    debugOtpCode = '';
     errorMessage = '';
     successMessage = '';
   }
@@ -556,6 +560,14 @@
             </button>
             <span class="text-[10px] text-[#767068] truncate">Code sent to: <span class="text-[#2A2521] dark:text-[#F6F2EA] font-bold">{customerEmail}</span></span>
           </div>
+
+          {#if debugOtpCode}
+            <div class="p-3 mb-2 rounded bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 text-center animate-pulse">
+              <span class="text-[10px] font-mono font-bold text-amber-800 dark:text-amber-300">
+                ⚠️ SIMULATION MODE: Use OTP Code <span class="bg-amber-100 dark:bg-amber-900 px-2 py-0.5 rounded text-sm font-black border border-amber-300 dark:border-amber-800 select-all">{debugOtpCode}</span> to verify.
+              </span>
+            </div>
+          {/if}
 
           <div>
             <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5 text-center" for="cust-otp">
