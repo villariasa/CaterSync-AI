@@ -40,6 +40,99 @@
   let successMessage = $state('');
   let greetingMessage = $state('');
   let showGreeting = $state(false);
+  let googleClientId = $state('');
+
+  function loadGoogleScript() {
+    if (document.getElementById('google-gsi-client-customer')) {
+      initializeGoogleButton();
+      return;
+    }
+    const script = document.createElement('script');
+    script.id = 'google-gsi-client-customer';
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      initializeGoogleButton();
+    };
+    document.head.appendChild(script);
+  }
+
+  function initializeGoogleButton() {
+    if (typeof window === 'undefined' || !window.google || !googleClientId) return;
+    try {
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: handleGoogleCredentialResponse,
+        auto_select: false,
+        cancel_on_tap_outside: true
+      });
+      const parentDiv = document.getElementById('google-btn-customer');
+      if (parentDiv) {
+        window.google.accounts.id.renderButton(
+          parentDiv,
+          { 
+            theme: 'outline', 
+            size: 'large', 
+            width: parentDiv.offsetWidth || 340, 
+            text: tab === 'register' ? 'signup_with' : 'signin_with' 
+          }
+        );
+      }
+    } catch (err) {
+      console.error("Google Identity Customer initialization error:", err);
+    }
+  }
+
+  async function handleGoogleCredentialResponse(response) {
+    isChecking = true;
+    errorMessage = '';
+    successMessage = '';
+    try {
+      const res = await fetch('/api/auth/google-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: response.credential })
+      });
+      const data = await res.json();
+      isChecking = false;
+
+      if (res.ok && data.success) {
+        appState.currentUser = { ...data.customer, userType: 'subscriber' };
+        if (data.needsOtp) {
+          successMessage = 'Google authenticated. Verification code sent!';
+          customerEmail = data.email;
+          step = 'otp';
+          startCountdown();
+          setTimeout(() => successMessage = '', 4000);
+        } else {
+          appState.playStampSound?.();
+          greetingMessage = getGreeting(data.name || data.customer.name);
+          showGreeting = true;
+          isRedirecting = true;
+          setTimeout(() => {
+            appState.isAuthenticated = true;
+            goto('/portal');
+          }, 1800);
+        }
+      } else {
+        appState.playBuzzerSound?.();
+        errorMessage = data.error || 'Google Authentication failed.';
+      }
+    } catch (err) {
+      isChecking = false;
+      appState.playBuzzerSound?.();
+      errorMessage = 'Google auth error: ' + err.message;
+    }
+  }
+
+  $effect(() => {
+    if (googleClientId && tab && step === 'email') {
+      setTimeout(() => {
+        initializeGoogleButton();
+      }, 80);
+    }
+  });
 
   // 10 minute countdown
   let timerSeconds = $state(600);
@@ -247,14 +340,31 @@
   // If user already has a valid session, skip login and redirect immediately.
   onMount(async () => {
     appState.initAudio?.();
+    
+    // 1. Silent persistent session check
     try {
       const res = await fetch('/api/auth/session');
       const data = await res.json();
       if (data.authenticated && data.user?.type === 'subscriber') {
         appState.isAuthenticated = true;
         goto(data.redirect || '/portal');
+        return;
       }
-    } catch { /* non-fatal — show login form normally */ }
+    } catch { /* non-fatal */ }
+
+    // 2. Fetch settings for Google Client ID
+    try {
+      const res = await fetch('/api/settings');
+      const data = await res.json();
+      if (res.ok && data.success) {
+        googleClientId = data.settings.googleClientId || '';
+        if (googleClientId) {
+          loadGoogleScript();
+        }
+      }
+    } catch (e) {
+      console.warn("Could not load settings in Customer Portal:", e.message);
+    }
   });
 </script>
 
@@ -341,6 +451,19 @@
         <VideoLoader message="Authenticating..." />
 
       {:else if step === 'email'}
+        <!-- Google Single Sign-On Option -->
+        {#if googleClientId}
+          <div class="space-y-2 mb-4 animate-fade-in text-left">
+            <span class="block text-[9px] font-bold text-[#767068] uppercase tracking-widest">Marketplace One-Tap Identity</span>
+            <div id="google-btn-customer" class="w-full flex justify-center py-1 bg-white border border-slate-200 dark:border-zinc-800 rounded min-h-[45px]"></div>
+          </div>
+
+          <div class="relative my-4 flex items-center justify-center">
+            <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-[#767068]/20"></div></div>
+            <span class="relative bg-white dark:bg-[#24201E] px-3 text-[9px] font-bold text-[#767068] uppercase font-mono">Or Manual Method</span>
+          </div>
+        {/if}
+
         <!-- ── Email Entry Step ──────────────────────────────────────────────── -->
         <form onsubmit={sendOtp} class="space-y-4">
 
