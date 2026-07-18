@@ -44,6 +44,7 @@ export function hashToken(token) {
 export function generateOtp() {
   const code = String(100000 + Math.floor(Math.random() * 900000));
   const hash = crypto.createHash('sha256').update(code).digest('hex');
+  console.log(`🔑 [DEV ONLY] Generated OTP code: ${code}`);
   return { code, hash };
 }
 
