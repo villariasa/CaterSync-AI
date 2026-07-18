@@ -50,7 +50,8 @@ export async function handle({ event, resolve }) {
     //    Support old cookie-based sessions during migration period.
     //    These will be phased out as users re-login with new token system.
     // ================================================================
-    if (!event.locals.user) {
+    // Only fall back to legacy session validation if modern token cookies are completely absent
+    if (!event.locals.user && !accessToken && !refreshToken) {
       await legacySessionFallback(event);
     }
 

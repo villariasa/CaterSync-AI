@@ -87,6 +87,16 @@ const COOKIE_REFRESH_DAYS_BY_ROLE = {
  * @param {string|boolean} [roleOrTrusted] - user role string (preferred) or legacy boolean isTrusted
  */
 export function setAuthCookies(cookies, accessToken, refreshToken, roleOrTrusted = false) {
+  // Clear any existing legacy cookies to prevent cross-portal/cross-role conflicts
+  const cookieOptions = { path: '/' };
+  cookies.delete('cs_org_session', cookieOptions);
+  cookies.delete('cs_admin_session', cookieOptions);
+  cookies.delete('cs_customer_session', cookieOptions);
+  cookies.delete('cs_supplier_session', cookieOptions);
+  cookies.delete('session_user', cookieOptions);
+  cookies.delete('portal_customer_id', cookieOptions);
+  cookies.delete('operator_session', cookieOptions);
+
   // Support both new role-string and legacy boolean isTrusted calls
   let refreshDays;
   if (typeof roleOrTrusted === 'string') {
