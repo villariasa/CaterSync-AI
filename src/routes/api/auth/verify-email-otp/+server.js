@@ -101,10 +101,17 @@ export async function POST({ request, cookies }) {
     }
 
     // Fetch account record
-    const res = await pool.query(
-      `SELECT * FROM ${cfg.table} WHERE LOWER(${cfg.emailCol}) = ? LIMIT 1`,
-      [email]
-    );
+    let query = `SELECT * FROM ${cfg.table} WHERE LOWER(${cfg.emailCol}) = ? LIMIT 1`;
+    let params = [email];
+    if (accountType === 'org_user') {
+      query = `SELECT * FROM users WHERE LOWER(email) = ? OR LOWER(username) = ? LIMIT 1`;
+      params = [email, email];
+    } else if (accountType === 'platform_admin') {
+      query = `SELECT * FROM platform_admins WHERE LOWER(email) = ? OR LOWER(username) = ? LIMIT 1`;
+      params = [email, email];
+    }
+
+    const res = await pool.query(query, params);
 
     if (res.rows.length === 0) {
       return json({ success: false, error: 'No account found for this email.' }, { status: 404 });

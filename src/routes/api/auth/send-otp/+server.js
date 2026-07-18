@@ -98,10 +98,17 @@ export async function POST({ request, cookies }) {
     }
 
     // Look up account
-    const res = await pool.query(
-      `SELECT id, ${cfg.emailCol} AS email, ${cfg.nameCol} AS display_name FROM ${cfg.table} WHERE LOWER(${cfg.emailCol}) = ? LIMIT 1`,
-      [email]
-    );
+    let query = `SELECT id, ${cfg.emailCol} AS email, ${cfg.nameCol} AS display_name FROM ${cfg.table} WHERE LOWER(${cfg.emailCol}) = ? LIMIT 1`;
+    let params = [email];
+    if (accountType === 'org_user') {
+      query = `SELECT id, COALESCE(email, username) AS email, username AS display_name FROM users WHERE LOWER(email) = ? OR LOWER(username) = ? LIMIT 1`;
+      params = [email, email];
+    } else if (accountType === 'platform_admin') {
+      query = `SELECT id, COALESCE(email, username) AS email, username AS display_name FROM platform_admins WHERE LOWER(email) = ? OR LOWER(username) = ? LIMIT 1`;
+      params = [email, email];
+    }
+
+    const res = await pool.query(query, params);
 
     if (res.rows.length === 0) {
       // Don't reveal whether account exists — return same response
