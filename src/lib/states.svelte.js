@@ -59,7 +59,7 @@ export class CateringState {
   }
 
   get userType() {
-    return this._currentUser?.userType || (this._currentUser?.role === 'platform_admin' ? 'platform_admin' : 'org_user');
+    return this._currentUser?.userType || this._currentUser?.type || (this._currentUser?.role === 'platform_admin' ? 'platform_admin' : 'org_user');
   }
 
   get organizationId() {
