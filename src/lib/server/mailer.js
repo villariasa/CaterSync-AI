@@ -183,7 +183,7 @@ export async function sendEmail({ to, subject, text, html, businessSettings = nu
           }
         ],
         from: {
-          email: gmailAddress || 'no-reply@catersync.ai',
+          email: 'no-reply@catersync.ai',
           name: 'CaterSync Customer Support'
         },
         subject,
