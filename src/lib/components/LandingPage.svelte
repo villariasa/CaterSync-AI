@@ -18,7 +18,8 @@
     KeyRound,
     CheckCircle2,
     ChefHat,
-    Truck
+    Truck,
+    RefreshCw
   } from '@lucide/svelte';
 
   const appState = getCateringContext();
