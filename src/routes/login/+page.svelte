@@ -13,9 +13,23 @@
   let step = $state('email');
 
   let customerEmail = $state('');
-  // Registration extras
-  let regName = $state('');
-  let regPhone = $state('');
+
+  // Step 3 customer profile form
+  let profFullName    = $state('');
+  let profPhone       = $state('');
+  let profAddress     = $state('');
+  let profBirthday    = $state('');
+  let profAllergies   = $state([]);
+  let profDietaryPrefs = $state([]);
+
+  const ALLERGY_OPTIONS   = ['Nuts', 'Seafood', 'Dairy', 'Eggs', 'Gluten', 'Soy', 'Shellfish'];
+  const DIETARY_OPTIONS   = ['Vegetarian', 'Vegan', 'Halal', 'Kosher', 'Gluten-Free', 'Keto', 'Low-Sodium'];
+
+  function toggleChip(arr, val) {
+    const idx = arr.indexOf(val);
+    if (idx >= 0) arr.splice(idx, 1);
+    else arr.push(val);
+  }
 
   let otpCode = $state('');
   let isChecking = $state(false);
@@ -66,11 +80,11 @@
 
     try {
       if (tab === 'register') {
-        // New customer registration — creates account then dispatches OTP
+        // New customer registration — creates minimal account then dispatches OTP
         const regRes = await fetch('/api/auth/register-subscriber', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, name: regName.trim(), phone: regPhone.trim() })
+          body: JSON.stringify({ email })
         });
         const regData = await regRes.json();
         if (!regRes.ok || !regData.success) {
@@ -78,9 +92,15 @@
           appState.playBuzzerSound?.();
           return;
         }
+        // OTP already sent by register-subscriber — go straight to OTP step
+        successMessage = `Verification code sent to ${email}. Check your inbox!`;
+        step = 'otp';
+        startCountdown();
+        setTimeout(() => successMessage = '', 4000);
+        return;
       }
 
-      // Dispatch OTP via unified send-otp endpoint
+      // Sign In: Dispatch OTP via unified send-otp endpoint
       const otpRes = await fetch('/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -134,15 +154,22 @@
       if (res.ok && data.success) {
         clearInterval(timerInterval);
 
-        // Update app state
+        // New registration → Step 3 profile form
+        if (data.needsProfile && tab === 'register') {
+          appState.currentUser = { ...data.user, userType: 'subscriber' };
+          step = 'profile';
+          errorMessage = '';
+          isChecking = false;
+          return;
+        }
+
+        // Returning login → go directly to portal
         const name = data.customer?.name || data.user?.name || customerEmail;
         appState.currentUser = { ...data.customer, ...data.user, userType: 'subscriber' };
         appState.playStampSound?.();
-
         greetingMessage = getGreeting(name);
         showGreeting = true;
         isRedirecting = true;
-
         setTimeout(() => {
           appState.isAuthenticated = true;
           goto('/portal');
@@ -166,6 +193,50 @@
     otpCode = '';
     errorMessage = '';
     successMessage = '';
+  }
+
+  // ── Step 3: Submit Customer Profile ─────────────────────────────────────────
+  async function submitProfile(e) {
+    if (e) e.preventDefault();
+    if (!profFullName.trim() || !profPhone.trim()) return;
+    isChecking = true;
+    errorMessage = '';
+    try {
+      const res = await fetch('/api/auth/complete-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accountType: 'customer',
+          email: customerEmail.trim().toLowerCase(),
+          fullName:     profFullName.trim(),
+          phone:        profPhone.trim(),
+          address:      profAddress.trim() || null,
+          birthday:     profBirthday || null,
+          allergies:    profAllergies,
+          dietaryPrefs: profDietaryPrefs
+        })
+      });
+      const data = await res.json();
+      isChecking = false;
+      if (res.ok && data.success) {
+        appState.currentUser = { ...appState.currentUser, name: profFullName.trim() };
+        appState.playStampSound?.();
+        greetingMessage = getGreeting(profFullName.trim());
+        showGreeting = true;
+        isRedirecting = true;
+        setTimeout(() => {
+          appState.isAuthenticated = true;
+          goto('/portal');
+        }, 1800);
+      } else {
+        appState.playBuzzerSound?.();
+        errorMessage = data.error || 'Profile submission failed.';
+      }
+    } catch (err) {
+      isChecking = false;
+      appState.playBuzzerSound?.();
+      errorMessage = 'Error: ' + err.message;
+    }
   }
 
   // ── Persistent session check on mount (Facebook-style) ─────────────────────
@@ -251,14 +322,14 @@
       <div class="mb-6 flex justify-between items-start">
         <div>
           <span class="text-[8px] uppercase tracking-widest text-[#767068] font-bold">
-            {#if step === 'otp'}ENTER CODE{:else if tab === 'login'}SIGN IN{:else}SIGN UP{/if}
+            {#if step === 'profile'}PROFILE SETUP{:else if step === 'otp'}ENTER CODE{:else if tab === 'login'}SIGN IN{:else}SIGN UP{/if}
           </span>
           <h2 class="text-lg font-bold mt-0.5 text-[#2A2521] dark:text-[#F6F2EA]">
-            {#if step === 'otp'}Verify your email{:else if tab === 'login'}Welcome back! Sign in{:else}Join CaterSync today{/if}
+            {#if step === 'profile'}Complete your profile{:else if step === 'otp'}Verify your email{:else if tab === 'login'}Welcome back! Sign in{:else}Join CaterSync today{/if}
           </h2>
         </div>
         <div class="p-2 rounded bg-slate-50 dark:bg-[#141210] border border-slate-200 dark:border-zinc-800 text-[#3E6650]">
-          {#if step === 'otp'}<Lock size={16} />{:else if tab === 'login'}<Mail size={16} />{:else}<UserPlus size={16} />{/if}
+          {#if step === 'profile'}<UserPlus size={16} />{:else if step === 'otp'}<Lock size={16} />{:else if tab === 'login'}<Mail size={16} />{:else}<UserPlus size={16} />{/if}
         </div>
       </div>
 
@@ -271,44 +342,37 @@
 
           {#if tab === 'register'}
             <div>
-              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="reg-name">Your Full Name</label>
+              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="cust-email">
+                Gmail Address
+              </label>
               <input
-                id="reg-name"
-                type="text"
-                bind:value={regName}
-                placeholder="Juan dela Cruz"
+                id="cust-email-reg"
+                type="email"
+                bind:value={customerEmail}
+                autocomplete="email"
+                placeholder="name@gmail.com"
                 class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-zinc-800 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 focus:outline-none focus:border-[#3E6650] transition-colors"
                 required
               />
+              <p class="text-[9px] text-[#767068] mt-1.5">We'll send a 6-digit verification code to confirm your email.</p>
             </div>
+          {:else}
             <div>
-              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="reg-phone">Phone Number</label>
+              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="cust-email">
+                Your Gmail Address
+              </label>
               <input
-                id="reg-phone"
-                type="tel"
-                bind:value={regPhone}
-                placeholder="+63 917 123 4567"
+                id="cust-email"
+                type="email"
+                bind:value={customerEmail}
+                autocomplete="email"
+                placeholder="name@gmail.com"
                 class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-zinc-800 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 focus:outline-none focus:border-[#3E6650] transition-colors"
                 required
               />
+              <p class="text-[9px] text-[#767068] mt-1.5">We'll send a 6-digit code to this Gmail address.</p>
             </div>
           {/if}
-
-          <div>
-            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="cust-email">
-              {tab === 'register' ? 'Gmail Address' : 'Your Gmail Address'}
-            </label>
-            <input
-              id="cust-email"
-              type="email"
-              bind:value={customerEmail}
-              autocomplete="email"
-              placeholder="name@gmail.com"
-              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-zinc-800 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 focus:outline-none focus:border-[#3E6650] transition-colors"
-              required
-            />
-            <p class="text-[9px] text-[#767068] mt-1.5">We'll send a 6-digit code to this Gmail address.</p>
-          </div>
 
           {#if errorMessage}
             <div class="p-3 rounded bg-red-50 dark:bg-[#AC3B2A]/10 border border-red-200 dark:border-[#AC3B2A]/30 text-xs text-[#AC3B2A] leading-relaxed">
@@ -322,11 +386,12 @@
             disabled={isChecking}
             class="w-full py-3 rounded bg-[#3E6650] hover:bg-[#3E6650]/90 text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
           >
-            {tab === 'register' ? 'Create Account & Send Code' : 'Send Verification Code'} <ArrowRight size={13} />
+            {tab === 'register' ? 'Send Verification Code' : 'Send Verification Code'} <ArrowRight size={13} />
           </button>
         </form>
 
-      {:else}
+
+      {:else if step === 'otp'}
         <!-- ── OTP Entry Step ────────────────────────────────────────────────── -->
         <form onsubmit={verifyOtp} class="space-y-4">
           <div class="flex items-center gap-1.5 border-b border-[#767068]/15 pb-2.5 mb-2">
@@ -383,7 +448,7 @@
             disabled={isChecking || otpCode.trim().length !== 6 || timerSeconds <= 0}
             class="w-full py-3 rounded bg-[#3E6650] hover:bg-[#3E6650]/90 text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] disabled:bg-slate-300 dark:disabled:bg-zinc-800 disabled:text-slate-500"
           >
-            Verify & Enter Portal <CheckCircle2 size={13} />
+            {#if isChecking}Verifying...{:else}Verify & Enter Portal <CheckCircle2 size={13} />{/if}
           </button>
 
           <button
@@ -393,6 +458,113 @@
             class="w-full text-center text-[10px] text-[#767068] hover:text-[#3E6650] uppercase font-bold transition-colors flex items-center justify-center gap-1"
           >
             <RefreshCw size={11} /> Resend Code
+          </button>
+        </form>
+
+      <!-- ══ STEP 3: CUSTOMER PROFILE FORM ════════════════════════════════════ -->
+      {:else if step === 'profile'}
+        <!-- Progress indicator -->
+        <div class="flex items-center gap-2 mb-5">
+          <div class="flex items-center gap-1 text-[9px] text-[#767068] uppercase font-bold">
+            <span class="w-5 h-5 rounded-full bg-[#3E6650]/20 border border-[#3E6650] flex items-center justify-center text-[8px] font-black text-[#3E6650]">✓</span>
+            Email
+          </div>
+          <div class="flex-1 h-px bg-[#3E6650]/40"></div>
+          <div class="flex items-center gap-1 text-[9px] text-[#767068] uppercase font-bold">
+            <span class="w-5 h-5 rounded-full bg-[#3E6650]/20 border border-[#3E6650] flex items-center justify-center text-[8px] font-black text-[#3E6650]">✓</span>
+            Verified
+          </div>
+          <div class="flex-1 h-px bg-[#3E6650]/40"></div>
+          <div class="flex items-center gap-1 text-[9px] text-[#3E6650] uppercase font-bold">
+            <span class="w-5 h-5 rounded-full bg-[#3E6650] flex items-center justify-center text-[8px] font-black text-white">3</span>
+            Profile
+          </div>
+        </div>
+
+        <p class="text-[10px] text-[#767068] mb-4 leading-relaxed">
+          Almost done! Tell us a bit about yourself so we can personalize your catering experience.
+        </p>
+
+        <form onsubmit={submitProfile} class="space-y-4">
+
+          <div>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="pf-name">
+              Full Name <span class="text-[#AC3B2A]">*</span>
+            </label>
+            <input id="pf-name" type="text" bind:value={profFullName}
+              placeholder="Juan dela Cruz"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-zinc-800 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 focus:outline-none focus:border-[#3E6650] transition-colors"
+              required />
+          </div>
+
+          <div>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="pf-phone">
+              Phone Number <span class="text-[#AC3B2A]">*</span>
+            </label>
+            <input id="pf-phone" type="tel" bind:value={profPhone}
+              placeholder="+63 917 123 4567"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-zinc-800 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 focus:outline-none focus:border-[#3E6650] transition-colors"
+              required />
+          </div>
+
+          <div>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="pf-address">Address</label>
+            <input id="pf-address" type="text" bind:value={profAddress}
+              placeholder="Street, Barangay, City (optional)"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-zinc-800 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 focus:outline-none focus:border-[#3E6650] transition-colors" />
+          </div>
+
+          <div>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="pf-bday">Birthday</label>
+            <input id="pf-bday" type="date" bind:value={profBirthday}
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-zinc-800 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] focus:outline-none focus:border-[#3E6650] transition-colors" />
+          </div>
+
+          <!-- Dietary Preferences (chip multi-select) -->
+          <div>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-2">Dietary Preferences</label>
+            <div class="flex flex-wrap gap-1.5">
+              {#each DIETARY_OPTIONS as opt}
+                <button
+                  type="button"
+                  onclick={() => { toggleChip(profDietaryPrefs, opt); profDietaryPrefs = [...profDietaryPrefs]; }}
+                  class="px-2.5 py-1 rounded-full text-[9px] font-bold uppercase border transition-all
+                    {profDietaryPrefs.includes(opt)
+                      ? 'bg-[#3E6650] border-[#3E6650] text-white'
+                      : 'bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 text-[#767068] hover:border-[#3E6650]'}"
+                >{opt}</button>
+              {/each}
+            </div>
+          </div>
+
+          <!-- Allergies (chip multi-select) -->
+          <div>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-2">Allergies</label>
+            <div class="flex flex-wrap gap-1.5">
+              {#each ALLERGY_OPTIONS as opt}
+                <button
+                  type="button"
+                  onclick={() => { toggleChip(profAllergies, opt); profAllergies = [...profAllergies]; }}
+                  class="px-2.5 py-1 rounded-full text-[9px] font-bold uppercase border transition-all
+                    {profAllergies.includes(opt)
+                      ? 'bg-[#AC3B2A] border-[#AC3B2A] text-white'
+                      : 'bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 text-[#767068] hover:border-[#AC3B2A]'}"
+                >{opt}</button>
+              {/each}
+            </div>
+          </div>
+
+          {#if errorMessage}
+            <div class="p-3 rounded bg-red-50 dark:bg-[#AC3B2A]/10 border border-red-200 dark:border-[#AC3B2A]/30 text-xs text-[#AC3B2A] leading-relaxed">{errorMessage}</div>
+          {/if}
+
+          <button
+            id="btn-cust-complete-profile"
+            type="submit"
+            disabled={isChecking || !profFullName.trim() || !profPhone.trim()}
+            class="w-full py-3 rounded bg-[#3E6650] hover:bg-[#3E6650]/90 text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] disabled:bg-slate-300"
+          >
+            {#if isChecking}Saving Profile...{:else}Complete & Enter Portal <ArrowRight size={13} />{/if}
           </button>
         </form>
       {/if}

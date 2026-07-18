@@ -37,7 +37,8 @@ const ACCOUNT_CONFIG = {
     otpAttemptCol: 'otp_attempts',
     userRole: 'subscriber',
     redirectTo: '/portal',
-    activateOnVerify: true   // sets status='active' and email_verified_at
+    activateOnVerify: true,  // sets status='active' and email_verified_at
+    profileCol: 'profile_complete'  // column to check if profile form was filled
   },
   org_user: {
     table: 'users',
@@ -47,7 +48,8 @@ const ACCOUNT_CONFIG = {
     otpAttemptCol: 'email_otp_attempts',
     userRole: 'org_user',
     redirectTo: '/',
-    activateOnVerify: false
+    activateOnVerify: true,  // stamp email_verified_at so complete-profile can validate
+    profileCol: 'name'       // operators use 'name' column — null means profile not filled
   },
   supplier: {
     table: 'supplier_accounts',
@@ -57,7 +59,8 @@ const ACCOUNT_CONFIG = {
     otpAttemptCol: 'otp_attempts',
     userRole: 'supplier',
     redirectTo: '/supplier',
-    activateOnVerify: false
+    activateOnVerify: true,  // stamp email_verified_at so complete-profile can validate
+    profileCol: 'profile_complete'  // column to check if profile form was filled
   },
   platform_admin: {
     table: 'platform_admins',
@@ -157,17 +160,17 @@ export async function POST({ request, cookies }) {
 
     // ── SUCCESS ────────────────────────────────────────────────────────────
 
-    // Clear OTP columns + optionally activate account
-    if (cfg.activateOnVerify) {
+    // Clear OTP columns + stamp email_verified_at for all types
+    await pool.query(
+      `UPDATE ${cfg.table} SET ${cfg.otpHashCol} = NULL, ${cfg.otpExpiryCol} = NULL, ${cfg.otpAttemptCol} = 0,
+       email_verified_at = CURRENT_TIMESTAMP, last_login_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      [account.id]
+    );
+
+    // For subscriber, also activate status
+    if (cfg.activateOnVerify && cfg.userRole === 'subscriber') {
       await pool.query(
-        `UPDATE ${cfg.table} SET ${cfg.otpHashCol} = NULL, ${cfg.otpExpiryCol} = NULL, ${cfg.otpAttemptCol} = 0, 
-         email_verified_at = CURRENT_TIMESTAMP, status = 'active', last_login_at = CURRENT_TIMESTAMP WHERE id = ?`,
-        [account.id]
-      );
-    } else {
-      await pool.query(
-        `UPDATE ${cfg.table} SET ${cfg.otpHashCol} = NULL, ${cfg.otpExpiryCol} = NULL, ${cfg.otpAttemptCol} = 0,
-         last_login_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        `UPDATE ${cfg.table} SET status = 'active' WHERE id = ?`,
         [account.id]
       );
     }
@@ -222,21 +225,40 @@ export async function POST({ request, cookies }) {
       type: cfg.userRole
     };
 
+    // Determine if this is a brand-new registration needing profile completion
+    // For subscriber/supplier: check profile_complete column
+    // For org_user (operator): check if name column is null/empty (indicates fresh registration)
+    let needsProfile = false;
+    if (cfg.profileCol === 'profile_complete') {
+      needsProfile = !account.profile_complete || account.profile_complete === 0;
+    } else if (cfg.profileCol === 'name') {
+      // org_user: name is null until profile form is submitted
+      needsProfile = !account.name || account.name.trim() === account.email?.trim() ||
+                     account.name.trim() === account.username?.trim();
+    }
+
     // For customers, also fetch the linked customer record
     let customerProfile = null;
     if (accountType === 'subscriber' && account.customer_id) {
       try {
         const custRes = await pool.query(
-          'SELECT id, name, email, contact FROM customers WHERE id = ? LIMIT 1',
+          'SELECT id, name, email, contact, address, birthday, allergies, dietary_prefs, status FROM customers WHERE id = ? LIMIT 1',
           [account.customer_id]
         );
-        if (custRes.rows.length > 0) customerProfile = custRes.rows[0];
+        if (custRes.rows.length > 0) {
+          customerProfile = custRes.rows[0];
+          // Override needsProfile based on customer status
+          needsProfile = customerProfile.status === 'pending' || !account.profile_complete;
+        }
       } catch { /* Non-fatal */ }
     }
 
     return json({
       success: true,
-      redirect: cfg.redirectTo,
+      redirect: needsProfile ? null : cfg.redirectTo,
+      needsProfile,
+      accountType,
+      email,
       user: userProfile,
       customer: customerProfile
     });

@@ -38,6 +38,11 @@
   let regName = $state('');
   let regMessage = $state('');
   let loginMessage = $state('');
+
+  // Operator Step 3 profile form fields
+  let opProfileName  = $state('');
+  let opProfilePhone = $state('');
+  let opProfilePos   = $state('');
   let biometricAvailable = $state(false);
   let showInstallHelp = $state(false);
   let installHelp = $derived(appState.getPwaInstallHelp());
@@ -227,11 +232,15 @@
 
       if (response.ok && data.success) {
         clearInterval(timerInterval);
-        appState.currentUser = {
-          ...data.user,
-          userType: 'org_user'
-        };
-        triggerWelcomeRedirect(data.user.name || username.trim().split('@')[0]);
+        appState.currentUser = { ...data.user, userType: 'org_user' };
+
+        // New registration → Step 3 profile form
+        if (data.needsProfile && tab === 'register') {
+          step = 3;
+          loginMessage = '';
+        } else {
+          triggerWelcomeRedirect(data.user.name || username.trim().split('@')[0]);
+        }
       } else {
         loginMessage = `❌ ${data.error || 'Verification failed.'}`;
         appState.playBuzzerSound();
@@ -249,6 +258,39 @@
 
   async function handleRegister(e) {
     if (e) e.preventDefault();
+  }
+
+  async function submitOperatorProfile(e) {
+    if (e) e.preventDefault();
+    if (!opProfileName.trim() || !opProfilePhone.trim()) return;
+    isChecking = true;
+    loginMessage = '';
+    try {
+      const res = await fetch('/api/auth/complete-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accountType: 'operator',
+          email: username.trim().toLowerCase(),
+          fullName:  opProfileName.trim(),
+          phone:     opProfilePhone.trim(),
+          position:  opProfilePos.trim() || null
+        })
+      });
+      const data = await res.json();
+      isChecking = false;
+      if (res.ok && data.success) {
+        appState.currentUser = { ...appState.currentUser, name: opProfileName.trim() };
+        triggerWelcomeRedirect(opProfileName.trim().split(' ')[0]);
+      } else {
+        loginMessage = `❌ ${data.error || 'Profile submission failed.'}`;
+        appState.playBuzzerSound();
+      }
+    } catch (err) {
+      isChecking = false;
+      loginMessage = `❌ Connection error: ${err.message}`;
+      appState.playBuzzerSound();
+    }
   }
 
   function goBackToIdentifier() {
@@ -590,35 +632,10 @@
           </p>
         </div>
       {:else if isChecking}
-        <!-- Sci-Fi AI Scanning Console -->
-        <div class="flex flex-col items-center justify-center py-8 space-y-5 animate-fade-in text-center font-mono">
-          <!-- Holographic pulsating brain/waveform visual -->
-          <div class="relative w-24 h-24 flex items-center justify-center">
-            <div class="absolute inset-0 rounded-full border border-[#3E6650]/20 animate-ping duration-1000"></div>
-            <div class="absolute inset-2 rounded-full border border-dashed border-[#3E6650]/40 animate-spin duration-[4000ms]"></div>
-            <div class="absolute inset-4 rounded-full bg-[#3E6650]/5 border border-[#3E6650]/30 animate-pulse duration-700"></div>
-            <div class="w-10 h-10 rounded-full bg-[#3E6650] shadow-[0_0_20px_#3e6650] flex items-center justify-center text-white">
-              <span class="text-xs animate-bounce font-bold">AI</span>
-            </div>
-            <div class="absolute w-full h-[2px] bg-[#3E6650]/65 top-0 left-0 animate-[bounce_2s_infinite]"></div>
-          </div>
-          
-          <div class="space-y-1.5 w-full">
-            <span class="text-[9px] uppercase font-bold text-[#3E6650] tracking-widest block">AI Operations Scanning</span>
-            <div class="flex items-center justify-center gap-1.5 text-[9px] text-[#767068] uppercase font-mono">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-              <span>Footprint verification in progress...</span>
-            </div>
-          </div>
-
-          <!-- Neural node connections activity visual -->
-          <div class="flex gap-1 justify-center h-4 items-end pb-1 w-2/3 border-b border-[#767068]/15">
-            <div class="w-[3px] bg-[#3E6650] animate-[pulse_0.8s_infinite]" style="height: 40%"></div>
-            <div class="w-[3px] bg-[#3E6650] animate-[pulse_0.6s_infinite_100ms]" style="height: 80%"></div>
-            <div class="w-[3px] bg-[#3E6650] animate-[pulse_0.9s_infinite_200ms]" style="height: 50%"></div>
-            <div class="w-[3px] bg-[#3E6650] animate-[pulse_0.5s_infinite_300ms]" style="height: 95%"></div>
-            <div class="w-[3px] bg-[#3E6650] animate-[pulse_0.7s_infinite_400ms]" style="height: 60%"></div>
-          </div>
+        <!-- Inline loading spinner (replaces AI scanning) -->
+        <div class="flex flex-col items-center justify-center py-10 gap-4 animate-fade-in">
+          <div class="w-10 h-10 border-4 border-[#3E6650]/20 border-t-[#3E6650] rounded-full animate-spin"></div>
+          <span class="text-[10px] font-mono uppercase tracking-widest text-[#767068]">Processing...</span>
         </div>
       {:else if step === 1}
         <!-- Tabs: Login vs Register -->
@@ -740,7 +757,7 @@
               disabled={isChecking || totpToken.trim().length !== 6 || timerSeconds <= 0}
               class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-white font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1.5 disabled:bg-slate-350 disabled:text-slate-500"
             >
-              Verify & Log In <ChevronRight size={14} />
+              {#if isChecking}Verifying...{:else}Verify & Log In <ChevronRight size={14} />{/if}
             </button>
 
             <button
@@ -756,6 +773,86 @@
             <p class="text-xs font-mono text-[#AC3B2A] text-center mt-2">{loginMessage}</p>
           {/if}
         </div>
+
+      <!-- ══ STEP 3: OPERATOR PROFILE FORM ═════════════════════════════════════ -->
+      {:else if step === 3}
+        <!-- Progress steps -->
+        <div class="flex items-center gap-2 mb-5">
+          <div class="flex items-center gap-1 text-[9px] text-[#767068] uppercase font-bold">
+            <span class="w-5 h-5 rounded-full bg-[#3E6650]/20 border border-[#3E6650] flex items-center justify-center text-[8px] font-black text-[#3E6650]">✓</span>
+            Email
+          </div>
+          <div class="flex-1 h-px bg-[#3E6650]/40"></div>
+          <div class="flex items-center gap-1 text-[9px] text-[#767068] uppercase font-bold">
+            <span class="w-5 h-5 rounded-full bg-[#3E6650]/20 border border-[#3E6650] flex items-center justify-center text-[8px] font-black text-[#3E6650]">✓</span>
+            Verified
+          </div>
+          <div class="flex-1 h-px bg-[#3E6650]/40"></div>
+          <div class="flex items-center gap-1 text-[9px] text-[#3E6650] uppercase font-bold">
+            <span class="w-5 h-5 rounded-full bg-[#3E6650] flex items-center justify-center text-[8px] font-black text-white">3</span>
+            Profile
+          </div>
+        </div>
+
+        <p class="text-[10px] text-[#767068] mb-4 leading-relaxed font-mono">
+          Almost done! Fill in your operator details to activate your account.
+        </p>
+
+        <form onsubmit={submitOperatorProfile} class="space-y-4">
+          <div>
+            <label class="block text-[10px] font-mono font-bold text-[#767068] uppercase mb-1" for="op-name">
+              Full Name <span class="text-[#AC3B2A]">*</span>
+            </label>
+            <input
+              id="op-name"
+              type="text"
+              bind:value={opProfileName}
+              placeholder="e.g. Juan Dela Cruz"
+              class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white dark:bg-[#141210] text-xs focus:outline-none focus:border-[#3E6650]"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-mono font-bold text-[#767068] uppercase mb-1" for="op-phone">
+              Phone Number <span class="text-[#AC3B2A]">*</span>
+            </label>
+            <input
+              id="op-phone"
+              type="tel"
+              bind:value={opProfilePhone}
+              placeholder="e.g. 09171234567"
+              class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white dark:bg-[#141210] text-xs focus:outline-none focus:border-[#3E6650]"
+              required
+            />
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-mono font-bold text-[#767068] uppercase mb-1" for="op-pos">
+              Position / Job Title
+            </label>
+            <input
+              id="op-pos"
+              type="text"
+              bind:value={opProfilePos}
+              placeholder="e.g. Head Chef, Catering Manager (optional)"
+              class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white dark:bg-[#141210] text-xs focus:outline-none focus:border-[#3E6650]"
+            />
+          </div>
+
+          {#if loginMessage}
+            <p class="text-xs font-mono text-[#AC3B2A]">{loginMessage}</p>
+          {/if}
+
+          <button
+            id="btn-op-complete-profile"
+            type="submit"
+            disabled={isChecking || !opProfileName.trim() || !opProfilePhone.trim()}
+            class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 disabled:bg-slate-300 text-white font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all flex items-center justify-center gap-1.5"
+          >
+            {#if isChecking}Saving Profile...{:else}Activate Operator Account <ChevronRight size={14} />{/if}
+          </button>
+        </form>
       {/if}
 
       <!-- Alternate Portal Switcher -->

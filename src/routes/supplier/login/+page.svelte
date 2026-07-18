@@ -2,18 +2,25 @@
   import { getCateringContext } from '$lib/states.svelte.js';
   import { goto } from '$app/navigation';
   import { onMount, onDestroy } from 'svelte';
-  import { Truck, ShieldCheck, ArrowRight, ChevronLeft, RefreshCw, CheckCircle2, Mail } from '@lucide/svelte';
+  import { Truck, ShieldCheck, ArrowRight, ChevronLeft, RefreshCw, CheckCircle2, Building2, Phone, MapPin, Tag, User } from '@lucide/svelte';
 
   const appState = getCateringContext();
 
-  // 'login' = login, 'register' = signup
+  // 'login' | 'register'
   let tab = $state('login');
-  let regName = $state('');
 
-  // 'email' = email entry, 'otp' = code entry
+  // 'email' | 'otp' | 'profile'
   let step = $state('email');
   let supplierEmail = $state('');
   let otpCode = $state('');
+
+  // Profile form fields (Step 3 — register only)
+  let profileCompanyName  = $state('');
+  let profileContactName  = $state('');
+  let profileContactPhone = $state('');
+  let profileAddress      = $state('');
+  let profileCategory     = $state('');
+  const SUPPLY_CATEGORIES = ['Produce', 'Meat & Poultry', 'Seafood', 'Dairy', 'Dry Goods', 'Beverages', 'Equipment', 'Packaging', 'Cleaning', 'Other'];
 
   let isChecking = $state(false);
   let errorMessage = $state('');
@@ -57,7 +64,7 @@
         res = await fetch('/api/auth/register-supplier', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, name: regName.trim() })
+          body: JSON.stringify({ email })
         });
       } else {
         res = await fetch('/api/auth/send-otp', {
@@ -117,12 +124,19 @@
         appState.currentUser = { ...data.user, userType: 'supplier' };
         appState.playStampSound?.();
 
-        greetingName = data.user?.name || supplierEmail;
-        showGreeting = true;
-        setTimeout(() => {
-          appState.isAuthenticated = true;
-          goto(data.redirect || '/supplier');
-        }, 1800);
+        // New registration needs profile form (Step 3)
+        if (data.needsProfile && tab === 'register') {
+          step = 'profile';
+          errorMessage = '';
+        } else {
+          // Returning login — go directly to dashboard
+          greetingName = data.user?.name || supplierEmail;
+          showGreeting = true;
+          setTimeout(() => {
+            appState.isAuthenticated = true;
+            goto(data.redirect || '/supplier');
+          }, 1800);
+        }
       } else {
         appState.playBuzzerSound?.();
         errorMessage = data.error || 'Invalid verification code.';
@@ -130,6 +144,48 @@
     } catch (err) {
       appState.playBuzzerSound?.();
       errorMessage = 'Verification error: ' + err.message;
+    } finally {
+      isChecking = false;
+    }
+  }
+
+  // ── Step 3: Submit Profile Form ─────────────────────────────────────────────
+  async function submitProfile(e) {
+    if (e) e.preventDefault();
+    isChecking = true;
+    errorMessage = '';
+
+    try {
+      const res = await fetch('/api/auth/complete-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accountType: 'supplier',
+          email: supplierEmail.trim().toLowerCase(),
+          companyName:  profileCompanyName.trim(),
+          contactName:  profileContactName.trim(),
+          contactPhone: profileContactPhone.trim(),
+          address:      profileAddress.trim() || null,
+          category:     profileCategory || null
+        })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        appState.playStampSound?.();
+        greetingName = profileCompanyName || supplierEmail;
+        showGreeting = true;
+        setTimeout(() => {
+          appState.isAuthenticated = true;
+          goto(data.redirectTo || '/supplier');
+        }, 1800);
+      } else {
+        appState.playBuzzerSound?.();
+        errorMessage = data.error || 'Profile submission failed.';
+      }
+    } catch (err) {
+      appState.playBuzzerSound?.();
+      errorMessage = 'Error: ' + err.message;
     } finally {
       isChecking = false;
     }
@@ -144,7 +200,7 @@
     successMessage = '';
   }
 
-  // ── Persistent session check (Facebook-style) ───────────────────────────────
+  // ── Persistent session check ───────────────────────────────────────────────
   onMount(async () => {
     appState.initAudio?.();
     try {
@@ -156,6 +212,18 @@
       }
     } catch { /* non-fatal */ }
   });
+
+  // Header label helper
+  const stepLabel = $derived(
+    step === 'profile' ? 'Complete Your Profile' :
+    step === 'otp'     ? 'Verify Your Email' :
+                         'Supplier Hub Sign In'
+  );
+  const stepSubLabel = $derived(
+    step === 'profile' ? 'PROFILE SETUP' :
+    step === 'otp'     ? 'ENTER CODE' :
+                         'VENDOR ACCESS'
+  );
 </script>
 
 <svelte:head>
@@ -171,7 +239,7 @@
     <div class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#F6F2EA]/95 dark:bg-[#1A1714]/95 backdrop-blur-sm">
       <div class="text-center space-y-4">
         <div class="text-5xl mb-2 animate-bounce">📦</div>
-        <h2 class="text-2xl font-black text-[#D9A441] tracking-tight">Welcome back, {greetingName.split(' ')[0]}!</h2>
+        <h2 class="text-2xl font-black text-[#D9A441] tracking-tight">Welcome, {greetingName.split(' ')[0]}!</h2>
         <p class="text-[10px] text-[#767068] uppercase tracking-widest">Redirecting to Supplier Hub...</p>
         <div class="flex justify-center gap-1 mt-4">
           <span class="w-2 h-2 rounded-full bg-[#D9A441] animate-bounce" style="animation-delay:0ms"></span>
@@ -197,7 +265,7 @@
     <div class="bg-white dark:bg-[#201D1A] border border-[#767068]/30 shadow-2xl p-6 md:p-8 rounded text-left relative">
       <div class="absolute top-0 right-0 w-24 h-1 bg-gradient-to-r from-transparent to-[#D9A441]"></div>
 
-      {#if !isChecking && step === 'email'}
+      {#if step === 'email' && !isChecking}
         <a
           href="/"
           class="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-[#767068] hover:text-[#2A2521] dark:hover:text-[#EBE5DC] transition-colors mb-4 no-underline bg-slate-50 dark:bg-zinc-800/40 py-1 px-2 rounded border border-[#767068]/20"
@@ -209,29 +277,28 @@
       <!-- Card Header -->
       <div class="mb-6 flex justify-between items-start">
         <div>
-          <span class="text-[8px] uppercase tracking-widest text-[#767068] font-bold">
-            {step === 'otp' ? 'ENTER CODE' : 'VENDOR ACCESS'}
-          </span>
-          <h2 class="text-lg font-bold mt-0.5 text-[#2A2521] dark:text-[#EBE5DC]">
-            {step === 'otp' ? 'Verify Your Email' : 'Supplier Hub Sign In'}
-          </h2>
+          <span class="text-[8px] uppercase tracking-widest text-[#767068] font-bold">{stepSubLabel}</span>
+          <h2 class="text-lg font-bold mt-0.5 text-[#2A2521] dark:text-[#EBE5DC]">{stepLabel}</h2>
         </div>
         <div class="p-2 rounded bg-slate-50 dark:bg-[#141210] border border-slate-200 dark:border-[#767068]/20 text-[#D9A441]">
-          {#if step === 'otp'}<ShieldCheck size={16} />{:else}<Truck size={16} />{/if}
+          {#if step === 'otp'}<ShieldCheck size={16} />
+          {:else if step === 'profile'}<Building2 size={16} />
+          {:else}<Truck size={16} />{/if}
         </div>
       </div>
 
+      <!-- ══ STEP 1: EMAIL ══════════════════════════════════════════════════════ -->
       {#if step === 'email'}
         <!-- Tabs: Login vs Register -->
         <div class="flex border-b border-[#767068]/15 mb-4">
-          <button 
+          <button
             type="button"
             onclick={() => { appState.playClickSound?.(); tab = 'login'; errorMessage = ''; }}
             class="flex-1 py-2 text-center text-[10px] font-bold uppercase tracking-wider transition-all border-b-2 font-mono {tab === 'login' ? 'border-[#D9A441] text-[#D9A441]' : 'border-transparent text-[#767068] hover:text-[#2A2521]'}"
           >
             Sign In
           </button>
-          <button 
+          <button
             type="button"
             onclick={() => { appState.playClickSound?.(); tab = 'register'; errorMessage = ''; }}
             class="flex-1 py-2 text-center text-[10px] font-bold uppercase tracking-wider transition-all border-b-2 font-mono {tab === 'register' ? 'border-[#D9A441] text-[#D9A441]' : 'border-transparent text-[#767068] hover:text-[#2A2521]'}"
@@ -240,24 +307,7 @@
           </button>
         </div>
 
-        <!-- ── Email / Reg Entry ────────────────────────────────────────────── -->
         <form onsubmit={sendOtp} class="space-y-4">
-          {#if tab === 'register'}
-            <div>
-              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="supplier-name">
-                Supplier Company Name
-              </label>
-              <input
-                id="supplier-name"
-                type="text"
-                bind:value={regName}
-                placeholder="e.g. Acme Fresh Foods"
-                class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 focus:outline-none focus:border-[#D9A441] transition-colors"
-                required
-              />
-            </div>
-          {/if}
-
           <div>
             <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="supplier-email">
               Gmail Address
@@ -271,13 +321,11 @@
               class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 focus:outline-none focus:border-[#D9A441] transition-colors"
               required
             />
-            <p class="text-[9px] text-[#767068] mt-1.5">We'll send a 6-digit code to this email address.</p>
+            <p class="text-[9px] text-[#767068] mt-1.5">We'll send a 6-digit verification code to this email.</p>
           </div>
 
           {#if errorMessage}
-            <div class="p-3 rounded bg-red-50 dark:bg-[#AC3B2A]/10 border border-red-200 dark:border-[#AC3B2A]/30 text-xs text-[#AC3B2A] leading-relaxed">
-              {errorMessage}
-            </div>
+            <div class="p-3 rounded bg-red-50 dark:bg-[#AC3B2A]/10 border border-red-200 dark:border-[#AC3B2A]/30 text-xs text-[#AC3B2A] leading-relaxed">{errorMessage}</div>
           {/if}
 
           <button
@@ -286,16 +334,12 @@
             disabled={isChecking}
             class="w-full py-3 rounded bg-[#D9A441] hover:bg-[#D9A441]/90 disabled:bg-slate-300 text-[#1F1B18] font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
           >
-            {#if isChecking}
-              Sending Code...
-            {:else}
-              Send Verification Code <ArrowRight size={13} />
-            {/if}
+            {#if isChecking}Sending Code...{:else}Send Verification Code <ArrowRight size={13} />{/if}
           </button>
         </form>
 
-      {:else}
-        <!-- ── OTP Entry ────────────────────────────────────────────────────── -->
+      <!-- ══ STEP 2: OTP ════════════════════════════════════════════════════════ -->
+      {:else if step === 'otp'}
         <form onsubmit={verifyOtp} class="space-y-4">
           <div class="flex items-center gap-1.5 border-b border-[#767068]/15 pb-2.5 mb-2">
             <button type="button" onclick={goBack} class="text-[#767068] hover:text-[#2A2521] dark:hover:text-[#EBE5DC] transition-colors p-1">
@@ -323,7 +367,6 @@
             />
           </div>
 
-          <!-- Countdown -->
           <div class="flex justify-between items-center bg-slate-50 dark:bg-[#141210] p-2.5 rounded border border-[#767068]/15 text-[10px] uppercase font-bold font-mono">
             <span class="text-[#767068]">Code expires in:</span>
             {#if timerSeconds > 0}
@@ -340,9 +383,7 @@
           {/if}
 
           {#if errorMessage}
-            <div class="p-3 rounded bg-red-50 dark:bg-[#AC3B2A]/10 border border-red-200 dark:border-[#AC3B2A]/30 text-xs text-[#AC3B2A] leading-relaxed">
-              {errorMessage}
-            </div>
+            <div class="p-3 rounded bg-red-50 dark:bg-[#AC3B2A]/10 border border-red-200 dark:border-[#AC3B2A]/30 text-xs text-[#AC3B2A] leading-relaxed">{errorMessage}</div>
           {/if}
 
           <button
@@ -351,7 +392,7 @@
             disabled={isChecking || otpCode.trim().length !== 6 || timerSeconds <= 0}
             class="w-full py-3 rounded bg-[#D9A441] hover:bg-[#D9A441]/90 disabled:bg-[#D9A441]/40 text-[#1F1B18] font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
           >
-            Access Supplier Hub <ShieldCheck size={13} />
+            {#if isChecking}Verifying...{:else}Verify Code <ShieldCheck size={13} />{/if}
           </button>
 
           <button
@@ -363,11 +404,127 @@
             <RefreshCw size={11} /> Resend Code
           </button>
         </form>
+
+      <!-- ══ STEP 3: PROFILE FORM ═══════════════════════════════════════════════ -->
+      {:else if step === 'profile'}
+        <!-- Progress indicator -->
+        <div class="flex items-center gap-2 mb-5">
+          <div class="flex items-center gap-1.5 text-[9px] text-[#767068] uppercase font-bold">
+            <span class="w-5 h-5 rounded-full bg-[#D9A441]/20 border border-[#D9A441] flex items-center justify-center text-[8px] font-black text-[#D9A441]">✓</span>
+            Email
+          </div>
+          <div class="flex-1 h-px bg-[#D9A441]/40"></div>
+          <div class="flex items-center gap-1.5 text-[9px] text-[#767068] uppercase font-bold">
+            <span class="w-5 h-5 rounded-full bg-[#D9A441]/20 border border-[#D9A441] flex items-center justify-center text-[8px] font-black text-[#D9A441]">✓</span>
+            Verified
+          </div>
+          <div class="flex-1 h-px bg-[#D9A441]/40"></div>
+          <div class="flex items-center gap-1.5 text-[9px] text-[#D9A441] uppercase font-bold">
+            <span class="w-5 h-5 rounded-full bg-[#D9A441] flex items-center justify-center text-[8px] font-black text-[#1F1B18]">3</span>
+            Profile
+          </div>
+        </div>
+
+        <p class="text-[10px] text-[#767068] mb-4 leading-relaxed">
+          Almost done! Please fill in your supplier details to activate your account.
+        </p>
+
+        <form onsubmit={submitProfile} class="space-y-4">
+
+          <!-- Company Name -->
+          <div>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="prof-company">
+              <Building2 size={10} class="inline mr-1" />Company / Business Name <span class="text-[#AC3B2A]">*</span>
+            </label>
+            <input
+              id="prof-company"
+              type="text"
+              bind:value={profileCompanyName}
+              placeholder="e.g. Acme Fresh Foods Inc."
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 focus:outline-none focus:border-[#D9A441] transition-colors"
+              required
+            />
+          </div>
+
+          <!-- Contact Name -->
+          <div>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="prof-contact-name">
+              <User size={10} class="inline mr-1" />Contact Person Name <span class="text-[#AC3B2A]">*</span>
+            </label>
+            <input
+              id="prof-contact-name"
+              type="text"
+              bind:value={profileContactName}
+              placeholder="e.g. Juan Dela Cruz"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 focus:outline-none focus:border-[#D9A441] transition-colors"
+              required
+            />
+          </div>
+
+          <!-- Contact Phone -->
+          <div>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="prof-phone">
+              <Phone size={10} class="inline mr-1" />Contact Phone <span class="text-[#AC3B2A]">*</span>
+            </label>
+            <input
+              id="prof-phone"
+              type="tel"
+              bind:value={profileContactPhone}
+              placeholder="e.g. 09171234567"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 focus:outline-none focus:border-[#D9A441] transition-colors"
+              required
+            />
+          </div>
+
+          <!-- Supply Category -->
+          <div>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="prof-category">
+              <Tag size={10} class="inline mr-1" />Supply Category
+            </label>
+            <select
+              id="prof-category"
+              bind:value={profileCategory}
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] focus:outline-none focus:border-[#D9A441] transition-colors"
+            >
+              <option value="">Select category (optional)</option>
+              {#each SUPPLY_CATEGORIES as cat}
+                <option value={cat}>{cat}</option>
+              {/each}
+            </select>
+          </div>
+
+          <!-- Business Address -->
+          <div>
+            <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="prof-address">
+              <MapPin size={10} class="inline mr-1" />Business Address
+            </label>
+            <input
+              id="prof-address"
+              type="text"
+              bind:value={profileAddress}
+              placeholder="Street, Barangay, City (optional)"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 focus:outline-none focus:border-[#D9A441] transition-colors"
+            />
+          </div>
+
+          {#if errorMessage}
+            <div class="p-3 rounded bg-red-50 dark:bg-[#AC3B2A]/10 border border-red-200 dark:border-[#AC3B2A]/30 text-xs text-[#AC3B2A] leading-relaxed">{errorMessage}</div>
+          {/if}
+
+          <button
+            id="btn-supplier-complete-profile"
+            type="submit"
+            disabled={isChecking || !profileCompanyName.trim() || !profileContactName.trim() || !profileContactPhone.trim()}
+            class="w-full py-3 rounded bg-[#D9A441] hover:bg-[#D9A441]/90 disabled:bg-[#D9A441]/40 text-[#1F1B18] font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
+          >
+            {#if isChecking}Saving Profile...{:else}Activate Supplier Account <ArrowRight size={13} />{/if}
+          </button>
+        </form>
       {/if}
     </div>
 
     <p class="text-center text-[9px] text-[#767068] tracking-widest uppercase">
-      CaterSync Operations Inc. · Supplier Hub v2 · Email OTP Only
+      CaterSync Operations Inc. · Supplier Hub v3 · Email OTP Only
     </p>
   </div>
 </div>

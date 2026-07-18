@@ -59,14 +59,14 @@ export async function POST({ request }) {
       customerId = customerRes.rows[0].id;
       customerName = customerRes.rows[0].name;
     } else {
-      const finalName = name?.trim() || cleanEmail.split('@')[0];
-      const finalPhone = phone?.trim() || cleanEmail;
+      const finalName = name?.trim() || null; // NULL until Step 3 profile form
+      const finalPhone = phone?.trim() || null;
       const insertRes = await pool.query(
-        'INSERT INTO customers (name, contact, email) VALUES ($1, $2, $3) RETURNING id, name',
+        `INSERT INTO customers (name, contact, email, status) VALUES ($1, $2, $3, 'pending') RETURNING id, name`,
         [finalName, finalPhone, cleanEmail]
       );
       customerId = insertRes.rows[0].id;
-      customerName = insertRes.rows[0].name;
+      customerName = insertRes.rows[0].name || 'Valued Client';
     }
 
     // ── Generate OTP (hashed before storage) ──────────────────────────

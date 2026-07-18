@@ -635,8 +635,30 @@ if (env.DATABASE_URL) {
             UNIQUE (organization_id, supplier_id)
         );
 
-        -- Migration for customer email
+        -- Migration for customer email + profile fields
         ALTER TABLE customers ADD COLUMN IF NOT EXISTS email VARCHAR(255) DEFAULT '';
+        ALTER TABLE customers ADD COLUMN IF NOT EXISTS address TEXT;
+        ALTER TABLE customers ADD COLUMN IF NOT EXISTS birthday DATE;
+        ALTER TABLE customers ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active';
+
+        -- Migration for subscriber_accounts profile fields
+        ALTER TABLE subscriber_accounts ADD COLUMN IF NOT EXISTS full_name TEXT;
+        ALTER TABLE subscriber_accounts ADD COLUMN IF NOT EXISTS profile_complete SMALLINT NOT NULL DEFAULT 0;
+
+        -- Migration for users (operators) profile fields
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS position VARCHAR(100);
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active';
+
+        -- Migration for suppliers profile fields
+        ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS contact_name VARCHAR(255);
+        ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(50);
+        ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS address TEXT;
+        ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS category VARCHAR(100);
+        ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active';
+
+        -- Migration for supplier_accounts profile fields
+        ALTER TABLE supplier_accounts ADD COLUMN IF NOT EXISTS profile_complete SMALLINT NOT NULL DEFAULT 0;
 
         -- Phase 12 Database Schema Extensions (Operational Modules)
         CREATE TABLE IF NOT EXISTS roles (
