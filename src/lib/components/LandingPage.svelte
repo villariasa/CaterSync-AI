@@ -728,74 +728,8 @@
             <p class="text-xs font-mono text-[#AC3B2A] text-center mt-2">{loginMessage}</p>
           {/if}
         </form>
-      {:else}
-        <!-- Step 2: Email OTP Verification Challenge -->
-        <div class="space-y-4">
-          <div class="flex items-center gap-2 border-b border-[#767068]/10 pb-3">
-            <button 
-              onclick={goBackToIdentifier}
-              class="text-[#767068] hover:text-[#2A2521] transition-all p-1 hover:bg-[#F6F2EA] rounded-full"
-              title="Change ID"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <span class="text-xs font-mono font-bold text-[#767068] truncate">Active ID: <span class="text-[#2A2521]">{username}</span></span>
-          </div>
-
-          <form onsubmit={handleTotpSubmit} class="space-y-4">
-            <div>
-              <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1.5 text-center" for="otp-code">
-                Enter the 6-digit code sent to your Gmail
-              </label>
-              <input 
-                id="otp-code"
-                type="text" 
-                pattern="[0-9]*"
-                inputmode="numeric"
-                maxlength="6"
-                bind:value={totpToken} 
-                oninput={() => { if (totpToken.trim().length === 6 && timerSeconds > 0) handleTotpSubmit(); }}
-                class="w-full px-3 py-2.5 rounded border border-[#767068]/30 bg-white text-base text-center font-bold tracking-[0.5em] focus:outline-none focus:border-[#3E6650]" 
-                placeholder="000000"
-                required 
-                autofocus
-              />
-            </div>
-
-            <!-- Countdown -->
-            <div class="flex justify-between items-center bg-slate-50 dark:bg-zinc-800/40 p-2.5 rounded border border-[#767068]/15 text-[10px] uppercase font-bold font-mono">
-              <span class="text-[#767068]">Code expires in:</span>
-              {#if timerSeconds > 0}
-                <span class="text-[#3E6650] animate-pulse">{Math.floor(timerSeconds / 60)}:{(timerSeconds % 60).toString().padStart(2, '0')}</span>
-              {:else}
-                <span class="text-[#AC3B2A]">Expired</span>
-              {/if}
-            </div>
-
-            <button 
-              type="submit" 
-              disabled={isChecking || totpToken.trim().length !== 6 || timerSeconds <= 0}
-              class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-white font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1.5 disabled:bg-slate-350 disabled:text-slate-500"
-            >
-              {#if isChecking}Verifying...{:else}Verify & Log In <ChevronRight size={14} />{/if}
-            </button>
-
-            <button
-              type="button"
-              onclick={handleIdentifierSubmit}
-              class="w-full text-center text-[10px] text-[#767068] hover:text-[#3E6650] uppercase font-bold transition-colors flex items-center justify-center gap-1"
-            >
-              <RefreshCw size={11} /> Resend Code
-            </button>
-          </form>
-
-          {#if loginMessage}
-            <p class="text-xs font-mono text-[#AC3B2A] text-center mt-2">{loginMessage}</p>
-          {/if}
-        </div>
-
-      <!-- ══ STEP 3: OPERATOR PROFILE FORM ═════════════════════════════════════ -->
       {:else if step === 3}
+        <!-- ══ STEP 3: OPERATOR PROFILE FORM ═════════════════════════════════════ -->
         <!-- Progress steps -->
         <div class="flex items-center gap-2 mb-5">
           <div class="flex items-center gap-1 text-[9px] text-[#767068] uppercase font-bold">
@@ -873,6 +807,71 @@
             {#if isChecking}Saving Profile...{:else}Activate Operator Account <ChevronRight size={14} />{/if}
           </button>
         </form>
+      {:else}
+        <!-- Step 2: Email OTP Verification Challenge -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-2 border-b border-[#767068]/10 pb-3">
+            <button 
+              onclick={goBackToIdentifier}
+              class="text-[#767068] hover:text-[#2A2521] transition-all p-1 hover:bg-[#F6F2EA] rounded-full"
+              title="Change ID"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span class="text-xs font-mono font-bold text-[#767068] truncate">Active ID: <span class="text-[#2A2521]">{username}</span></span>
+          </div>
+
+          <form onsubmit={handleTotpSubmit} class="space-y-4">
+            <div>
+              <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1.5 text-center" for="otp-code">
+                Enter the 6-digit code sent to your Gmail
+              </label>
+              <input 
+                id="otp-code"
+                type="text" 
+                pattern="[0-9]*"
+                inputmode="numeric"
+                maxlength="6"
+                bind:value={totpToken} 
+                oninput={() => { if (totpToken.trim().length === 6 && timerSeconds > 0) handleTotpSubmit(); }}
+                class="w-full px-3 py-2.5 rounded border border-[#767068]/30 bg-white text-base text-center font-bold tracking-[0.5em] focus:outline-none focus:border-[#3E6650]" 
+                placeholder="000000"
+                required 
+                autofocus
+              />
+            </div>
+
+            <!-- Countdown -->
+            <div class="flex justify-between items-center bg-slate-50 dark:bg-zinc-800/40 p-2.5 rounded border border-[#767068]/15 text-[10px] uppercase font-bold font-mono">
+              <span class="text-[#767068]">Code expires in:</span>
+              {#if timerSeconds > 0}
+                <span class="text-[#3E6650] animate-pulse">{Math.floor(timerSeconds / 60)}:{(timerSeconds % 60).toString().padStart(2, '0')}</span>
+              {:else}
+                <span class="text-[#AC3B2A]">Expired</span>
+              {/if}
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={isChecking || totpToken.trim().length !== 6 || timerSeconds <= 0}
+              class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-white font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1.5 disabled:bg-slate-350 disabled:text-slate-500"
+            >
+              {#if isChecking}Verifying...{:else}Verify & Log In <ChevronRight size={14} />{/if}
+            </button>
+
+            <button
+              type="button"
+              onclick={handleIdentifierSubmit}
+              class="w-full text-center text-[10px] text-[#767068] hover:text-[#3E6650] uppercase font-bold transition-colors flex items-center justify-center gap-1"
+            >
+              <RefreshCw size={11} /> Resend Code
+            </button>
+          </form>
+
+          {#if loginMessage}
+            <p class="text-xs font-mono text-[#AC3B2A] text-center mt-2">{loginMessage}</p>
+          {/if}
+        </div>
       {/if}
 
       <!-- Alternate Portal Switcher -->
