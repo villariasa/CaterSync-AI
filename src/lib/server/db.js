@@ -590,7 +590,8 @@ if (env.DATABASE_URL) {
             last_login_at TIMESTAMP WITH TIME ZONE,
             email_otp_hash VARCHAR(128),
             email_otp_expires_at TIMESTAMP WITH TIME ZONE,
-            email_otp_attempts INT DEFAULT 0
+            email_otp_attempts INT DEFAULT 0,
+            email_verified_at TIMESTAMP WITH TIME ZONE
         );
         INSERT INTO users (username, password_hash, role, organization_id)
         VALUES ('admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'Admin', 1)
@@ -649,6 +650,7 @@ if (env.DATABASE_URL) {
         ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
         ALTER TABLE users ADD COLUMN IF NOT EXISTS position VARCHAR(100);
         ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMP WITH TIME ZONE;
 
         -- Migration for suppliers profile fields
         ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS contact_name VARCHAR(255);
