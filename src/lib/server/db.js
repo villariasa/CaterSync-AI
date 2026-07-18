@@ -593,8 +593,8 @@ if (env.DATABASE_URL) {
             email_otp_attempts INT DEFAULT 0,
             email_verified_at TIMESTAMP WITH TIME ZONE
         );
-        INSERT INTO users (username, password_hash, role, organization_id)
-        VALUES ('admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'Admin', 1)
+        INSERT INTO users (username, email, name, password_hash, role, organization_id)
+        VALUES ('admin@gmail.com', 'admin@gmail.com', 'Medy Villarias', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'Admin', 1)
         ON CONFLICT (username) DO NOTHING;
 
         CREATE TABLE IF NOT EXISTS platform_admins (
