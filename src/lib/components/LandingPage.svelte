@@ -358,30 +358,29 @@
         body: JSON.stringify({ credential: response.credential })
       });
       const data = await res.json();
-      isChecking = false;
 
       if (res.ok && data.success) {
-        username = data.user.username;
-        // Temporarily store user details so once 2FA passes we can log in
+        username = data.user.email || data.user.username;
         appState.currentUser = data.user;
 
-        if (data.totpConfigured) {
-          availableMethods = ['totp'];
-          totpSetupSecret = '';
-          totpSetupQrUrl = '';
+        // Auto-send OTP to this operator's Google email
+        const otpRes = await fetch('/api/auth/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: username, accountType: 'org_user' })
+        });
+        const otpData = await otpRes.json();
+        isChecking = false;
+
+        if (otpRes.ok && otpData.success) {
+          step = 2;
+          startCountdown();
         } else {
-          availableMethods = ['totp-setup'];
-          if (data.totpSetup) {
-            totpSetupSecret = data.totpSetup.secret;
-            totpSetupQrUrl = data.totpSetup.qrCodeUrl;
-          } else {
-            totpSetupSecret = '';
-            totpSetupQrUrl = '';
-          }
+          loginMessage = `❌ ${otpData.error || 'Failed to dispatch code to your Google email.'}`;
+          appState.playBuzzerSound();
         }
-        selectedMethod = availableMethods[0];
-        step = 2;
       } else {
+        isChecking = false;
         const errMsg = data.error || 'Google Authentication failed.';
         if (isSignupMode) regMessage = errMsg;
         else loginMessage = errMsg;

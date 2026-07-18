@@ -51,9 +51,9 @@ export async function POST({ request, cookies }) {
     email = payload.email.trim().toLowerCase();
     name = payload.name || payload.given_name || email.split('@')[0];
 
-    // 1. Check if Operator exists in users table
+    // 1. Check if Operator exists in users table (check both username and email columns)
     const userRes = await pool.query(
-      'SELECT id, username, role, totp_secret FROM users WHERE LOWER(username) = $1 LIMIT 1',
+      'SELECT id, username, email, role FROM users WHERE LOWER(username) = $1 OR LOWER(email) = $1 LIMIT 1',
       [email]
     );
 
@@ -66,31 +66,17 @@ export async function POST({ request, cookies }) {
       // Use a dummy password hash that cannot be matched normally
       const dummyHash = 'google-oauth-operator-account-placeholder-hash';
       const insertRes = await pool.query(
-        "INSERT INTO users (username, password_hash, role) VALUES ($1, $2, 'Operator') RETURNING id, username, role, totp_secret",
+        "INSERT INTO users (username, email, password_hash, role) VALUES ($1, $1, $2, 'Operator') RETURNING id, username, email, role",
         [email, dummyHash]
       );
       user = insertRes.rows[0];
     }
 
-    const totpConfigured = !!user.totp_secret;
-    let totpSetup = null;
-
-    if (!totpConfigured) {
-      // Generate a new TOTP setup secret if not configured
-      const setupSecret = generateSecret();
-      const otpauthUrl = `otpauth://totp/CaterSync-AI:${encodeURIComponent(user.username)}?secret=${setupSecret}&issuer=CaterSync-AI`;
-      totpSetup = {
-        secret: setupSecret,
-        qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(otpauthUrl)}`
-      };
-    }
-
     return json({
       success: true,
-      totpConfigured,
-      totpSetup,
       user: {
         username: user.username,
+        email: user.email || user.username,
         role: user.role,
         name: name,
         picture: payload.picture || null
@@ -105,13 +91,9 @@ export async function POST({ request, cookies }) {
       return json({
         success: true,
         offlineFallback: true,
-        totpConfigured: false,
-        totpSetup: {
-          secret: 'OFFLINETOTPSECRET',
-          qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth%3A%2F%2Ftotp%2FCaterSync-AI%3Aoffline%3Fsecret%3DOFFLINETOTPSECRET%26issuer%3DCaterSync-AI'
-        },
         user: {
-          username: name,
+          username: email,
+          email: email,
           role: 'Operator',
           name: name,
           picture: payload ? payload.picture : null
