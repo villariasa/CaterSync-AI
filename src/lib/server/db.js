@@ -620,7 +620,10 @@ if (env.DATABASE_URL) {
             is_active BOOLEAN NOT NULL DEFAULT TRUE,
             email_verified_at TIMESTAMP WITH TIME ZONE,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-            last_login_at TIMESTAMP WITH TIME ZONE
+            last_login_at TIMESTAMP WITH TIME ZONE,
+            otp_hash VARCHAR(128),
+            otp_expires_at TIMESTAMP WITH TIME ZONE,
+            otp_attempts INT DEFAULT 0
         );
 
         CREATE TABLE IF NOT EXISTS organization_suppliers (

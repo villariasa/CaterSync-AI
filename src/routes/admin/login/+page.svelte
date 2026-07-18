@@ -187,13 +187,7 @@
         </div>
       </div>
 
-      {#if isChecking}
-        <div class="py-12 flex flex-col items-center gap-3 text-[#767068]">
-          <div class="w-8 h-8 border-2 border-[#AC3B2A] border-t-transparent rounded-full animate-spin"></div>
-          <p class="text-[10px] uppercase tracking-widest">{successMessage || 'Authenticating...'}</p>
-        </div>
-
-      {:else if step === 'email'}
+      {#if step === 'email'}
         <!-- ── Email Entry ──────────────────────────────────────────────────── -->
         <form onsubmit={sendOtp} class="space-y-4">
           <div>
@@ -221,9 +215,14 @@
           <button
             id="btn-admin-send-code"
             type="submit"
-            class="w-full py-3 rounded bg-[#AC3B2A] hover:bg-[#AC3B2A]/90 text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
+            disabled={isChecking}
+            class="w-full py-3 rounded bg-[#AC3B2A] hover:bg-[#AC3B2A]/90 disabled:bg-slate-300 text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
           >
-            Send Verification Code <ArrowRight size={13} />
+            {#if isChecking}
+              Sending Code...
+            {:else}
+              Send Verification Code <ArrowRight size={13} />
+            {/if}
           </button>
         </form>
 
@@ -284,7 +283,11 @@
             disabled={isChecking || otpCode.trim().length !== 6 || timerSeconds <= 0}
             class="w-full py-3 rounded bg-[#AC3B2A] hover:bg-[#AC3B2A]/90 disabled:bg-[#AC3B2A]/40 text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
           >
-            Authorize Platform Access <ShieldCheck size={13} />
+            {#if isChecking}
+              Verifying...
+            {:else}
+              Authorize Platform Access <ShieldCheck size={13} />
+            {/if}
           </button>
 
           <button

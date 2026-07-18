@@ -6,6 +6,10 @@
 
   const appState = getCateringContext();
 
+  // 'login' = login, 'register' = signup
+  let tab = $state('login');
+  let regName = $state('');
+
   // 'email' = email entry, 'otp' = code entry
   let step = $state('email');
   let supplierEmail = $state('');
@@ -48,11 +52,21 @@
     successMessage = '';
 
     try {
-      const res = await fetch('/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, accountType: 'supplier' })
-      });
+      let res;
+      if (tab === 'register') {
+        res = await fetch('/api/auth/register-supplier', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, name: regName.trim() })
+        });
+      } else {
+        res = await fetch('/api/auth/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, accountType: 'supplier' })
+        });
+      }
+
       const data = await res.json();
 
       if (data.success) {
@@ -207,18 +221,46 @@
         </div>
       </div>
 
-      {#if isChecking}
-        <div class="py-12 flex flex-col items-center gap-3 text-[#767068]">
-          <div class="w-8 h-8 border-2 border-[#D9A441] border-t-transparent rounded-full animate-spin"></div>
-          <p class="text-[10px] uppercase tracking-widest">Authenticating...</p>
+      {#if step === 'email'}
+        <!-- Tabs: Login vs Register -->
+        <div class="flex border-b border-[#767068]/15 mb-4">
+          <button 
+            type="button"
+            onclick={() => { appState.playClickSound?.(); tab = 'login'; errorMessage = ''; }}
+            class="flex-1 py-2 text-center text-[10px] font-bold uppercase tracking-wider transition-all border-b-2 font-mono {tab === 'login' ? 'border-[#D9A441] text-[#D9A441]' : 'border-transparent text-[#767068] hover:text-[#2A2521]'}"
+          >
+            Sign In
+          </button>
+          <button 
+            type="button"
+            onclick={() => { appState.playClickSound?.(); tab = 'register'; errorMessage = ''; }}
+            class="flex-1 py-2 text-center text-[10px] font-bold uppercase tracking-wider transition-all border-b-2 font-mono {tab === 'register' ? 'border-[#D9A441] text-[#D9A441]' : 'border-transparent text-[#767068] hover:text-[#2A2521]'}"
+          >
+            Sign Up
+          </button>
         </div>
 
-      {:else if step === 'email'}
-        <!-- ── Email Entry ──────────────────────────────────────────────────── -->
+        <!-- ── Email / Reg Entry ────────────────────────────────────────────── -->
         <form onsubmit={sendOtp} class="space-y-4">
+          {#if tab === 'register'}
+            <div>
+              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="supplier-name">
+                Supplier Company Name
+              </label>
+              <input
+                id="supplier-name"
+                type="text"
+                bind:value={regName}
+                placeholder="e.g. Acme Fresh Foods"
+                class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 focus:outline-none focus:border-[#D9A441] transition-colors"
+                required
+              />
+            </div>
+          {/if}
+
           <div>
             <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="supplier-email">
-              Registered Supplier Gmail
+              Gmail Address
             </label>
             <input
               id="supplier-email"
@@ -241,9 +283,14 @@
           <button
             id="btn-supplier-send-code"
             type="submit"
-            class="w-full py-3 rounded bg-[#D9A441] hover:bg-[#D9A441]/90 text-[#1F1B18] font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
+            disabled={isChecking}
+            class="w-full py-3 rounded bg-[#D9A441] hover:bg-[#D9A441]/90 disabled:bg-slate-300 text-[#1F1B18] font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
           >
-            Send Verification Code <ArrowRight size={13} />
+            {#if isChecking}
+              Sending Code...
+            {:else}
+              Send Verification Code <ArrowRight size={13} />
+            {/if}
           </button>
         </form>
 

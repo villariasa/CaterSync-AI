@@ -33,9 +33,9 @@
   let selectedMethod = $state('password'); // password, biometric, totp, totp-setup
 
   // Signup fields
-  let isSignupMode = $state(false);
-  let regUsername = $state('');
-  let regPassword = $state('');
+  let tab = $state('login'); // 'login' = login, 'register' = signup
+  let isSignupMode = $derived(tab === 'register');
+  let regName = $state('');
   let regMessage = $state('');
   let loginMessage = $state('');
   let biometricAvailable = $state(false);
@@ -163,11 +163,21 @@
     totpToken = '';
 
     try {
-      const response = await fetch('/api/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, accountType: 'org_user' })
-      });
+      let response;
+      if (tab === 'register') {
+        response = await fetch('/api/auth/register-operator', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, name: regName.trim() })
+        });
+      } else {
+        response = await fetch('/api/auth/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, accountType: 'org_user' })
+        });
+      }
+
       const data = await response.json();
       isChecking = false;
 
@@ -238,54 +248,7 @@
   }
 
   async function handleRegister(e) {
-    e.preventDefault();
-    if (!regUsername || !regPassword) return;
-
-    appState.playClickSound();
-
-    if (appState.usingMockData) {
-      appState.currentUser = {
-        username: regUsername,
-        password: regPassword
-      };
-      regMessage = `✅ Profile "${regUsername}" registered successfully.`;
-      appState.playStampSound();
-      setTimeout(() => {
-        isSignupMode = false;
-        username = regUsername;
-        step = 1;
-      }, 1200);
-    } else {
-      try {
-        const response = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: regUsername, password: regPassword, role: 'Operator' })
-        });
-        const res = await response.json();
-        if (response.ok) {
-          appState.currentUser = {
-            username: regUsername,
-            password: regPassword,
-            pin: regPIN
-          };
-          appState.registeredPIN = regPIN;
-          regMessage = `✅ Profile "${regUsername}" registered successfully.`;
-          appState.playStampSound();
-          setTimeout(() => {
-            isSignupMode = false;
-            username = regUsername;
-            step = 1;
-          }, 1200);
-        } else {
-          regMessage = `❌ Registration failed: ${res.error}`;
-          appState.playBuzzerSound();
-        }
-      } catch (err) {
-        regMessage = `❌ Error: ${err.message}`;
-        appState.playBuzzerSound();
-      }
-    }
+    if (e) e.preventDefault();
   }
 
   function goBackToIdentifier() {
@@ -657,72 +620,50 @@
             <div class="w-[3px] bg-[#3E6650] animate-[pulse_0.7s_infinite_400ms]" style="height: 60%"></div>
           </div>
         </div>
-      {:else if isSignupMode}
-        <!-- signup card -->
-        <form onsubmit={handleRegister} class="space-y-4 text-left">
-          <div>
-            <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="reg-username">Configure Username</label>
-            <input 
-              id="reg-username"
-              type="text" 
-              bind:value={regUsername} 
-              autocomplete="off"
-              class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs focus:outline-none focus:border-[#3E6650]" 
-              placeholder="e.g. operator_sally"
-              required 
-            />
-          </div>
-          <div>
-            <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="reg-password">Password</label>
-            <input 
-              id="reg-password"
-              type="password" 
-              bind:value={regPassword} 
-              class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs focus:outline-none focus:border-[#3E6650]" 
-              placeholder="Select password"
-              required 
-            />
-          </div>
-
-
+      {:else if step === 1}
+        <!-- Tabs: Login vs Register -->
+        <div class="flex border-b border-[#767068]/15 mb-4">
           <button 
-            type="submit" 
-            class="w-full bg-[#3E6650] hover:bg-[#3E6650]/90 text-[#F6F2EA] font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1.5"
+            type="button"
+            onclick={() => { appState.playClickSound?.(); tab = 'login'; loginMessage = ''; }}
+            class="flex-1 py-2 text-center text-[10px] font-bold uppercase tracking-wider transition-all border-b-2 font-mono {tab === 'login' ? 'border-[#3E6650] text-[#3E6650]' : 'border-transparent text-[#767068] hover:text-[#2A2521]'}"
           >
-            Register Profile
+            Sign In
           </button>
+          <button 
+            type="button"
+            onclick={() => { appState.playClickSound?.(); tab = 'register'; loginMessage = ''; }}
+            class="flex-1 py-2 text-center text-[10px] font-bold uppercase tracking-wider transition-all border-b-2 font-mono {tab === 'register' ? 'border-[#3E6650] text-[#3E6650]' : 'border-transparent text-[#767068] hover:text-[#2A2521]'}"
+          >
+            Sign Up
+          </button>
+        </div>
 
-          {#if googleClientId}
-            <div class="border-t border-[#767068]/15 pt-4 my-2 text-center">
-              <span class="text-[9px] uppercase text-[#767068] font-bold block mb-3 font-mono">Or connect with Google</span>
-              <div id="google-btn-operator" class="w-full flex justify-center min-h-[40px]"></div>
+        <form onsubmit={handleIdentifierSubmit} class="space-y-4 text-left">
+          {#if tab === 'register'}
+            <div>
+              <label class="block text-[10px] font-mono font-bold text-[#767068] uppercase mb-1" for="reg-name">Full Name</label>
+              <input 
+                id="reg-name"
+                type="text" 
+                bind:value={regName} 
+                autocomplete="off"
+                class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs focus:outline-none focus:border-[#3E6650]" 
+                placeholder="e.g. Sally Doe"
+                required 
+              />
             </div>
           {/if}
 
-          <button 
-            type="button" 
-            onclick={() => { appState.playClickSound(); isSignupMode = false; }} 
-            class="w-full text-center text-xs font-mono text-[#767068] hover:underline pt-2 block"
-          >
-            Already have an account? Sign In
-          </button>
-
-          {#if regMessage}
-            <p class="text-xs font-mono text-[#3E6650] text-center mt-2 leading-relaxed">{regMessage}</p>
-          {/if}
-        </form>
-      {:else if step === 1}
-        <!-- Step 1: Identifier Entry -->
-        <form onsubmit={handleIdentifierSubmit} class="space-y-4 text-left">
           <div>
-            <label class="block text-xs font-mono font-bold text-[#767068] uppercase mb-1" for="login-username">Operator ID</label>
+            <label class="block text-[10px] font-mono font-bold text-[#767068] uppercase mb-1" for="login-username">Gmail Address</label>
             <input 
               id="login-username"
-              type="text" 
+              type="email" 
               bind:value={username} 
               autocomplete="off"
               class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs focus:outline-none focus:border-[#3E6650]" 
-              placeholder="operator username (default: admin)"
+              placeholder="e.g. operator@gmail.com"
               required 
             />
           </div>
@@ -730,29 +671,21 @@
           <button 
             type="submit" 
             disabled={isChecking}
-            class="w-full bg-[#2A2521] hover:bg-slate-800 disabled:bg-slate-300 text-[#F6F2EA] font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1"
+            class="w-full bg-[#2A2521] hover:bg-slate-800 disabled:bg-slate-300 text-[#F6F2EA] font-bold font-mono text-xs py-3 rounded uppercase tracking-wider transition-all btn-interactive flex items-center justify-center gap-1.5"
           >
             {#if isChecking}
-              Checking Account...
+              Sending Code...
             {:else}
-              Continue <ChevronRight size={14} />
+              Send Verification Code <ChevronRight size={14} />
             {/if}
           </button>
 
           {#if googleClientId}
-            <div class="border-t border-[#767068]/15 pt-4 my-2 text-center">
-              <span class="text-[9px] uppercase text-[#767068] font-bold block mb-3 font-mono">Or connect with Google</span>
-              <div id="google-btn-operator" class="w-full flex justify-center min-h-[40px]"></div>
+            <div class="border-t border-[#767068]/15 pt-3 my-1 text-center">
+              <span class="text-[9px] uppercase text-[#767068] font-bold block mb-2 font-mono">Or connect with Google</span>
+              <div id="google-btn-operator" class="w-full flex justify-center min-h-[45px]"></div>
             </div>
           {/if}
-
-          <button 
-            type="button" 
-            onclick={() => { appState.playClickSound(); isSignupMode = true; regMessage = ''; }} 
-            class="w-full text-center text-xs font-mono text-[#3E6650] hover:underline pt-2 block"
-          >
-            Need an operator profile? Sign Up
-          </button>
 
           {#if loginMessage}
             <p class="text-xs font-mono text-[#AC3B2A] text-center mt-2">{loginMessage}</p>
