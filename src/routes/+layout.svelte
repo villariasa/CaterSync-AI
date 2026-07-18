@@ -827,6 +827,37 @@
     return page.url.pathname.startsWith(path);
   }
 
+  // Centralized session routing guard to keep authenticated users inside their portal dashboard
+  $effect(() => {
+    if (typeof window === 'undefined') return;
+    const path = page.url.pathname;
+    
+    // Skip routing checks on active API routes
+    if (path.startsWith('/api/')) return;
+
+    if (appState.isAuthenticated && appState.currentUser) {
+      const type = appState.userType;
+      
+      if (type === 'subscriber') {
+        if (path !== '/portal') {
+          goto('/portal');
+        }
+      } else if (type === 'supplier') {
+        if (!path.startsWith('/supplier')) {
+          goto('/supplier');
+        }
+      } else if (type === 'platform_admin') {
+        if (!path.startsWith('/admin')) {
+          goto('/admin');
+        }
+      } else if (type === 'org_user') {
+        if (path.startsWith('/portal') || path.startsWith('/supplier') || path.startsWith('/admin')) {
+          goto('/');
+        }
+      }
+    }
+  });
+
   const isPublicRoute = $derived(
     page.url.pathname === '/admin/login' || 
     page.url.pathname === '/supplier/login' || 
