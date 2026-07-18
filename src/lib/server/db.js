@@ -581,11 +581,16 @@ if (env.DATABASE_URL) {
             id SERIAL PRIMARY KEY,
             organization_id INT REFERENCES organizations(id),
             username VARCHAR(255) NOT NULL UNIQUE,
+            email VARCHAR(255),
             password_hash VARCHAR(255) NOT NULL,
             role VARCHAR(100) NOT NULL DEFAULT 'Operator',
             is_active BOOLEAN DEFAULT TRUE NOT NULL,
             totp_secret VARCHAR(128),
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            last_login_at TIMESTAMP WITH TIME ZONE,
+            email_otp_hash VARCHAR(128),
+            email_otp_expires_at TIMESTAMP WITH TIME ZONE,
+            email_otp_attempts INT DEFAULT 0
         );
         INSERT INTO users (username, password_hash, role, organization_id)
         VALUES ('admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'Admin', 1)
