@@ -13,6 +13,8 @@
   let step = $state('email');
 
   let customerEmail = $state('');
+  let regName  = $state(''); // collected at Step 1 for new signups
+  let regPhone = $state(''); // collected at Step 1 for new signups
 
   // Step 3 customer profile form
   let profFullName    = $state('');
@@ -84,7 +86,7 @@
         const regRes = await fetch('/api/auth/register-subscriber', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
+          body: JSON.stringify({ email, name: regName.trim(), phone: regPhone.trim() })
         });
         const regData = await regRes.json();
         if (!regRes.ok || !regData.success) {
@@ -157,6 +159,8 @@
         // New registration → Step 3 profile form
         if (data.needsProfile && tab === 'register') {
           appState.currentUser = { ...data.user, userType: 'subscriber' };
+          profFullName = regName.trim();
+          profPhone = regPhone.trim();
           step = 'profile';
           errorMessage = '';
           isChecking = false;
@@ -341,9 +345,38 @@
         <form onsubmit={sendOtp} class="space-y-4">
 
           {#if tab === 'register'}
+            <!-- Name -->
             <div>
-              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="cust-email">
-                Gmail Address
+              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="reg-name">
+                Full Name <span class="text-[#AC3B2A]">*</span>
+              </label>
+              <input
+                id="reg-name"
+                type="text"
+                bind:value={regName}
+                placeholder="Juan dela Cruz"
+                class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-zinc-800 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 focus:outline-none focus:border-[#3E6650] transition-colors"
+                required
+              />
+            </div>
+            <!-- Phone -->
+            <div>
+              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="reg-phone">
+                Phone Number <span class="text-[#AC3B2A]">*</span>
+              </label>
+              <input
+                id="reg-phone"
+                type="tel"
+                bind:value={regPhone}
+                placeholder="09171234567"
+                class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-zinc-800 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 focus:outline-none focus:border-[#3E6650] transition-colors"
+                required
+              />
+            </div>
+            <!-- Email -->
+            <div>
+              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="cust-email-reg">
+                Gmail Address <span class="text-[#AC3B2A]">*</span>
               </label>
               <input
                 id="cust-email-reg"

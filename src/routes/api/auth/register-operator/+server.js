@@ -16,7 +16,7 @@ export async function POST({ request }) {
   try {
     const body = await request.json();
     email = body.email || '';
-    const { name } = body;
+    const { name, phone } = body;
 
     if (!email || !email.includes('@')) {
       return json({ success: false, error: 'Valid email address is required.' }, { status: 400 });
@@ -60,12 +60,20 @@ export async function POST({ request }) {
         [otpHash, otpExpiresAt, userId]
       );
     } else {
+      // Validate required fields for new registrations
+      if (!name?.trim()) {
+        return json({ success: false, error: 'Full name is required.' }, { status: 400 });
+      }
+      if (!phone?.trim()) {
+        return json({ success: false, error: 'Phone number is required.' }, { status: 400 });
+      }
+
       // Auto-provision Operator profile with dummy password
       const dummyHash = 'google-oauth-operator-account-placeholder-hash';
       const insertRes = await pool.query(
-        `INSERT INTO users (username, email, password_hash, role, organization_id, email_otp_hash, email_otp_expires_at, email_otp_attempts)
-         VALUES ($1, $1, $2, 'Operator', 1, $3, $4, 0) RETURNING id`,
-        [cleanEmail, dummyHash, otpHash, otpExpiresAt]
+        `INSERT INTO users (username, email, name, phone, password_hash, role, organization_id, email_otp_hash, email_otp_expires_at, email_otp_attempts, status)
+         VALUES ($1, $1, $2, $3, $4, 'Operator', 1, $5, $6, 0, 'pending') RETURNING id`,
+        [cleanEmail, name.trim(), phone.trim(), dummyHash, otpHash, otpExpiresAt]
       );
       userId = insertRes.rows[0].id;
     }

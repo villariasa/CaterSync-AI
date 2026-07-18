@@ -16,14 +16,13 @@ export async function POST({ request }) {
   try {
     const body = await request.json();
     email = body.email || '';
-    const { name } = body;
+    const { companyName, contactName, contactPhone } = body;
 
     if (!email || !email.includes('@')) {
       return json({ success: false, error: 'Valid email address is required.' }, { status: 400 });
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    const finalSupplierName = name?.trim() || cleanEmail.split('@')[0] + ' Supplies';
 
     // Rate limiting
     const [emailLimit, ipLimit] = await Promise.all([
@@ -62,10 +61,21 @@ export async function POST({ request }) {
         [otpHash, otpExpiresAt, accountId]
       );
     } else {
-      // Auto-create supplier profile
+      // Validate required fields for new supplier registrations
+      if (!companyName?.trim()) {
+        return json({ success: false, error: 'Company / business name is required.' }, { status: 400 });
+      }
+      if (!contactName?.trim()) {
+        return json({ success: false, error: 'Contact person name is required.' }, { status: 400 });
+      }
+      if (!contactPhone?.trim()) {
+        return json({ success: false, error: 'Contact phone number is required.' }, { status: 400 });
+      }
+
+      // Auto-create supplier profile with all collected fields
       const supRes = await pool.query(
-        `INSERT INTO suppliers (name) VALUES ($1) RETURNING id`,
-        [finalSupplierName]
+        `INSERT INTO suppliers (name, contact_name, contact_phone, status) VALUES ($1, $2, $3, 'pending') RETURNING id`,
+        [companyName.trim(), contactName.trim(), contactPhone.trim()]
       );
       supplierId = supRes.rows[0].id;
 

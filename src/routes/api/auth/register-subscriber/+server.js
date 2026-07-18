@@ -59,14 +59,22 @@ export async function POST({ request }) {
       customerId = customerRes.rows[0].id;
       customerName = customerRes.rows[0].name;
     } else {
-      const finalName = name?.trim() || null; // NULL until Step 3 profile form
-      const finalPhone = phone?.trim() || null;
+      const finalName = name?.trim();
+      const finalPhone = phone?.trim();
+
+      if (!finalName) {
+        return json({ success: false, error: 'Full name is required.' }, { status: 400 });
+      }
+      if (!finalPhone) {
+        return json({ success: false, error: 'Phone number is required.' }, { status: 400 });
+      }
+
       const insertRes = await pool.query(
         `INSERT INTO customers (name, contact, email, status) VALUES ($1, $2, $3, 'pending') RETURNING id, name`,
         [finalName, finalPhone, cleanEmail]
       );
       customerId = insertRes.rows[0].id;
-      customerName = insertRes.rows[0].name || 'Valued Client';
+      customerName = insertRes.rows[0].name;
     }
 
     // ── Generate OTP (hashed before storage) ──────────────────────────

@@ -173,8 +173,10 @@
         response = await fetch('/api/auth/register-operator', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, name: regName.trim() })
+          body: JSON.stringify({ email, name: regName.trim(), phone: opProfilePhone.trim() })
         });
+        // Pre-fill Step 3 form with what was entered
+        opProfileName = regName.trim();
       } else {
         response = await fetch('/api/auth/send-otp', {
           method: 'POST',
@@ -659,27 +661,45 @@
         <form onsubmit={handleIdentifierSubmit} class="space-y-4 text-left">
           {#if tab === 'register'}
             <div>
-              <label class="block text-[10px] font-mono font-bold text-[#767068] uppercase mb-1" for="reg-name">Full Name</label>
+              <label class="block text-[10px] font-mono font-bold text-[#767068] uppercase mb-1" for="reg-name">
+                Full Name <span class="text-[#AC3B2A]">*</span>
+              </label>
               <input 
                 id="reg-name"
                 type="text" 
                 bind:value={regName} 
                 autocomplete="off"
-                class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs focus:outline-none focus:border-[#3E6650]" 
-                placeholder="e.g. Sally Doe"
+                class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white dark:bg-[#141210] text-xs focus:outline-none focus:border-[#3E6650]" 
+                placeholder="e.g. Juan dela Cruz"
                 required 
+              />
+            </div>
+            <div>
+              <label class="block text-[10px] font-mono font-bold text-[#767068] uppercase mb-1" for="reg-op-phone">
+                Phone Number <span class="text-[#AC3B2A]">*</span>
+              </label>
+              <input
+                id="reg-op-phone"
+                type="tel"
+                bind:value={opProfilePhone}
+                autocomplete="off"
+                class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white dark:bg-[#141210] text-xs focus:outline-none focus:border-[#3E6650]"
+                placeholder="09171234567"
+                required
               />
             </div>
           {/if}
 
           <div>
-            <label class="block text-[10px] font-mono font-bold text-[#767068] uppercase mb-1" for="login-username">Gmail Address</label>
+            <label class="block text-[10px] font-mono font-bold text-[#767068] uppercase mb-1" for="login-username">
+              Gmail Address {#if tab === 'register'}<span class="text-[#AC3B2A]">*</span>{/if}
+            </label>
             <input 
               id="login-username"
               type="email" 
               bind:value={username} 
               autocomplete="off"
-              class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white text-xs focus:outline-none focus:border-[#3E6650]" 
+              class="w-full px-3 py-2 rounded border border-[#767068]/30 bg-white dark:bg-[#141210] text-xs focus:outline-none focus:border-[#3E6650]" 
               placeholder="e.g. operator@gmail.com"
               required 
             />

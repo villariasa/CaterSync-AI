@@ -64,8 +64,15 @@
         res = await fetch('/api/auth/register-supplier', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
+          body: JSON.stringify({
+            email,
+            companyName:  profileCompanyName.trim(),
+            contactName:  profileContactName.trim(),
+            contactPhone: profileContactPhone.trim()
+          })
         });
+        // Pre-fill Step 3 profile form (already filled)
+        // profileCompanyName, profileContactName, profileContactPhone are already set
       } else {
         res = await fetch('/api/auth/send-otp', {
           method: 'POST',
@@ -308,9 +315,56 @@
         </div>
 
         <form onsubmit={sendOtp} class="space-y-4">
+
+          {#if tab === 'register'}
+            <!-- Company Name -->
+            <div>
+              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="sup-company">
+                Company / Business Name <span class="text-[#AC3B2A]">*</span>
+              </label>
+              <input
+                id="sup-company"
+                type="text"
+                bind:value={profileCompanyName}
+                placeholder="e.g. Acme Fresh Foods Inc."
+                class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 focus:outline-none focus:border-[#D9A441] transition-colors"
+                required
+              />
+            </div>
+            <!-- Contact Person -->
+            <div>
+              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="sup-contact-name">
+                Contact Person Name <span class="text-[#AC3B2A]">*</span>
+              </label>
+              <input
+                id="sup-contact-name"
+                type="text"
+                bind:value={profileContactName}
+                placeholder="e.g. Juan dela Cruz"
+                class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 focus:outline-none focus:border-[#D9A441] transition-colors"
+                required
+              />
+            </div>
+            <!-- Contact Phone -->
+            <div>
+              <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="sup-phone">
+                Contact Phone <span class="text-[#AC3B2A]">*</span>
+              </label>
+              <input
+                id="sup-phone"
+                type="tel"
+                bind:value={profileContactPhone}
+                placeholder="09171234567"
+                class="w-full px-3 py-2 bg-slate-50 dark:bg-[#141210] border border-slate-300 dark:border-[#767068]/30 rounded text-xs text-[#2A2521] dark:text-[#EBE5DC] placeholder-slate-400 focus:outline-none focus:border-[#D9A441] transition-colors"
+                required
+              />
+            </div>
+          {/if}
+
+          <!-- Email (shown for both login and register) -->
           <div>
             <label class="block text-[9px] font-bold text-[#767068] uppercase mb-1.5" for="supplier-email">
-              Gmail Address
+              Gmail Address <span class="text-[#AC3B2A]">*</span>
             </label>
             <input
               id="supplier-email"
