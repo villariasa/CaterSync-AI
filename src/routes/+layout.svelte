@@ -383,7 +383,27 @@
     return results.slice(0, 6); // Max 6 results for compact Facebook style
   });
 
-  onMount(() => {
+  onMount(async () => {
+    // Centralized session hydration on startup (Facebook-style persistent session restore)
+    try {
+      const res = await fetch('/api/auth/session');
+      const data = await res.json();
+      if (res.ok && data.authenticated) {
+        appState.currentUser = data.user;
+        appState.isAuthenticated = true;
+        // Keep authenticated users on their portal dashboard if they land on root or login views
+        const path = page.url.pathname;
+        if (data.redirect && (path === '/' || path === '/login' || path === '/supplier/login' || path === '/admin/login')) {
+          goto(data.redirect);
+        }
+      } else {
+        appState.isAuthenticated = false;
+        appState.currentUser = null;
+      }
+    } catch (e) {
+      console.warn("Centralized session hydration failed:", e.message);
+    }
+
     // Fade out video loading screen after app is ready
     if (typeof window !== 'undefined') {
       const loader = document.getElementById('pwa-loading-screen');
