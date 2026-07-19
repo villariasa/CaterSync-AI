@@ -15,7 +15,7 @@ export async function POST({ request }) {
       accountId = userRes.rows[0].id;
     } else {
       if (!email) return json({ error: 'Email is required for subscriber registration' }, { status: 400 });
-      const subRes = await pool.query('SELECT id FROM subscriber_accounts WHERE LOWER(email) = $1 LIMIT 1', [email.trim().toLowerCase()]);
+      const subRes = await pool.query('SELECT id FROM users WHERE LOWER(email) = $1 AND is_customer = 1 LIMIT 1', [email.trim().toLowerCase()]);
       if (subRes.rows.length === 0) return json({ error: 'Subscriber account not found' }, { status: 404 });
       accountId = subRes.rows[0].id;
     }

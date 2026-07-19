@@ -238,6 +238,7 @@
     appState.playClickSound();
     showLogoutModal = false;
     appState.isAuthenticated = false;
+    appState.currentUser = null;
     if (!appState.usingMockData) {
       try {
         await fetch('/api/auth/logout', { method: 'POST' });
@@ -245,6 +246,7 @@
         console.warn("Server logout request skipped or failed:", err);
       }
     }
+    goto('/login');
   }
 
   async function handleAppInstallClick() {

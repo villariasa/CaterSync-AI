@@ -11,9 +11,9 @@ export async function POST({ request }) {
 
     const cleanEmail = email.trim().toLowerCase();
 
-    // Check subscriber account
+    // Check subscriber account on unified users table
     const subRes = await pool.query(
-      'SELECT id, status, customer_id FROM subscriber_accounts WHERE LOWER(email) = $1 LIMIT 1',
+      'SELECT id, customer_id, password_hash, is_active FROM users WHERE LOWER(email) = $1 AND is_customer = 1 LIMIT 1',
       [cleanEmail]
     );
 
@@ -28,7 +28,7 @@ export async function POST({ request }) {
     const account = subRes.rows[0];
 
     const methods = [];
-    if (account.password_hash) {
+    if (account.password_hash && account.password_hash !== 'google-oauth-operator-account-placeholder-hash') {
       methods.push('password');
     }
     // PIN is always allowed for quick local access
@@ -47,7 +47,7 @@ export async function POST({ request }) {
       success: true,
       registered: true,
       customerId: account.customer_id,
-      status: account.status,
+      status: account.is_active ? 'active' : 'pending',
       methods
     });
   } catch (error) {

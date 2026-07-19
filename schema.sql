@@ -20,14 +20,7 @@ CREATE TABLE IF NOT EXISTS business_settings (
     google_client_id TEXT
 );
 
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'Operator',
-    is_active INTEGER DEFAULT 1 NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
+-- Unified users table is defined in the Multi-Tenant section below
 
 -- PostgreSQL Schema for AI Catering Intelligence Platform (ACIP)
 -- Designed with detailed constraints, relationships, validations, and auto-updated timestamps.
@@ -867,62 +860,48 @@ CREATE INDEX IF NOT EXISTS idx_organizations_verification ON organizations(verif
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     organization_id INTEGER REFERENCES organizations(id),
-    username TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'Operator',
-    is_active INTEGER DEFAULT 1 NOT NULL,
-    totp_secret TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS subscriber_accounts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    supplier_id INTEGER REFERENCES suppliers(id) ON DELETE CASCADE,
     customer_id INTEGER REFERENCES customers(id) ON DELETE SET NULL,
+    username TEXT NOT NULL UNIQUE,
     email TEXT UNIQUE,
     phone TEXT UNIQUE,
     password_hash TEXT,
+    role TEXT NOT NULL DEFAULT 'Operator',
+    is_active INTEGER DEFAULT 1 NOT NULL,
+    
+    -- Boolean Type Flags
+    is_customer INTEGER DEFAULT 0 NOT NULL,
+    is_operator INTEGER DEFAULT 0 NOT NULL,
+    is_admin INTEGER DEFAULT 0 NOT NULL,
+    is_supplier INTEGER DEFAULT 0 NOT NULL,
+
+    permission_level TEXT DEFAULT NULL
+        CHECK (permission_level IS NULL OR permission_level IN ('super_admin','ops','support','finance')),
+
     email_verified_at DATETIME,
     phone_verified_at DATETIME,
     otp_code TEXT,
+    otp_hash TEXT,
     otp_expires_at DATETIME,
-    status TEXT NOT NULL DEFAULT 'pending',
+    otp_attempts INTEGER DEFAULT 0 NOT NULL,
+
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    last_login_at DATETIME
+    last_login_at DATETIME,
+    
+    full_name TEXT,
+    profile_complete INTEGER DEFAULT 0 NOT NULL,
+    totp_secret TEXT
 );
 
 CREATE TABLE IF NOT EXISTS webauthn_credentials (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    account_id INTEGER NOT NULL,
+    account_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     account_type TEXT NOT NULL,
     credential_id TEXT UNIQUE NOT NULL,
     public_key TEXT NOT NULL,
     sign_count BIGINT NOT NULL DEFAULT 0,
     device_label TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS platform_admins (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL UNIQUE,
-    email TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
-    permission_level TEXT NOT NULL DEFAULT 'support'
-        CHECK (permission_level IN ('super_admin','ops','support','finance')),
-    is_active INTEGER NOT NULL DEFAULT TRUE,
-    totp_secret TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    last_login_at DATETIME
-);
-
-CREATE TABLE IF NOT EXISTS supplier_accounts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    supplier_id INTEGER NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    is_active INTEGER NOT NULL DEFAULT TRUE,
-    email_verified_at DATETIME,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    last_login_at DATETIME
 );
 
 CREATE TABLE IF NOT EXISTS organization_suppliers (

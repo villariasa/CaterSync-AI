@@ -59,38 +59,52 @@ export async function POST({ request, cookies }) {
     const { email, name } = decoded;
     const cleanEmail = email.toLowerCase();
 
-    // ── Customer profile lookup / creation ────────────────────────────
-    let customer = null;
-    const customerRes = await pool.query(
-      'SELECT id, name, contact, email FROM customers WHERE LOWER(email) = $1 LIMIT 1',
+    // ── Lookup user in unified users table first ──────────────────────
+    const subRes = await pool.query(
+      'SELECT id, email_verified_at, is_admin, is_operator, is_customer, is_supplier, customer_id, supplier_id FROM users WHERE LOWER(email) = $1 LIMIT 1',
       [cleanEmail]
     );
 
-    if (customerRes.rows.length > 0) {
-      customer = customerRes.rows[0];
-    } else {
-      const newCust = await pool.query(
-        'INSERT INTO customers (name, contact, email) VALUES ($1, $2, $3) RETURNING id, name, contact, email',
-        [name || cleanEmail.split('@')[0], cleanEmail, cleanEmail]
-      );
-      customer = newCust.rows[0];
+    if (subRes.rows.length === 0) {
+      // User doesn't exist in the database!
+      // Do NOT auto-register, do NOT send OTP.
+      // Return userExists: false so frontend can proceed to sign up role selection.
+      return json({
+        success: true,
+        userExists: false,
+        email: cleanEmail,
+        name: name
+      });
     }
 
-    // ── Subscriber account lookup ─────────────────────────────────────
-    let subscriberAccountId = null;
-    const subRes = await pool.query(
-      'SELECT id, status FROM subscriber_accounts WHERE LOWER(email) = $1 LIMIT 1',
-      [cleanEmail]
-    );
+    const user = subRes.rows[0];
+    const subscriberAccountId = user.id;
+    const isExistingVerified = user.email_verified_at !== null;
 
-    const isExistingVerified = subRes.rows.length > 0 && subRes.rows[0].status === 'active';
-    subscriberAccountId = subRes.rows[0]?.id || null;
+    // Determine user role
+    let userRole = 'subscriber';
+    if (user.is_admin) userRole = 'platform_admin';
+    else if (user.is_supplier) userRole = 'supplier';
+    else if (user.is_operator) userRole = 'org_user';
+    else if (user.is_customer) userRole = 'subscriber';
+
+    // Fetch linked customer profile if customer
+    let customer = null;
+    if (userRole === 'subscriber' && user.customer_id) {
+      const customerRes = await pool.query(
+        'SELECT id, name, contact, email FROM customers WHERE id = $1 LIMIT 1',
+        [user.customer_id]
+      );
+      if (customerRes.rows.length > 0) {
+        customer = customerRes.rows[0];
+      }
+    }
 
     // ── Device + risk check ───────────────────────────────────────────
     const { deviceId: resolvedDeviceId, isNew, isTrusted } = await getOrCreateDevice({
       deviceId,
-      userId: subscriberAccountId || -1, // temp ID for new accounts
-      userRole: 'subscriber',
+      userId: subscriberAccountId,
+      userRole,
       userAgent,
       ipAddress
     });
@@ -103,20 +117,18 @@ export async function POST({ request, cookies }) {
       maxAge: 60 * 60 * 24 * 365
     });
 
-    // Check WebAuthn registered for this subscriber
+    // Check WebAuthn registered for this user
     let hasWebAuthn = false;
-    if (subscriberAccountId) {
-      const credCheck = await pool.query(
-        "SELECT id FROM webauthn_credentials WHERE account_id = $1 AND account_type = 'subscriber' LIMIT 1",
-        [subscriberAccountId]
-      );
-      hasWebAuthn = credCheck.rows.length > 0;
-    }
+    const credCheck = await pool.query(
+      "SELECT id FROM webauthn_credentials WHERE account_id = $1 AND account_type = $2 LIMIT 1",
+      [subscriberAccountId, userRole === 'subscriber' ? 'subscriber' : 'operator']
+    );
+    hasWebAuthn = credCheck.rows.length > 0;
 
     // Compute risk score
     const { score: riskScore } = await computeRiskScore({
       userId: subscriberAccountId,
-      userRole: 'subscriber',
+      userRole,
       deviceId: resolvedDeviceId,
       isDeviceTrusted: isTrusted,
       ipAddress,
@@ -127,18 +139,14 @@ export async function POST({ request, cookies }) {
 
     // ── Trusted device: skip OTP, create session directly ─────────────
     if (isExistingVerified && (challenge === 'none')) {
-      // Upsert subscriber account
-      if (subRes.rows.length > 0) {
-        await pool.query(
-          `UPDATE subscriber_accounts SET last_login_at = CURRENT_TIMESTAMP WHERE LOWER(email) = $1`,
-          [cleanEmail]
-        );
-        subscriberAccountId = subRes.rows[0].id;
-      }
+      await pool.query(
+        `UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        [subscriberAccountId]
+      );
 
       const { accessToken, refreshToken } = await createSession({
         userId: subscriberAccountId,
-        userRole: 'subscriber',
+        userRole,
         deviceId: resolvedDeviceId,
         ipAddress,
         userAgent,
@@ -150,7 +158,7 @@ export async function POST({ request, cookies }) {
       logAuthEvent({
         eventType: AUTH_EVENTS.LOGIN_SUCCESS,
         userId: subscriberAccountId,
-        userRole: 'subscriber',
+        userRole,
         identifier: cleanEmail,
         method: 'google',
         deviceId: resolvedDeviceId,
@@ -162,6 +170,8 @@ export async function POST({ request, cookies }) {
       return json({
         success: true,
         needsOtp: false,
+        userExists: true,
+        userRole,
         customer,
         name
       });
@@ -171,21 +181,10 @@ export async function POST({ request, cookies }) {
     const { code: otpCode, hash: otpHash } = generateOtp();
     const otpExpiresAt = new Date(Date.now() + 600 * 1000).toISOString();
 
-    // Upsert subscriber account
-    if (subRes.rows.length > 0) {
-      await pool.query(
-        `UPDATE subscriber_accounts SET customer_id = $1, otp_hash = $2, otp_code = NULL, otp_expires_at = $3, otp_attempts = 0, status = 'pending' WHERE LOWER(email) = $4`,
-        [customer.id, otpHash, otpExpiresAt, cleanEmail]
-      );
-      subscriberAccountId = subRes.rows[0].id;
-    } else {
-      const newSub = await pool.query(
-        `INSERT INTO subscriber_accounts (customer_id, email, phone, otp_hash, otp_expires_at, otp_attempts, status)
-         VALUES ($1, $2, $3, $4, $5, 0, 'pending') RETURNING id`,
-        [customer.id, cleanEmail, cleanEmail, otpHash, otpExpiresAt]
-      );
-      subscriberAccountId = newSub.rows[0].id;
-    }
+    await pool.query(
+      `UPDATE users SET otp_hash = ?, otp_code = NULL, otp_expires_at = ?, otp_attempts = 0 WHERE id = ?`,
+      [otpHash, otpExpiresAt, subscriberAccountId]
+    );
 
     // Fetch SMTP settings and send email
     let businessSettings = null;
@@ -212,7 +211,7 @@ export async function POST({ request, cookies }) {
     logAuthEvent({
       eventType: AUTH_EVENTS.OTP_SENT,
       userId: subscriberAccountId,
-      userRole: 'subscriber',
+      userRole,
       identifier: cleanEmail,
       method: 'google',
       deviceId: resolvedDeviceId,
@@ -222,6 +221,7 @@ export async function POST({ request, cookies }) {
 
     return json({
       success: true,
+      userExists: true,
       needsOtp: true,
       email: cleanEmail,
       name,

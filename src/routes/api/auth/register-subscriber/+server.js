@@ -70,7 +70,7 @@ export async function POST({ request }) {
       }
 
       const insertRes = await pool.query(
-        `INSERT INTO customers (name, contact, email, status) VALUES ($1, $2, $3, 'pending') RETURNING id, name`,
+        `INSERT INTO customers (name, contact, email) VALUES ($1, $2, $3) RETURNING id, name`,
         [finalName, finalPhone, cleanEmail]
       );
       customerId = insertRes.rows[0].id;
@@ -81,27 +81,28 @@ export async function POST({ request }) {
     const { code: otpCode, hash: otpHash } = generateOtp();
     const otpExpiresAt = new Date(Date.now() + OTP_TTL_SECONDS * 1000).toISOString();
 
-    // ── Upsert subscriber account ─────────────────────────────────────
+    // ── Upsert subscriber account on unified users table ─────────────────────────────────────
     const subRes = await pool.query(
-      'SELECT id FROM subscriber_accounts WHERE LOWER(email) = $1 LIMIT 1',
+      'SELECT id, is_customer FROM users WHERE LOWER(email) = $1 LIMIT 1',
       [cleanEmail]
     );
 
     if (subRes.rows.length > 0) {
       await pool.query(
-        `UPDATE subscriber_accounts 
+        `UPDATE users 
          SET customer_id = $1, phone = COALESCE($2, phone), 
              otp_hash = $3, otp_code = NULL,
-             otp_expires_at = $4, otp_attempts = 0, status = 'pending'
+             otp_expires_at = $4, otp_attempts = 0, is_customer = 1, role = 'Customer',
+             full_name = COALESCE($6, full_name)
          WHERE LOWER(email) = $5`,
-        [customerId, phone?.trim() || null, otpHash, otpExpiresAt, cleanEmail]
+        [customerId, phone?.trim() || null, otpHash, otpExpiresAt, cleanEmail, name?.trim() || null]
       );
     } else {
       await pool.query(
-        `INSERT INTO subscriber_accounts 
-          (customer_id, email, phone, otp_hash, otp_expires_at, otp_attempts, status)
-         VALUES ($1, $2, $3, $4, $5, 0, 'pending')`,
-        [customerId, cleanEmail, phone?.trim() || null, otpHash, otpExpiresAt]
+        `INSERT INTO users 
+          (customer_id, email, username, phone, otp_hash, otp_expires_at, otp_attempts, is_customer, role, full_name)
+         VALUES ($1, $2, $2, $3, $4, $5, 0, 1, 'Customer', $6)`,
+        [customerId, cleanEmail, phone?.trim() || null, otpHash, otpExpiresAt, name?.trim() || null]
       );
     }
 

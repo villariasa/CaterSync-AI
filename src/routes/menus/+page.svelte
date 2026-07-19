@@ -127,7 +127,7 @@
       rows={appState.menus} 
       {columns} 
       searchableKeys={['name', 'category', 'cuisine_tags']}
-      emptyMessage="No menus currently configured."
+      emptyMessage="No menus configured yet — click 'New Menu Template' to build your first catering package."
     />
   </div>
 

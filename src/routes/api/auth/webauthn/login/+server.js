@@ -43,7 +43,7 @@ export async function POST({ request, cookies }) {
     // ── Fetch account ─────────────────────────────────────────────────
     if (type === 'operator') {
       const res = await pool.query(
-        'SELECT id, username, role FROM users WHERE LOWER(username) = $1 LIMIT 1',
+        'SELECT id, username, role FROM users WHERE LOWER(username) = $1 AND is_operator = 1 LIMIT 1',
         [username.trim().toLowerCase()]
       );
       if (res.rows.length === 0) return json({ error: 'Operator not found' }, { status: 404 });
@@ -51,7 +51,7 @@ export async function POST({ request, cookies }) {
       accountId = userRow.id;
     } else {
       const res = await pool.query(
-        'SELECT id, email, customer_id FROM subscriber_accounts WHERE LOWER(email) = $1 LIMIT 1',
+        'SELECT id, email, customer_id FROM users WHERE LOWER(email) = $1 AND is_customer = 1 LIMIT 1',
         [email.trim().toLowerCase()]
       );
       if (res.rows.length === 0) return json({ error: 'Subscriber account not found' }, { status: 404 });
@@ -194,10 +194,10 @@ export async function GET({ url }) {
     let accountId = null;
 
     if (type === 'operator') {
-      const res = await pool.query('SELECT id FROM users WHERE LOWER(username) = $1 LIMIT 1', [username?.trim().toLowerCase()]);
+      const res = await pool.query('SELECT id FROM users WHERE LOWER(username) = $1 AND is_operator = 1 LIMIT 1', [username?.trim().toLowerCase()]);
       if (res.rows.length > 0) accountId = res.rows[0].id;
     } else {
-      const res = await pool.query('SELECT id FROM subscriber_accounts WHERE LOWER(email) = $1 LIMIT 1', [email?.trim().toLowerCase()]);
+      const res = await pool.query('SELECT id FROM users WHERE LOWER(email) = $1 AND is_customer = 1 LIMIT 1', [email?.trim().toLowerCase()]);
       if (res.rows.length > 0) accountId = res.rows[0].id;
     }
 

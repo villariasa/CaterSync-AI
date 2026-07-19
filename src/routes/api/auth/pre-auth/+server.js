@@ -18,49 +18,22 @@ export async function POST({ request }) {
       return json({ success: false, error: 'Email is required.' }, { status: 400 });
     }
 
-    // 1. Platform Admins
-    const adminRes = await pool.query(
-      'SELECT id, is_active FROM platform_admins WHERE LOWER(email) = ? OR LOWER(username) = ? LIMIT 1',
+    const res = await pool.query(
+      'SELECT id, is_active, is_admin, is_supplier, is_customer, is_operator FROM users WHERE LOWER(email) = ? OR LOWER(username) = ? LIMIT 1',
       [identifier, identifier]
     );
-    if (adminRes.rows.length > 0) {
-      if (!adminRes.rows[0].is_active) {
+    if (res.rows.length > 0) {
+      const user = res.rows[0];
+      if (!user.is_active) {
         return json({ success: false, error: 'Account is deactivated.' }, { status: 403 });
       }
-      return json({ success: true, userExists: true, userType: 'platform_admin' });
-    }
+      let userType = null;
+      if (user.is_admin) userType = 'platform_admin';
+      else if (user.is_supplier) userType = 'supplier';
+      else if (user.is_customer) userType = 'subscriber';
+      else if (user.is_operator) userType = 'org_user';
 
-    // 2. Supplier Accounts
-    const supplierRes = await pool.query(
-      'SELECT id, is_active FROM supplier_accounts WHERE LOWER(email) = ? LIMIT 1',
-      [identifier]
-    );
-    if (supplierRes.rows.length > 0) {
-      if (!supplierRes.rows[0].is_active) {
-        return json({ success: false, error: 'Account is deactivated.' }, { status: 403 });
-      }
-      return json({ success: true, userExists: true, userType: 'supplier' });
-    }
-
-    // 3. Subscriber (Customer) Accounts
-    const subscriberRes = await pool.query(
-      "SELECT id FROM subscriber_accounts WHERE LOWER(email) = ? AND status = 'active' LIMIT 1",
-      [identifier]
-    );
-    if (subscriberRes.rows.length > 0) {
-      return json({ success: true, userExists: true, userType: 'subscriber' });
-    }
-
-    // 4. Org Users (Operators)
-    const userRes = await pool.query(
-      'SELECT id, is_active FROM users WHERE LOWER(email) = ? OR LOWER(username) = ? LIMIT 1',
-      [identifier, identifier]
-    );
-    if (userRes.rows.length > 0) {
-      if (!userRes.rows[0].is_active) {
-        return json({ success: false, error: 'Account is deactivated.' }, { status: 403 });
-      }
-      return json({ success: true, userExists: true, userType: 'org_user' });
+      return json({ success: true, userExists: true, userType });
     }
 
     return json({ success: true, userExists: false, userType: null });

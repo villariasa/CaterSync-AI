@@ -83,7 +83,7 @@ async function attachUserFromSession(event, session) {
   try {
     if (user_role === 'platform_admin') {
       const res = await pool.query(
-        'SELECT id, username, email, permission_level FROM platform_admins WHERE id = $1 AND is_active = TRUE LIMIT 1',
+        'SELECT id, username, email, permission_level FROM users WHERE id = $1 AND is_admin = 1 AND is_active = 1 LIMIT 1',
         [user_id]
       );
       if (res.rows.length > 0) {
@@ -98,7 +98,7 @@ async function attachUserFromSession(event, session) {
       }
     } else if (user_role === 'org_user') {
       const res = await pool.query(
-        'SELECT id, username, organization_id, role FROM users WHERE id = $1 AND is_active = TRUE LIMIT 1',
+        'SELECT id, username, organization_id, role FROM users WHERE id = $1 AND is_operator = 1 AND is_active = 1 LIMIT 1',
         [user_id]
       );
       if (res.rows.length > 0) {
@@ -114,10 +114,10 @@ async function attachUserFromSession(event, session) {
       }
     } else if (user_role === 'subscriber') {
       const res = await pool.query(
-        `SELECT sa.id, sa.email, sa.customer_id, c.name 
-         FROM subscriber_accounts sa
-         LEFT JOIN customers c ON c.id = sa.customer_id
-         WHERE sa.id = $1 AND sa.status = 'active' LIMIT 1`,
+        `SELECT u.id, u.email, u.customer_id, c.name 
+         FROM users u
+         LEFT JOIN customers c ON c.id = u.customer_id
+         WHERE u.id = $1 AND u.is_customer = 1 AND u.is_active = 1 LIMIT 1`,
         [user_id]
       );
       if (res.rows.length > 0) {
@@ -134,7 +134,7 @@ async function attachUserFromSession(event, session) {
       }
     } else if (user_role === 'supplier') {
       const res = await pool.query(
-        'SELECT id, email, supplier_id FROM supplier_accounts WHERE id = $1 AND is_active = TRUE LIMIT 1',
+        'SELECT id, email, supplier_id FROM users WHERE id = $1 AND is_supplier = 1 AND is_active = 1 LIMIT 1',
         [user_id]
       );
       if (res.rows.length > 0) {
@@ -165,11 +165,20 @@ async function legacySessionFallback(event) {
   const sessionSupplier = event.cookies.get('cs_supplier_session');
 
   if (sessionAdmin) {
-    event.locals.user = { username: sessionAdmin, type: 'platform_admin' };
+    try {
+      const res = await pool.query('SELECT id, username FROM users WHERE (LOWER(username) = LOWER($1) OR LOWER(email) = LOWER($1)) AND is_admin = 1 LIMIT 1', [sessionAdmin]);
+      if (res.rows.length > 0) {
+        event.locals.user = { id: res.rows[0].id, username: sessionAdmin, type: 'platform_admin' };
+      } else {
+        event.locals.user = { username: sessionAdmin, type: 'platform_admin' };
+      }
+    } catch {
+      event.locals.user = { username: sessionAdmin, type: 'platform_admin' };
+    }
     event.locals.tenantId = null;
   } else if (sessionOrg) {
     try {
-      const res = await pool.query('SELECT id, organization_id, role FROM users WHERE LOWER(username) = LOWER($1)', [sessionOrg]);
+      const res = await pool.query('SELECT id, organization_id, role FROM users WHERE (LOWER(username) = LOWER($1) OR LOWER(email) = LOWER($1)) AND is_operator = 1 LIMIT 1', [sessionOrg]);
       if (res.rows.length > 0) {
         event.locals.user = {
           id: res.rows[0].id,
@@ -188,11 +197,12 @@ async function legacySessionFallback(event) {
     try {
       const isNumeric = /^\d+$/.test(sessionCustomer);
       const queryStr = isNumeric
-        ? 'SELECT id, id as customer_id, email FROM customers WHERE id = $1'
-        : 'SELECT id, customer_id, email FROM subscriber_accounts WHERE LOWER(email) = LOWER($1)';
+        ? 'SELECT id, customer_id, email FROM users WHERE customer_id = $1 AND is_customer = 1 LIMIT 1'
+        : 'SELECT id, customer_id, email FROM users WHERE (LOWER(email) = LOWER($1) OR LOWER(username) = LOWER($1)) AND is_customer = 1 LIMIT 1';
       const res = await pool.query(queryStr, [isNumeric ? parseInt(sessionCustomer, 10) : sessionCustomer]);
       if (res.rows.length > 0) {
         event.locals.user = {
+          id: res.rows[0].id,
           username: res.rows[0].email || sessionCustomer,
           type: 'subscriber',
           subscriber_id: res.rows[0].id,
@@ -204,7 +214,7 @@ async function legacySessionFallback(event) {
     }
   } else if (sessionSupplier) {
     try {
-      const res = await pool.query('SELECT id, supplier_id FROM supplier_accounts WHERE LOWER(email) = LOWER($1)', [sessionSupplier]);
+      const res = await pool.query('SELECT id, supplier_id FROM users WHERE (LOWER(email) = LOWER($1) OR LOWER(username) = LOWER($1)) AND is_supplier = 1 LIMIT 1', [sessionSupplier]);
       if (res.rows.length > 0) {
         event.locals.user = {
           username: sessionSupplier,

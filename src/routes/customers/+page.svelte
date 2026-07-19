@@ -344,7 +344,7 @@
       rows={appState.customers} 
       {columns} 
       searchableKeys={['name', 'contact', 'email', 'preferred_theme']}
-      emptyMessage="No customer profiles in directory registry."
+      emptyMessage="No clients registered yet — click 'Register Client Profile' to add your first customer."
     />
   </div>
 

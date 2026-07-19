@@ -1,5 +1,5 @@
 <script>
-  import { ChevronLeft, ChevronRight, ArrowUpDown } from '@lucide/svelte';
+  import { ChevronLeft, ChevronRight, ArrowUpDown, Inbox } from '@lucide/svelte';
 
   import { onMount } from 'svelte';
 
@@ -181,8 +181,15 @@
           {/each}
         {:else}
           <tr>
-            <td colspan={columns.length} class="py-8 text-center text-[#767068] font-sans dark:text-[#9E978F]">
-              {emptyMessage}
+            <td colspan={columns.length} class="py-14 px-4 text-center">
+              <div class="flex flex-col items-center gap-3 max-w-sm mx-auto">
+                <div class="w-12 h-12 rounded-full bg-[#F6F2EA] dark:bg-[#332E2A] flex items-center justify-center border-2 border-dashed border-[#767068]/30 dark:border-[#9E978F]/30">
+                  <Inbox size={20} class="text-[#767068]/60 dark:text-[#9E978F]/60" />
+                </div>
+                <p class="text-xs font-mono text-[#767068] dark:text-[#9E978F] leading-relaxed text-center">
+                  {emptyMessage}
+                </p>
+              </div>
             </td>
           </tr>
         {/if}

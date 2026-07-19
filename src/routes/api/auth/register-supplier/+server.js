@@ -37,9 +37,9 @@ export async function POST({ request }) {
       return json({ success: false, ...rateLimitExceededResponse(ipLimit.retryAfterMs) }, { status: 429 });
     }
 
-    // Check if supplier account already exists
+    // Check if supplier account already exists on unified users table
     const subRes = await pool.query(
-      'SELECT id, supplier_id FROM supplier_accounts WHERE LOWER(email) = $1 LIMIT 1',
+      'SELECT id, supplier_id FROM users WHERE LOWER(email) = $1 LIMIT 1',
       [cleanEmail]
     );
 
@@ -55,10 +55,11 @@ export async function POST({ request }) {
       accountId = subRes.rows[0].id;
       // Update existing account's OTP columns
       await pool.query(
-        `UPDATE supplier_accounts 
-         SET otp_hash = $1, otp_expires_at = $2, otp_attempts = 0
+        `UPDATE users 
+         SET otp_hash = $1, otp_expires_at = $2, otp_attempts = 0, is_supplier = 1, role = 'Supplier',
+             full_name = COALESCE($4, full_name)
          WHERE id = $3`,
-        [otpHash, otpExpiresAt, accountId]
+        [otpHash, otpExpiresAt, accountId, contactName?.trim() || null]
       );
     } else {
       // Validate required fields for new supplier registrations
@@ -72,19 +73,19 @@ export async function POST({ request }) {
         return json({ success: false, error: 'Contact phone number is required.' }, { status: 400 });
       }
 
-      // Auto-create supplier profile with all collected fields
+      // Auto-create supplier profile — only columns that exist in schema: name, reliability_score, avg_lead_time_days
       const supRes = await pool.query(
-        `INSERT INTO suppliers (name, contact_name, contact_phone, status) VALUES ($1, $2, $3, 'pending') RETURNING id`,
-        [companyName.trim(), contactName.trim(), contactPhone.trim()]
+        `INSERT INTO suppliers (name, reliability_score, avg_lead_time_days) VALUES ($1, 1.00, 1) RETURNING id`,
+        [companyName.trim()]
       );
       supplierId = supRes.rows[0].id;
 
-      // Auto-provision supplier account with dummy password
+      // Auto-provision supplier account — store contact name/phone on the users row
       const dummyHash = 'google-oauth-operator-account-placeholder-hash';
       const insertRes = await pool.query(
-        `INSERT INTO supplier_accounts (supplier_id, email, password_hash, is_active, otp_hash, otp_expires_at, otp_attempts)
-         VALUES ($1, $2, $3, 1, $4, $5, 0) RETURNING id`,
-        [supplierId, cleanEmail, dummyHash, otpHash, otpExpiresAt]
+        `INSERT INTO users (supplier_id, email, username, phone, password_hash, is_active, otp_hash, otp_expires_at, otp_attempts, is_supplier, role, full_name)
+         VALUES ($1, $2, $2, $3, $4, 1, $5, $6, 0, 1, 'Supplier', $7) RETURNING id`,
+        [supplierId, cleanEmail, contactPhone?.trim() || null, dummyHash, otpHash, otpExpiresAt, contactName?.trim() || null]
       );
       accountId = insertRes.rows[0].id;
     }

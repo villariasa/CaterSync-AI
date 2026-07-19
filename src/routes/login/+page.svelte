@@ -206,10 +206,10 @@
       const data = await res.json();
       if (res.ok && data.success) {
         clearInterval(timerHandle);
-        const userType = data.customer?.type || data.user?.type || accountType;
-        appState.currentUser = { ...(data.customer || data.user || {}), userType };
+        const userType = data.user?.type || data.customer?.type || accountType;
+        appState.currentUser = { ...data.user, ...data.customer, userType };
         if (data.needsProfile) { profName = ''; profPhone = ''; loginStep = 'profile'; }
-        else redirect(userType, data.customer?.name || data.user?.name || identifier.trim());
+        else redirect(userType, data.customer?.name || data.user?.name || data.user?.username || identifier.trim());
       } else { appState.playBuzzerSound?.(); errorMsg = data.error || 'Invalid verification code.'; }
     } catch (err) { appState.playBuzzerSound?.(); errorMsg = 'Verification error: ' + err.message; }
     finally { isLoading = false; }
@@ -236,9 +236,28 @@
       const res = await fetch('/api/auth/google-login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credential: response.credential }) });
       const data = await res.json(); isLoading = false;
       if (res.ok && data.success) {
-        appState.currentUser = { ...data.customer, userType: 'subscriber' };
-        if (data.needsOtp) { identifier = data.email; successMsg = 'Google authenticated. Verification code sent!'; loginStep = 'otp'; startCountdown(); setTimeout(() => successMsg = '', 4000); }
-        else redirect('subscriber', data.name || data.customer?.name);
+        if (data.userExists === false) {
+          appState.playClickSound?.();
+          view = 'signup';
+          signupStep = 'role';
+          suEmail = data.email || '';
+          suFullName = data.name || '';
+          successMsg = 'Google account connected. Please select your user type to continue sign-up.';
+          setTimeout(() => successMsg = '', 6000);
+          return;
+        }
+        const resolvedType = data.userRole || 'subscriber';
+        appState.currentUser = { ...data.customer, userType: resolvedType };
+        if (data.needsOtp) {
+          identifier = data.email;
+          accountType = resolvedType;
+          successMsg = 'Google authenticated. Verification code sent!';
+          loginStep = 'otp';
+          startCountdown();
+          setTimeout(() => successMsg = '', 4000);
+        } else {
+          redirect(resolvedType, data.name || data.customer?.name || data.user?.username);
+        }
       } else { appState.playBuzzerSound?.(); errorMsg = data.error || 'Google Authentication failed.'; }
     } catch (err) { isLoading = false; appState.playBuzzerSound?.(); errorMsg = 'Google auth error: ' + err.message; }
   }
@@ -287,9 +306,9 @@
       const res = await fetch('/api/auth/verify-email-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: identifier.trim(), otp: code, accountType }) });
       const data = await res.json();
       if (res.ok && data.success) {
-        clearInterval(timerHandle); appState.currentUser = { ...(data.customer || data.user || {}), userType: accountType };
+        clearInterval(timerHandle); appState.currentUser = { ...data.user, ...data.customer, userType: accountType };
         if (data.needsProfile) { profName = suFullName.trim(); profPhone = suPhone.trim(); signupStep = 'profile'; }
-        else redirect(accountType, suFullName.trim() || data.user?.name);
+        else redirect(accountType, suFullName.trim() || data.customer?.name || data.user?.name || data.user?.username);
       } else { appState.playBuzzerSound?.(); errorMsg = data.error || 'Invalid verification code.'; }
     } catch (err) { appState.playBuzzerSound?.(); errorMsg = 'Verification error: ' + err.message; }
     finally { isLoading = false; }

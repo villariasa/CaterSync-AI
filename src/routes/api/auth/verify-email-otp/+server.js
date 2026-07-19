@@ -30,47 +30,28 @@ const MAX_OTP_ATTEMPTS = 5;
 /** Per account-type configuration */
 const ACCOUNT_CONFIG = {
   subscriber: {
-    table: 'subscriber_accounts',
-    emailCol: 'email',
-    otpHashCol: 'otp_hash',
-    otpExpiryCol: 'otp_expires_at',
-    otpAttemptCol: 'otp_attempts',
+    typeFlag: 'is_customer',
     userRole: 'subscriber',
     redirectTo: '/portal',
-    activateOnVerify: true,  // sets status='active' and email_verified_at
-    profileCol: 'profile_complete'  // column to check if profile form was filled
+    profileCol: 'profile_complete'
   },
   org_user: {
-    table: 'users',
-    emailCol: 'email',
-    otpHashCol: 'email_otp_hash',
-    otpExpiryCol: 'email_otp_expires_at',
-    otpAttemptCol: 'email_otp_attempts',
+    typeFlag: 'is_operator',
     userRole: 'org_user',
     redirectTo: '/',
-    activateOnVerify: true,  // stamp email_verified_at so complete-profile can validate
-    profileCol: 'name'       // operators use 'name' column — null means profile not filled
+    profileCol: 'full_name'
   },
   supplier: {
-    table: 'supplier_accounts',
-    emailCol: 'email',
-    otpHashCol: 'otp_hash',
-    otpExpiryCol: 'otp_expires_at',
-    otpAttemptCol: 'otp_attempts',
+    typeFlag: 'is_supplier',
     userRole: 'supplier',
     redirectTo: '/supplier',
-    activateOnVerify: true,  // stamp email_verified_at so complete-profile can validate
-    profileCol: 'profile_complete'  // column to check if profile form was filled
+    profileCol: 'profile_complete'
   },
   platform_admin: {
-    table: 'platform_admins',
-    emailCol: 'email',
-    otpHashCol: 'email_otp_hash',
-    otpExpiryCol: 'email_otp_expires_at',
-    otpAttemptCol: 'email_otp_attempts',
+    typeFlag: 'is_admin',
     userRole: 'platform_admin',
     redirectTo: '/admin',
-    activateOnVerify: false
+    profileCol: null
   }
 };
 
@@ -103,16 +84,9 @@ export async function POST({ request, cookies }) {
       return json({ success: false, ...rateLimitExceededResponse(limit.retryAfterMs) }, { status: 429 });
     }
 
-    // Fetch account record
-    let query = `SELECT * FROM ${cfg.table} WHERE LOWER(${cfg.emailCol}) = ? LIMIT 1`;
-    let params = [email];
-    if (accountType === 'org_user') {
-      query = `SELECT * FROM users WHERE LOWER(email) = ? OR LOWER(username) = ? LIMIT 1`;
-      params = [email, email];
-    } else if (accountType === 'platform_admin') {
-      query = `SELECT * FROM platform_admins WHERE LOWER(email) = ? OR LOWER(username) = ? LIMIT 1`;
-      params = [email, email];
-    }
+    // Fetch account record from unified users table
+    const query = `SELECT * FROM users WHERE (LOWER(email) = ? OR LOWER(username) = ?) AND ${cfg.typeFlag} = 1 LIMIT 1`;
+    const params = [email, email];
 
     const res = await pool.query(query, params);
 
@@ -123,14 +97,14 @@ export async function POST({ request, cookies }) {
     const account = res.rows[0];
 
     // Check attempt count
-    const attempts = account[cfg.otpAttemptCol] || 0;
+    const attempts = account.otp_attempts || 0;
     if (attempts >= MAX_OTP_ATTEMPTS) {
       logAuthEvent({ eventType: AUTH_EVENTS.OTP_FAILED, identifier: email, method: 'email_otp', ipAddress, failureReason: 'max_attempts_exceeded' });
       return json({ success: false, error: 'Too many incorrect attempts. Please request a new verification code.' }, { status: 400 });
     }
 
     // Verify OTP hash (timing-safe)
-    const storedHash = account[cfg.otpHashCol];
+    const storedHash = account.otp_hash;
     if (!storedHash) {
       return json({ success: false, error: 'No pending verification code. Please request a new one.' }, { status: 400 });
     }
@@ -140,7 +114,7 @@ export async function POST({ request, cookies }) {
     if (!otpValid) {
       // Increment attempt counter
       await pool.query(
-        `UPDATE ${cfg.table} SET ${cfg.otpAttemptCol} = ${cfg.otpAttemptCol} + 1 WHERE id = ?`,
+        `UPDATE users SET otp_attempts = otp_attempts + 1 WHERE id = ?`,
         [account.id]
       );
       logAuthEvent({ eventType: AUTH_EVENTS.OTP_FAILED, identifier: email, method: 'email_otp', ipAddress, failureReason: 'invalid_code' });
@@ -152,7 +126,7 @@ export async function POST({ request, cookies }) {
     }
 
     // Check expiry
-    const expiresAt = account[cfg.otpExpiryCol];
+    const expiresAt = account.otp_expires_at;
     if (!expiresAt || new Date(expiresAt) < new Date()) {
       logAuthEvent({ eventType: AUTH_EVENTS.OTP_FAILED, identifier: email, method: 'email_otp', ipAddress, failureReason: 'otp_expired' });
       return json({ success: false, error: 'Verification code has expired. Please request a new one.' }, { status: 400 });
@@ -160,20 +134,12 @@ export async function POST({ request, cookies }) {
 
     // ── SUCCESS ────────────────────────────────────────────────────────────
 
-    // Clear OTP columns + stamp email_verified_at for all types
+    // Clear OTP columns + stamp email_verified_at
     await pool.query(
-      `UPDATE ${cfg.table} SET ${cfg.otpHashCol} = NULL, ${cfg.otpExpiryCol} = NULL, ${cfg.otpAttemptCol} = 0,
+      `UPDATE users SET otp_hash = NULL, otp_expires_at = NULL, otp_attempts = 0,
        email_verified_at = CURRENT_TIMESTAMP, last_login_at = CURRENT_TIMESTAMP WHERE id = ?`,
       [account.id]
     );
-
-    // For subscriber, also activate status
-    if (cfg.activateOnVerify && cfg.userRole === 'subscriber') {
-      await pool.query(
-        `UPDATE ${cfg.table} SET status = 'active' WHERE id = ?`,
-        [account.id]
-      );
-    }
 
     // Device fingerprint
     const { deviceId: resolvedDeviceId } = await getOrCreateDevice({
@@ -192,7 +158,7 @@ export async function POST({ request, cookies }) {
       maxAge: 60 * 60 * 24 * 365
     });
 
-    // Create session — uses per-role TTL from session.js
+    // Create session
     const { accessToken, refreshToken } = await createSession({
       userId: account.id,
       userRole: cfg.userRole,
@@ -201,7 +167,7 @@ export async function POST({ request, cookies }) {
       userAgent
     });
 
-    // Set cookies — pass role so cookie maxAge matches session TTL
+    // Set cookies
     setAuthCookies(cookies, accessToken, refreshToken, cfg.userRole);
 
     await resetRateLimit('otp_verify', `email:${email}`);
@@ -220,21 +186,17 @@ export async function POST({ request, cookies }) {
     // Build user profile for frontend
     const userProfile = {
       id: account.id,
-      email: account[cfg.emailCol],
-      name: account.name || account.username || account[cfg.emailCol],
+      email: account.email,
+      name: account.full_name || account.username || account.email,
       type: cfg.userRole
     };
 
     // Determine if this is a brand-new registration needing profile completion
-    // For subscriber/supplier: check profile_complete column
-    // For org_user (operator): check if name column is null/empty (indicates fresh registration)
     let needsProfile = false;
     if (cfg.profileCol === 'profile_complete') {
       needsProfile = !account.profile_complete || account.profile_complete === 0;
-    } else if (cfg.profileCol === 'name') {
-      // org_user: name is null until profile form is submitted
-      needsProfile = !account.name || account.name.trim() === account.email?.trim() ||
-                     account.name.trim() === account.username?.trim();
+    } else if (cfg.profileCol === 'full_name') {
+      needsProfile = !account.full_name || account.full_name.trim() === '';
     }
 
     // For customers, also fetch the linked customer record

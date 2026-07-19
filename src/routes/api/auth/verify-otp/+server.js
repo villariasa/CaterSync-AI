@@ -43,7 +43,7 @@ export async function POST({ request, cookies }) {
 
     // ── Fetch subscriber account ──────────────────────────────────────
     const subRes = await pool.query(
-      'SELECT * FROM subscriber_accounts WHERE LOWER(email) = $1 LIMIT 1',
+      'SELECT * FROM users WHERE LOWER(email) = $1 AND is_customer = 1 LIMIT 1',
       [email]
     );
 
@@ -73,7 +73,7 @@ export async function POST({ request, cookies }) {
     if (!otpValid) {
       // Increment attempt counter
       await pool.query(
-        'UPDATE subscriber_accounts SET otp_attempts = otp_attempts + 1 WHERE id = $1',
+        'UPDATE users SET otp_attempts = otp_attempts + 1 WHERE id = $1',
         [account.id]
       );
       logAuthEvent({ eventType: AUTH_EVENTS.OTP_FAILED, identifier: email, method: 'otp', ipAddress, failureReason: 'invalid_code' });
@@ -89,16 +89,15 @@ export async function POST({ request, cookies }) {
 
     // ── Activate account ──────────────────────────────────────────────
     const updateRes = await pool.query(
-      `UPDATE subscriber_accounts
+      `UPDATE users
        SET email_verified_at = CURRENT_TIMESTAMP,
-           status = 'active',
            otp_code = NULL,
            otp_hash = NULL,
            otp_expires_at = NULL,
            otp_attempts = 0,
            last_login_at = CURRENT_TIMESTAMP
-       WHERE id = $1
-       RETURNING id, customer_id, email, status`,
+        WHERE id = $1
+        RETURNING id, customer_id, email`,
       [account.id]
     );
 

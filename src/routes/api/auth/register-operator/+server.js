@@ -55,9 +55,10 @@ export async function POST({ request }) {
       // If user exists, update their OTP info
       await pool.query(
         `UPDATE users 
-         SET email_otp_hash = $1, email_otp_expires_at = $2, email_otp_attempts = 0
+         SET otp_hash = $1, otp_expires_at = $2, otp_attempts = 0, is_operator = 1,
+             full_name = COALESCE($4, full_name)
          WHERE id = $3`,
-        [otpHash, otpExpiresAt, userId]
+        [otpHash, otpExpiresAt, userId, name?.trim() || null]
       );
     } else {
       // Validate required fields for new registrations
@@ -71,8 +72,8 @@ export async function POST({ request }) {
       // Auto-provision Operator profile with dummy password
       const dummyHash = 'google-oauth-operator-account-placeholder-hash';
       const insertRes = await pool.query(
-        `INSERT INTO users (username, email, name, phone, password_hash, role, organization_id, email_otp_hash, email_otp_expires_at, email_otp_attempts, status)
-         VALUES ($1, $1, $2, $3, $4, 'Operator', 1, $5, $6, 0, 'pending') RETURNING id`,
+        `INSERT INTO users (username, email, full_name, phone, password_hash, role, otp_hash, otp_expires_at, otp_attempts, is_active, is_operator)
+         VALUES ($1, $1, $2, $3, $4, 'Operator', $5, $6, 0, 1, 1) RETURNING id`,
         [cleanEmail, name.trim(), phone.trim(), dummyHash, otpHash, otpExpiresAt]
       );
       userId = insertRes.rows[0].id;

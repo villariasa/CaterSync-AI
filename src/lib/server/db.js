@@ -219,44 +219,77 @@ export const pool = {
         }
 
         if (err.message && (
-          err.message.includes('no such table: subscriber_accounts') ||
-          err.message.includes('relation "subscriber_accounts" does not exist')
+          err.message.includes('no such table: users') ||
+          err.message.includes('relation "users" does not exist')
         )) {
-          console.warn('⚠️ Detected missing table "subscriber_accounts". Running automatic database migration...');
+          console.warn('⚠️ Detected missing table "users". Running automatic database migration...');
           try {
             const createSql = platform && platform.env && platform.env.DB 
-              ? `CREATE TABLE IF NOT EXISTS subscriber_accounts (
+              ? `CREATE TABLE IF NOT EXISTS users (
                   id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  customer_id INT,
-                  email VARCHAR(255) UNIQUE,
-                  phone VARCHAR(50) UNIQUE,
+                  organization_id INTEGER REFERENCES organizations(id),
+                  supplier_id INTEGER REFERENCES suppliers(id) ON DELETE CASCADE,
+                  customer_id INTEGER REFERENCES customers(id) ON DELETE SET NULL,
+                  username TEXT NOT NULL UNIQUE,
+                  email TEXT UNIQUE,
+                  phone TEXT UNIQUE,
                   password_hash TEXT,
+                  role TEXT NOT NULL DEFAULT 'Operator',
+                  is_active INTEGER DEFAULT 1 NOT NULL,
+                  is_customer INTEGER DEFAULT 0 NOT NULL,
+                  is_operator INTEGER DEFAULT 0 NOT NULL,
+                  is_admin INTEGER DEFAULT 0 NOT NULL,
+                  is_supplier INTEGER DEFAULT 0 NOT NULL,
+                  permission_level TEXT,
                   email_verified_at TIMESTAMP WITH TIME ZONE,
                   phone_verified_at TIMESTAMP WITH TIME ZONE,
                   otp_code VARCHAR(10),
+                  otp_hash TEXT,
                   otp_expires_at TIMESTAMP WITH TIME ZONE,
-                  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                  otp_attempts INTEGER DEFAULT 0 NOT NULL,
                   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                  last_login_at TIMESTAMP WITH TIME ZONE
+                  last_login_at TIMESTAMP WITH TIME ZONE,
+                  full_name TEXT,
+                  profile_complete INTEGER DEFAULT 0 NOT NULL,
+                  totp_secret TEXT
                 )`
-              : `CREATE TABLE IF NOT EXISTS subscriber_accounts (
+              : `CREATE TABLE IF NOT EXISTS users (
                   id SERIAL PRIMARY KEY,
-                  customer_id INT,
+                  organization_id INT REFERENCES organizations(id),
+                  supplier_id INT REFERENCES suppliers(id) ON DELETE CASCADE,
+                  customer_id INT REFERENCES customers(id) ON DELETE SET NULL,
+                  username VARCHAR(255) NOT NULL UNIQUE,
                   email VARCHAR(255) UNIQUE,
                   phone VARCHAR(50) UNIQUE,
                   password_hash TEXT,
+                  role VARCHAR(100) NOT NULL DEFAULT 'Operator',
+                  is_active INT DEFAULT 1 NOT NULL,
+                  is_customer INT DEFAULT 0 NOT NULL,
+                  is_operator INT DEFAULT 0 NOT NULL,
+                  is_admin INT DEFAULT 0 NOT NULL,
+                  is_supplier INT DEFAULT 0 NOT NULL,
+                  permission_level VARCHAR(50),
                   email_verified_at TIMESTAMP WITH TIME ZONE,
                   phone_verified_at TIMESTAMP WITH TIME ZONE,
                   otp_code VARCHAR(10),
+                  otp_hash TEXT,
                   otp_expires_at TIMESTAMP WITH TIME ZONE,
-                  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                  otp_attempts INT DEFAULT 0 NOT NULL,
                   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                  last_login_at TIMESTAMP WITH TIME ZONE
+                  last_login_at TIMESTAMP WITH TIME ZONE,
+                  full_name TEXT,
+                  profile_complete INT DEFAULT 0 NOT NULL,
+                  totp_secret VARCHAR(128)
                 )`;
             await runQueryFn(createSql);
-            console.log('✅ Automatic table migration completed. Retrying original query...');
+            // Seed super admin
+            const seedSql = `INSERT INTO users (username, email, password_hash, role, is_admin, is_active, permission_level)
+                             VALUES ('platform_admin', 'admin@catersync.ai', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'Admin', 1, 1, 'super_admin')
+                             ON CONFLICT (username) DO NOTHING`;
+            await runQueryFn(seedSql);
+            console.log('✅ Automatic table migration completed for users. Retrying original query...');
           } catch (migrationErr) {
-            console.error('❌ Automatic table migration failed:', migrationErr.message);
+            console.error('❌ Automatic table migration failed for users:', migrationErr.message);
           }
           return await runQueryFn();
         }
@@ -321,87 +354,11 @@ export const pool = {
           } catch (migrationErr) {
             console.error('❌ Automatic table migration failed for organizations:', migrationErr.message);
           }
+            // platform_admins table removed in favor of unified users table    }
           return await runQueryFn();
         }
 
-        if (err.message && (
-          err.message.includes('no such table: platform_admins') ||
-          err.message.includes('relation "platform_admins" does not exist')
-        )) {
-          console.warn('⚠️ Detected missing table "platform_admins". Running automatic database migration...');
-          try {
-            const createSql = platform && platform.env && platform.env.DB 
-              ? `CREATE TABLE IF NOT EXISTS platform_admins (
-                  id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  username TEXT NOT NULL UNIQUE,
-                  email TEXT NOT NULL UNIQUE,
-                  password_hash TEXT NOT NULL,
-                  permission_level TEXT NOT NULL DEFAULT 'support',
-                  is_active INTEGER NOT NULL DEFAULT 1,
-                  totp_secret TEXT,
-                  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                  last_login_at DATETIME
-                )`
-              : `CREATE TABLE IF NOT EXISTS platform_admins (
-                  id SERIAL PRIMARY KEY,
-                  username VARCHAR(255) NOT NULL UNIQUE,
-                  email VARCHAR(255) NOT NULL UNIQUE,
-                  password_hash VARCHAR(255) NOT NULL,
-                  permission_level VARCHAR(50) NOT NULL DEFAULT 'support'
-                      CHECK (permission_level IN ('super_admin','ops','support','finance')),
-                  is_active BOOLEAN NOT NULL DEFAULT TRUE,
-                  totp_secret VARCHAR(128),
-                  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                  last_login_at TIMESTAMP WITH TIME ZONE
-                )`;
-            await runQueryFn(createSql);
-
-            // Seed default platform admin
-            const seedSql = `INSERT INTO platform_admins (username, email, password_hash, permission_level)
-                             VALUES ('platform_admin', 'admin@catersync.ai', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'super_admin')
-                             ON CONFLICT (username) DO NOTHING`;
-            await runQueryFn(seedSql);
-            console.log('✅ Automatic table migration completed for platform_admins. Retrying original query...');
-          } catch (migrationErr) {
-            console.error('❌ Automatic table migration failed for platform_admins:', migrationErr.message);
-          }
-          return await runQueryFn();
-        }
-
-        if (err.message && (
-          err.message.includes('no such table: supplier_accounts') ||
-          err.message.includes('relation "supplier_accounts" does not exist')
-        )) {
-          console.warn('⚠️ Detected missing table "supplier_accounts". Running automatic database migration...');
-          try {
-            const createSql = platform && platform.env && platform.env.DB 
-              ? `CREATE TABLE IF NOT EXISTS supplier_accounts (
-                  id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  supplier_id INTEGER NOT NULL,
-                  email TEXT UNIQUE NOT NULL,
-                  password_hash TEXT NOT NULL,
-                  is_active INTEGER NOT NULL DEFAULT 1,
-                  email_verified_at DATETIME,
-                  created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                  last_login_at DATETIME
-                )`
-              : `CREATE TABLE IF NOT EXISTS supplier_accounts (
-                  id SERIAL PRIMARY KEY,
-                  supplier_id INT NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
-                  email VARCHAR(255) UNIQUE NOT NULL,
-                  password_hash TEXT NOT NULL,
-                  is_active BOOLEAN NOT NULL DEFAULT TRUE,
-                  email_verified_at TIMESTAMP WITH TIME ZONE,
-                  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                  last_login_at TIMESTAMP WITH TIME ZONE
-                )`;
-            await runQueryFn(createSql);
-            console.log('✅ Automatic table migration completed for supplier_accounts. Retrying original query...');
-          } catch (migrationErr) {
-            console.error('❌ Automatic table migration failed for supplier_accounts:', migrationErr.message);
-          }
-          return await runQueryFn();
-        }
+        // supplier_accounts table removed in favor of unified users table
 
         if (err.message && (
           err.message.includes('no such table: organization_suppliers') ||
@@ -573,59 +530,37 @@ if (env.DATABASE_URL) {
         VALUES (1, 'default-org', 'Default Organization', 'org@example.com', 'verified')
         ON CONFLICT (id) DO NOTHING;
 
-        -- Alter users to add organization_id
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS organization_id INT REFERENCES organizations(id);
-        UPDATE users SET organization_id = 1 WHERE organization_id IS NULL;
-
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             organization_id INT REFERENCES organizations(id),
+            supplier_id INT REFERENCES suppliers(id) ON DELETE CASCADE,
+            customer_id INT REFERENCES customers(id) ON DELETE SET NULL,
             username VARCHAR(255) NOT NULL UNIQUE,
-            email VARCHAR(255),
-            password_hash VARCHAR(255) NOT NULL,
+            email VARCHAR(255) UNIQUE,
+            phone VARCHAR(50) UNIQUE,
+            password_hash TEXT,
             role VARCHAR(100) NOT NULL DEFAULT 'Operator',
-            is_active BOOLEAN DEFAULT TRUE NOT NULL,
-            totp_secret VARCHAR(128),
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-            last_login_at TIMESTAMP WITH TIME ZONE,
-            email_otp_hash VARCHAR(128),
-            email_otp_expires_at TIMESTAMP WITH TIME ZONE,
-            email_otp_attempts INT DEFAULT 0,
-            email_verified_at TIMESTAMP WITH TIME ZONE
-        );
-        INSERT INTO users (username, email, name, password_hash, role, organization_id)
-        VALUES ('admin@gmail.com', 'admin@gmail.com', 'Medy Villarias', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'Admin', 1)
-        ON CONFLICT (username) DO NOTHING;
-
-        CREATE TABLE IF NOT EXISTS platform_admins (
-            id SERIAL PRIMARY KEY,
-            username VARCHAR(255) NOT NULL UNIQUE,
-            email VARCHAR(255) NOT NULL UNIQUE,
-            password_hash VARCHAR(255) NOT NULL,
-            permission_level VARCHAR(50) NOT NULL DEFAULT 'support'
-                CHECK (permission_level IN ('super_admin','ops','support','finance')),
-            is_active BOOLEAN NOT NULL DEFAULT TRUE,
-            totp_secret VARCHAR(128),
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-            last_login_at TIMESTAMP WITH TIME ZONE
-        );
-        INSERT INTO platform_admins (username, email, password_hash, permission_level)
-        VALUES ('platform_admin', 'admin@catersync.ai', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'super_admin')
-        ON CONFLICT (username) DO NOTHING;
-
-        CREATE TABLE IF NOT EXISTS supplier_accounts (
-            id SERIAL PRIMARY KEY,
-            supplier_id INT NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
-            email VARCHAR(255) UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            is_active BOOLEAN NOT NULL DEFAULT TRUE,
+            is_active INT DEFAULT 1 NOT NULL,
+            is_customer INT DEFAULT 0 NOT NULL,
+            is_operator INT DEFAULT 0 NOT NULL,
+            is_admin INT DEFAULT 0 NOT NULL,
+            is_supplier INT DEFAULT 0 NOT NULL,
+            permission_level VARCHAR(50),
             email_verified_at TIMESTAMP WITH TIME ZONE,
+            phone_verified_at TIMESTAMP WITH TIME ZONE,
+            otp_code VARCHAR(10),
+            otp_hash TEXT,
+            otp_expires_at TIMESTAMP WITH TIME ZONE,
+            otp_attempts INT DEFAULT 0 NOT NULL,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
             last_login_at TIMESTAMP WITH TIME ZONE,
-            otp_hash VARCHAR(128),
-            otp_expires_at TIMESTAMP WITH TIME ZONE,
-            otp_attempts INT DEFAULT 0
+            full_name TEXT,
+            profile_complete INT DEFAULT 0 NOT NULL,
+            totp_secret VARCHAR(128)
         );
+        INSERT INTO users (username, email, password_hash, role, is_admin, is_active, permission_level, organization_id)
+        VALUES ('admin@catersync.ai', 'admin@catersync.ai', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'Admin', 1, 1, 'super_admin', 1)
+        ON CONFLICT (username) DO NOTHING;
 
         CREATE TABLE IF NOT EXISTS organization_suppliers (
             id SERIAL PRIMARY KEY,
@@ -640,28 +575,8 @@ if (env.DATABASE_URL) {
         ALTER TABLE customers ADD COLUMN IF NOT EXISTS email VARCHAR(255) DEFAULT '';
         ALTER TABLE customers ADD COLUMN IF NOT EXISTS address TEXT;
         ALTER TABLE customers ADD COLUMN IF NOT EXISTS birthday DATE;
-        ALTER TABLE customers ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active';
-
-        -- Migration for subscriber_accounts profile fields
-        ALTER TABLE subscriber_accounts ADD COLUMN IF NOT EXISTS full_name TEXT;
-        ALTER TABLE subscriber_accounts ADD COLUMN IF NOT EXISTS profile_complete SMALLINT NOT NULL DEFAULT 0;
-
-        -- Migration for users (operators) profile fields
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS position VARCHAR(100);
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active';
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMP WITH TIME ZONE;
-
-        -- Migration for suppliers profile fields
-        ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS contact_name VARCHAR(255);
-        ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(50);
-        ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS address TEXT;
-        ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS category VARCHAR(100);
-        ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active';
-
-        -- Migration for supplier_accounts profile fields
-        ALTER TABLE supplier_accounts ADD COLUMN IF NOT EXISTS profile_complete SMALLINT NOT NULL DEFAULT 0;
-
+        -- Migration profile fields consolidated inside unified users table definition
+        
         -- Phase 12 Database Schema Extensions (Operational Modules)
         CREATE TABLE IF NOT EXISTS roles (
             id SERIAL PRIMARY KEY,

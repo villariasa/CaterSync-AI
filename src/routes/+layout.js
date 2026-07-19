@@ -48,15 +48,18 @@ export async function load({ fetch }) {
     safeFetch(fetch, '/api/staff')
   ]);
 
-  // Helper: extract array from response or fall back to mock
+  // Helper: extract array from a successful response.
+  // Only fall back to mock if the API call itself failed (null response = network/server error).
+  // An empty array [] from a live API is VALID — it means the operator has no data yet.
   function resolveList(data, key, mock, label) {
-    const list = data?.success ? (data[key] ?? (Array.isArray(data) ? data : null)) : null;
-    if (!list) {
+    if (data === null) {
+      // API call failed entirely (network error, 5xx, non-JSON) — use mock in offline mode
       usingMockData = true;
       console.warn(`⚠️ ${label} API unavailable — using mock data.`);
       return mock;
     }
-    return list;
+    // API responded successfully — use the real list even if it's empty
+    return data[key] ?? (Array.isArray(data) ? data : []);
   }
 
   const customers    = resolveList(custData,  'customers',   MOCK_CUSTOMERS,   'Customers');

@@ -265,18 +265,13 @@
   }
 
   onMount(() => {
-    // Seed purchase orders if empty
-    if (!appState.purchaseOrders || appState.purchaseOrders.length === 0) {
-      appState.purchaseOrders = [
-        { id: 1001, supplier_id: 1, ingredient_id: 2, quantity: 80, cost: 14400, status: 'Draft' },
-        { id: 1002, supplier_id: 2, ingredient_id: 5, quantity: 40, cost: 22000, status: 'Approved' },
-        { id: 1003, supplier_id: 4, ingredient_id: 1, quantity: 150, cost: 7800, status: 'Received' }
-      ];
+    // Initialize PO and receipts lists as empty if not yet set.
+    // Operators create their own purchase orders from scratch.
+    if (!appState.purchaseOrders) {
+      appState.purchaseOrders = [];
     }
-    if (!appState.goodsReceipts || appState.goodsReceipts.length === 0) {
-      appState.goodsReceipts = [
-        { id: 5001, po_id: 1003, billed_amount: 7800, received_qty: 150, has_discrepancy: false }
-      ];
+    if (!appState.goodsReceipts) {
+      appState.goodsReceipts = [];
     }
   });
 </script>
@@ -349,7 +344,7 @@
           rows={appState.suppliers} 
           {columns} 
           searchableKeys={['name']}
-          emptyMessage="No suppliers enrolled."
+          emptyMessage="No suppliers enrolled yet — click 'Add Supplier Profile' to register your first partner."
         />
       </div>
     </div>
@@ -468,7 +463,7 @@
           rows={appState.purchaseOrders || []} 
           columns={poColumns} 
           searchableKeys={['status']}
-          emptyMessage="No purchase orders raised."
+          emptyMessage="No purchase orders yet — add suppliers and ingredients first, then create your first PO."
         />
       </div>
     </div>
@@ -530,7 +525,7 @@
           rows={appState.goodsReceipts || []} 
           columns={matchColumns} 
           searchableKeys={['po_id']}
-          emptyMessage="No verification records logged."
+          emptyMessage="No goods receipts yet — verify a delivered purchase order to create a receipt record."
         />
       </div>
     </div>

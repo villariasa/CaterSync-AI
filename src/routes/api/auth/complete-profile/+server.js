@@ -42,9 +42,9 @@ export async function POST({ request }) {
         return json({ success: false, error: 'Phone number is required.' }, { status: 400 });
       }
 
-      // Verify subscriber_account exists and is verified
+      // Verify user exists and is verified
       const subRes = await pool.query(
-        `SELECT id, customer_id, email_verified_at FROM subscriber_accounts WHERE LOWER(email) = $1 LIMIT 1`,
+        `SELECT id, customer_id, email_verified_at FROM users WHERE LOWER(email) = $1 AND is_customer = 1 LIMIT 1`,
         [cleanEmail]
       );
       if (subRes.rows.length === 0) {
@@ -72,9 +72,9 @@ export async function POST({ request }) {
         [cleanName, cleanPhone, cleanAddr, cleanBday, allergyJson, dietJson, sub.customer_id]
       );
 
-      // Mark profile as complete on subscriber_accounts
+      // Mark profile as complete on unified users table
       await pool.query(
-        `UPDATE subscriber_accounts SET full_name = $1, profile_complete = 1, status = 'active' WHERE id = $2`,
+        `UPDATE users SET full_name = $1, profile_complete = 1, is_active = 1 WHERE id = $2`,
         [cleanName, sub.id]
       );
 
@@ -96,7 +96,7 @@ export async function POST({ request }) {
 
       // Verify user exists and has been OTP-verified
       const userRes = await pool.query(
-        `SELECT id, email_verified_at FROM users WHERE LOWER(email) = $1 LIMIT 1`,
+        `SELECT id, email_verified_at FROM users WHERE LOWER(email) = $1 AND is_operator = 1 LIMIT 1`,
         [cleanEmail]
       );
       if (userRes.rows.length === 0) {
@@ -109,7 +109,7 @@ export async function POST({ request }) {
 
       await pool.query(
         `UPDATE users
-         SET name = $1, phone = $2, position = $3, status = 'active',
+         SET full_name = $1, phone = $2, position = $3, is_active = 1,
              username = CASE WHEN username = $4 THEN $1 ELSE username END
          WHERE id = $5`,
         [fullName.trim(), phone.trim(), position?.trim() || null, cleanEmail, user.id]
@@ -134,11 +134,11 @@ export async function POST({ request }) {
         return json({ success: false, error: 'Contact phone number is required.' }, { status: 400 });
       }
 
-      // Verify supplier_account exists and is verified
+      // Verify supplier account exists and is verified on unified users table
       const accRes = await pool.query(
-        `SELECT sa.id, sa.supplier_id, sa.email_verified_at
-         FROM supplier_accounts sa
-         WHERE LOWER(sa.email) = $1 LIMIT 1`,
+        `SELECT id, supplier_id, email_verified_at
+         FROM users
+         WHERE LOWER(email) = $1 AND is_supplier = 1 LIMIT 1`,
         [cleanEmail]
       );
       if (accRes.rows.length === 0) {
@@ -158,9 +158,9 @@ export async function POST({ request }) {
         [companyName.trim(), contactName.trim(), contactPhone.trim(), address?.trim() || null, category?.trim() || null, acc.supplier_id]
       );
 
-      // Mark profile as complete on supplier_accounts
+      // Mark profile as complete on unified users table
       await pool.query(
-        `UPDATE supplier_accounts SET profile_complete = 1, is_active = 1 WHERE id = $1`,
+        `UPDATE users SET profile_complete = 1, is_active = 1 WHERE id = $1`,
         [acc.id]
       );
 

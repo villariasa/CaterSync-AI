@@ -310,15 +310,15 @@
   }
 
   onMount(() => {
-    // Populate default ledger if empty
-    if (!appState.inventoryTransactions || appState.inventoryTransactions.length === 0) {
-      appState.inventoryTransactions = [
-        { id: 10, ingredient_id: 1, transaction_type: 'receipt', quantity: 150, reference: 'Metro Delivery #03', performed_by: 'Inventory Sys', created_at: new Date(Date.now() - 1000 * 60 * 60).toISOString() },
-        { id: 11, ingredient_id: 2, transaction_type: 'consumption', quantity: 20, reference: 'Event #502 Kitchen', performed_by: 'Chef Cruz', created_at: new Date(Date.now() - 1000 * 60 * 120).toISOString() },
-        { id: 12, ingredient_id: 3, transaction_type: 'waste', quantity: 5.5, reference: 'Spoilage Check', performed_by: 'Sous Chef Gomez', created_at: new Date(Date.now() - 1000 * 60 * 180).toISOString() }
-      ];
+    // Initialize transactions as empty — operators build their own ledger.
+    // Do NOT pre-populate with fake data; a blank ledger is the correct new-operator state.
+    if (!appState.inventoryTransactions) {
+      appState.inventoryTransactions = [];
     }
-    fetchEOQPurchasing();
+    // Only run EOQ if there are actual ingredients in the DB
+    if (appState.ingredients && appState.ingredients.length > 0) {
+      fetchEOQPurchasing();
+    }
   });
 </script>
 
@@ -371,7 +371,7 @@
           rows={appState.ingredients} 
           {columns} 
           searchableKeys={['name']}
-          emptyMessage="No ingredients logged in inventory store."
+          emptyMessage="No ingredients added yet — use the form on the right to register your first ingredient."
         />
       </div>
 
@@ -498,7 +498,7 @@
             rows={appState.inventoryTransactions || []} 
             columns={ledgerColumns} 
             searchableKeys={['reference', 'performed_by', 'transaction_type']}
-            emptyMessage="No ledger logs recorded."
+            emptyMessage="No transactions logged yet — stock adjustments and receipts will appear here."
           />
         </div>
       {/if}

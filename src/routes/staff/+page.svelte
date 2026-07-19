@@ -223,23 +223,11 @@
   }
 
   onMount(() => {
-    // Seed staff lists if empty
-    if (!appState.staffCertifications || appState.staffCertifications.length === 0) {
-      appState.staffCertifications = [
-        { id: 201, staff_id: 1, cert_name: 'Food Safety & Handling', issuing_body: 'DOH Food Hygiene', expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString() },
-        { id: 202, staff_id: 5, cert_name: 'Professional Driving License (Heavy vehicle)', issuing_body: 'LTO Philippines', expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 180).toISOString() }
-      ];
-    }
-    if (!appState.staffLeaves || appState.staffLeaves.length === 0) {
-      appState.staffLeaves = [
-        { id: 301, staff_id: 3, leave_type: 'Sick Leave', start_date: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), end_date: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), status: 'Approved' }
-      ];
-    }
-    if (!appState.staffTimeLogs || appState.staffTimeLogs.length === 0) {
-      appState.staffTimeLogs = [
-        { id: 801, event_id: 501, staff_id: 1, hours_worked: 8, recorded_at: new Date(Date.now() - 1000 * 60 * 60).toISOString() }
-      ];
-    }
+    // Initialize staff support lists as empty.
+    // Operators enroll their own certifications, leaves, and timesheets.
+    if (!appState.staffCertifications) appState.staffCertifications = [];
+    if (!appState.staffLeaves) appState.staffLeaves = [];
+    if (!appState.staffTimeLogs) appState.staffTimeLogs = [];
   });
 </script>
 
@@ -333,7 +321,7 @@
           rows={appState.staff} 
           {columns} 
           searchableKeys={['name', 'role']}
-          emptyMessage="No employees registered."
+          emptyMessage="No crew members enrolled yet — use the form on the left to add your first staff member."
         />
       </div>
     </div>
@@ -404,7 +392,7 @@
             rows={appState.staffLeaves || []} 
             columns={leaveColumns} 
             searchableKeys={['leave_type']}
-            emptyMessage="No leave records logged."
+            emptyMessage="No leave records yet — enroll staff first, then file leave requests."
           />
         </div>
 
@@ -420,7 +408,7 @@
             rows={appState.staffCertifications || []} 
             columns={certColumns} 
             searchableKeys={['cert_name']}
-            emptyMessage="No certifications registered."
+            emptyMessage="No certifications recorded yet — add staff first, then log their credentials."
           />
         </div>
       </div>
@@ -486,7 +474,7 @@
           rows={appState.staffTimeLogs || []} 
           columns={clockColumns} 
           searchableKeys={['staff_name']}
-          emptyMessage="No timesheet logs logged."
+          emptyMessage="No timesheet entries yet — assign staff to events to start logging hours."
         />
       </div>
     </div>

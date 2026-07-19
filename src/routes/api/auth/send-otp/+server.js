@@ -34,39 +34,19 @@ const OTP_TTL_MS = 10 * 60 * 1000;
  */
 const ACCOUNT_CONFIG = {
   subscriber: {
-    table: 'subscriber_accounts',
-    emailCol: 'email',
-    activeCheck: "status = 'active'",
-    otpHashCol: 'otp_hash',
-    otpExpiryCol: 'otp_expires_at',
-    otpAttemptCol: 'otp_attempts',
+    typeFlag: 'is_customer',
     nameCol: 'email'
   },
   org_user: {
-    table: 'users',
-    emailCol: 'email',
-    activeCheck: 'is_active = 1',
-    otpHashCol: 'email_otp_hash',
-    otpExpiryCol: 'email_otp_expires_at',
-    otpAttemptCol: 'email_otp_attempts',
+    typeFlag: 'is_operator',
     nameCol: 'username'
   },
   supplier: {
-    table: 'supplier_accounts',
-    emailCol: 'email',
-    activeCheck: 'is_active = 1',
-    otpHashCol: 'otp_hash',
-    otpExpiryCol: 'otp_expires_at',
-    otpAttemptCol: 'otp_attempts',
+    typeFlag: 'is_supplier',
     nameCol: 'email'
   },
   platform_admin: {
-    table: 'platform_admins',
-    emailCol: 'email',
-    activeCheck: 'is_active = 1',
-    otpHashCol: 'email_otp_hash',
-    otpExpiryCol: 'email_otp_expires_at',
-    otpAttemptCol: 'email_otp_attempts',
+    typeFlag: 'is_admin',
     nameCol: 'username'
   }
 };
@@ -97,16 +77,12 @@ export async function POST({ request, cookies }) {
       return json({ success: false, ...rateLimitExceededResponse(limit.retryAfterMs) }, { status: 429 });
     }
 
-    // Look up account
-    let query = `SELECT id, ${cfg.emailCol} AS email, ${cfg.nameCol} AS display_name FROM ${cfg.table} WHERE LOWER(${cfg.emailCol}) = ? LIMIT 1`;
-    let params = [email];
-    if (accountType === 'org_user') {
-      query = `SELECT id, COALESCE(email, username) AS email, username AS display_name FROM users WHERE LOWER(email) = ? OR LOWER(username) = ? LIMIT 1`;
-      params = [email, email];
-    } else if (accountType === 'platform_admin') {
-      query = `SELECT id, COALESCE(email, username) AS email, username AS display_name FROM platform_admins WHERE LOWER(email) = ? OR LOWER(username) = ? LIMIT 1`;
-      params = [email, email];
-    }
+    // Look up account on unified users table
+    const query = `SELECT id, COALESCE(email, username) AS email, ${cfg.nameCol} AS display_name 
+                   FROM users 
+                   WHERE (LOWER(email) = ? OR LOWER(username) = ?) AND ${cfg.typeFlag} = 1 AND is_active = 1 
+                   LIMIT 1`;
+    const params = [email, email];
 
     const res = await pool.query(query, params);
 
@@ -123,7 +99,7 @@ export async function POST({ request, cookies }) {
 
     // Store hashed OTP in DB (reset attempts)
     await pool.query(
-      `UPDATE ${cfg.table} SET ${cfg.otpHashCol} = ?, ${cfg.otpExpiryCol} = ?, ${cfg.otpAttemptCol} = 0 WHERE id = ?`,
+      `UPDATE users SET otp_hash = ?, otp_expires_at = ?, otp_attempts = 0 WHERE id = ?`,
       [hash, expiresAt, account.id]
     );
 
@@ -145,7 +121,7 @@ export async function POST({ request, cookies }) {
       platform_admin: 'Admin Console'
     }[accountType] || 'CaterSync';
 
-    await sendEmail({
+    const mailResult = await sendEmail({
       to: account.email,
       subject: `Your CaterSync verification code: ${code}`,
       html: `
